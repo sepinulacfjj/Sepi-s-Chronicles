@@ -4,8 +4,8 @@ import com.mojang.blaze3d.platform.InputConstants;
 import com.sepinula.sepimod.SepiMod;
 import com.sepinula.sepimod.client.gui.ClassSelectionScreen;
 import com.sepinula.sepimod.client.gui.StatUpgradeScreen;
-import com.sepinula.sepimod.client.model.GoblinModel;
-import com.sepinula.sepimod.client.renderer.GoblinRenderer;
+import com.sepinula.sepimod.client.model.Baby_GoblinModel;
+import com.sepinula.sepimod.client.renderer.Baby_GoblinRenderer;
 import com.sepinula.sepimod.init.ModEntities;
 import com.sepinula.sepimod.init.ModModelLayers;
 import com.sepinula.sepimod.util.ModDataAttachments;
@@ -21,7 +21,7 @@ import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import org.lwjgl.glfw.GLFW;
 
-@EventBusSubscriber(modid = SepiMod.MODID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber(modid = SepiMod.MODID, value = Dist.CLIENT)
 public class ClientEvents {
 
     public static final KeyMapping classKey = new KeyMapping("key.sepimod.class", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "key.categories.sepimod");
@@ -30,13 +30,13 @@ public class ClientEvents {
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         // This connects the Entity Type to the Renderer class you just made
-        event.registerEntityRenderer(ModEntities.GOBLIN.get(), GoblinRenderer::new);
+        event.registerEntityRenderer(ModEntities.BabyGOBLIN.get(), Baby_GoblinRenderer::new);
     }
 
     @SubscribeEvent
     public static void registerLayers(EntityRenderersEvent.RegisterLayerDefinitions event) {
         // This points to BabyGoblin_Model.createBodyLayer() which is the method from your export
-        event.registerLayerDefinition(ModModelLayers.GOBLIN_LAYER, GoblinModel::createBodyLayer);
+        event.registerLayerDefinition(ModModelLayers.GOBLIN_LAYER, Baby_GoblinModel::createBodyLayer);
     }
 
     @SubscribeEvent
@@ -67,7 +67,7 @@ public class ClientEvents {
         }
     }
 
-    @EventBusSubscriber(modid = SepiMod.MODID, value = Dist.CLIENT, bus = EventBusSubscriber.Bus.MOD)
+    @EventBusSubscriber(modid = SepiMod.MODID, value = Dist.CLIENT)
     public static class ModBusEvents {
         @SubscribeEvent
         public static void onKeyRegister(RegisterKeyMappingsEvent event) {

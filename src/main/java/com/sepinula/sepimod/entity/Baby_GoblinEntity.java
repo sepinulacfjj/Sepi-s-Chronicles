@@ -10,12 +10,12 @@ import net.minecraft.world.entity.monster.Monster;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.Level;
 
-public class GoblinEntity extends Monster {
+public class Baby_GoblinEntity extends Monster {
     // FIX: You must define these states for the Model to use them
     public final AnimationState idleAnimationState = new AnimationState();
     public final AnimationState walkAnimationState = new AnimationState();
 
-    public GoblinEntity(EntityType<? extends Monster> type, Level level) {
+    public Baby_GoblinEntity(EntityType<? extends Monster> type, Level level) {
         super(type, level);
     }
 

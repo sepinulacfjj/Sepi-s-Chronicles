@@ -10,7 +10,7 @@ import net.minecraft.client.animation.KeyframeAnimations;
  * Exported for Minecraft version 1.19 or later with Mojang mappings
  * @author Author
  */
-public class BabyGoblin_ModelAnimation {
+public class Baby_Goblin_ModelAnimation {
 	public static final AnimationDefinition Walking = AnimationDefinition.Builder.withLength(1.0F).looping()
 		.addAnimation("Head", new AnimationChannel(AnimationChannel.Targets.ROTATION,
 			new Keyframe(0.0F, KeyframeAnimations.degreeVec(0.0F, -2.5F, 0.0F), AnimationChannel.Interpolations.CATMULLROM),
@@ -24,7 +24,7 @@ public class BabyGoblin_ModelAnimation {
 			new Keyframe(0.5F, KeyframeAnimations.degreeVec(-12.5F, 0.0F, 0.0F), AnimationChannel.Interpolations.CATMULLROM),
 			new Keyframe(1.0F, KeyframeAnimations.degreeVec(12.5F, 0.0F, 0.0F), AnimationChannel.Interpolations.CATMULLROM)
 		))
-		.addAnimation("RigthLeg", new AnimationChannel(AnimationChannel.Targets.ROTATION, 
+		.addAnimation("RightLeg", new AnimationChannel(AnimationChannel.Targets.ROTATION,
 			new Keyframe(0.0F, KeyframeAnimations.degreeVec(-17.5F, 0.0F, 0.0F), AnimationChannel.Interpolations.CATMULLROM),
 			new Keyframe(0.5F, KeyframeAnimations.degreeVec(12.5F, 0.0F, 0.0F), AnimationChannel.Interpolations.CATMULLROM),
 			new Keyframe(1.0F, KeyframeAnimations.degreeVec(-17.5F, 0.0F, 0.0F), AnimationChannel.Interpolations.CATMULLROM)

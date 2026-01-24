@@ -7,7 +7,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
 import net.neoforged.neoforge.network.registration.PayloadRegistrar;
 
-@EventBusSubscriber(modid = SepiMod.MODID, bus = EventBusSubscriber.Bus.MOD)
+@EventBusSubscriber(modid = SepiMod.MODID)
 public class Messages {
     @SubscribeEvent
     public static void register(RegisterPayloadHandlersEvent event) {

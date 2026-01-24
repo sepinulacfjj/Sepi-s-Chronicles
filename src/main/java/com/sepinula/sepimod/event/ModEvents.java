@@ -1,7 +1,7 @@
 package com.sepinula.sepimod.event;
 
 import com.sepinula.sepimod.SepiMod;
-import com.sepinula.sepimod.entity.GoblinEntity;
+import com.sepinula.sepimod.entity.Baby_GoblinEntity;
 import com.sepinula.sepimod.init.ModEntities;
 import com.sepinula.sepimod.util.ModDataAttachments;
 import com.sepinula.sepimod.util.PlayerStats;
@@ -16,13 +16,13 @@ import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 import net.neoforged.neoforge.event.entity.living.LivingEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 
-@EventBusSubscriber(modid = SepiMod.MODID, bus = EventBusSubscriber.Bus.GAME)
+@EventBusSubscriber(modid = SepiMod.MODID)
 public class ModEvents {
 
     @SubscribeEvent
     public static void registerAttributes(EntityAttributeCreationEvent event) {
         // This connects the Goblin Entity to the attributes we defined in its class
-        event.put(ModEntities.GOBLIN.get(), GoblinEntity.createAttributes().build());
+        event.put(ModEntities.BabyGOBLIN.get(), Baby_GoblinEntity.createAttributes().build());
     }
 
     @SubscribeEvent

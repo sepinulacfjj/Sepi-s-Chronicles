@@ -3,9 +3,8 @@ package com.sepinula.sepimod.init;
 import com.sepinula.sepimod.SepiMod;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Rarity;
-import net.minecraft.world.item.SpawnEggItem;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.neoforge.registries.DeferredHolder;
+import net.neoforged.neoforge.common.DeferredSpawnEggItem;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -18,10 +17,9 @@ public class ModItems {
                     .durability(500)
                     .rarity(Rarity.EPIC)));
 
-    // This creates the Goblin Spawn Egg
-    // Colors: 0x475E3E (Dark Green base), 0xB02E26 (Red spots/eyes)
-    public static final DeferredHolder<Item, Item> GOBLIN_SPAWN_EGG = ITEMS.register("goblin_spawn_egg",
-            () -> new SpawnEggItem(ModEntities.GOBLIN.get(), 0x475E3E, 0xB02E26, new Item.Properties()));
+    // FIX: Use DeferredSpawnEggItem instead of SpawnEggItem to avoid the deprecation warning
+    public static final DeferredItem<Item> GOBLIN_SPAWN_EGG = ITEMS.register("goblin_spawn_egg",
+            () -> new DeferredSpawnEggItem(ModEntities.BabyGOBLIN, 0x475E3E, 0x8B1E28, new Item.Properties()));
 
     public static void register(IEventBus eventBus) {
         ITEMS.register(eventBus);
