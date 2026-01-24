@@ -15,14 +15,13 @@ import net.minecraft.sounds.SoundEvents;
 public class ClassSelectionScreen extends Screen {
     private static final ResourceLocation GUI_TEXTURE = ResourceLocation.fromNamespaceAndPath(SepiMod.MODID, "textures/gui/archetype_selection.png");
 
-    private final int xSize = 256;
-    private final int ySize = 256;
+    private final int xSize = 512;
+    private final int ySize = 512;
 
-    // Tracks what the user has clicked on before pressing confirm
     private String selectedClass = "";
 
     public ClassSelectionScreen() {
-        super(Component.literal("Select Your Class"));
+        super(Component.literal("Select Your Archetype"));
     }
 
     @Override
@@ -35,36 +34,41 @@ public class ClassSelectionScreen extends Screen {
         RenderSystem.setShader(GameRenderer::getPositionTexShader);
         RenderSystem.setShaderTexture(0, GUI_TEXTURE);
 
-        // Render main texture. Using 512, 512 for the source size to fix tiling.
-        graphics.blit(GUI_TEXTURE, leftPos, topPos, 0, 0, xSize, ySize, 256, 256);
+        // Render the texture scaled to 512x512
+        graphics.blit(GUI_TEXTURE, leftPos, topPos, xSize, ySize, 0, 0, 256, 256, 256, 256);
 
-        // --- BUTTON DIMENSIONS (Synced with your provided values) ---
-        int buttonX = leftPos + 55;
-        int buttonWidth = 145;
-        int buttonHeight = 35;
+        // --- DYNAMIC BUTTON SCALING ---
+        int boxW = (int)(xSize * 0.196);
+        int boxH = (int)(ySize * 0.321);
+        int boxY = topPos + (int)(ySize * 0.337);
 
-        // Render Class Visuals (Hover = White, Selected = Green)
-        renderClassVisuals(graphics, mouseX, mouseY, "Rogue", buttonX, topPos + 56, buttonWidth, buttonHeight);
-        renderClassVisuals(graphics, mouseX, mouseY, "Warrior", buttonX, topPos + 95, buttonWidth, buttonHeight);
-        renderClassVisuals(graphics, mouseX, mouseY, "Mage", buttonX, topPos + 133, buttonWidth, buttonHeight);
+        // Rogue, Warrior, Mage Highlights
+        renderClassVisuals(graphics, mouseX, mouseY, "Rogue", leftPos + (int)(xSize * 0.205), boxY, boxW, boxH);
+        renderClassVisuals(graphics, mouseX, mouseY, "Warrior", leftPos + (int)(xSize * 0.411), boxY, boxW, boxH);
+        renderClassVisuals(graphics, mouseX, mouseY, "Mage", leftPos + (int)(xSize * 0.619), boxY, boxW, boxH);
 
-        // --- SYSTEM BUTTON HOVERS (Confirm & X) ---
-        // Confirm Hover
-        if (checkClick(mouseX, mouseY, leftPos + 94, topPos + 181, 55, 18)) {
-            graphics.fill(leftPos + 94, topPos + 181, leftPos + 107 + 55, topPos + 191 + 18, 0x40FFFFFF);
+        // Choose Button Highlight
+        if (checkClick(mouseX, mouseY, leftPos + (int)(xSize * 0.290), topPos + (int)(ySize * 0.665), (int)(xSize * 0.44), (int)(ySize * 0.08))) {
+            graphics.fill(leftPos + (int)(xSize * 0.290), topPos + (int)(ySize * 0.665), leftPos + (int)(xSize * 0.732), topPos + (int)(ySize * 0.745), 0x40FFFFFF);
         }
-        // X Hover
-        if (checkClick(mouseX, mouseY, leftPos + 177, topPos + 183, 18, 18)) {
-            graphics.fill(leftPos + 177, topPos + 183, leftPos + 185 + 18, topPos + 193 + 18, 0x40FFFFFF);
+
+        // --- X BUTTON HOVER FIX ---
+        // These coordinates are calculated to hit the red 'X' in the top right of the scroll
+        int xBtnX = leftPos + (int)(xSize * 0.923);
+        int xBtnY = topPos + (int)(ySize * 0.245);
+        int xBtnWidth = (int)(xSize * 0.047);
+        int xBtnHeight = (int)(ySize * 0.038);
+
+        if (checkClick(mouseX, mouseY, xBtnX, xBtnY, xBtnWidth, xBtnHeight)) {
+            // Draw the hover box exactly over the sensor area
+            graphics.fill(xBtnX, xBtnY, xBtnX + xBtnWidth, xBtnY + xBtnHeight, 0x40FFFFFF);
         }
     }
 
     private void renderClassVisuals(GuiGraphics graphics, int mouseX, int mouseY, String className, int x, int y, int w, int h) {
         if (selectedClass.equals(className)) {
-            // SELECTED: Green highlight (0x6000FF00)
             graphics.fill(x, y, x + w, y + h, 0x6000FF00);
         } else if (mouseX >= x && mouseX <= x + w && mouseY >= y && mouseY <= y + h) {
-            // HOVER: White highlight (0x40FFFFFF)
             graphics.fill(x, y, x + w, y + h, 0x40FFFFFF);
         }
     }
@@ -74,36 +78,40 @@ public class ClassSelectionScreen extends Screen {
         int leftPos = (this.width - xSize) / 2;
         int topPos = (this.height - ySize) / 2;
 
-        int buttonX = leftPos + 55;
-        int buttonWidth = 145;
-        int buttonHeight = 32;
+        int boxW = (int)(xSize * 0.196);
+        int boxH = (int)(ySize * 0.321);
+        int boxY = topPos + (int)(ySize * 0.337);
 
-        // 1. Rogue Selection
-        if (checkClick(mouseX, mouseY, buttonX, topPos + 57, buttonWidth, buttonHeight)) {
+        // Class Selection Clicks
+        if (checkClick(mouseX, mouseY, leftPos + (int)(xSize * 0.205), boxY, boxW, boxH)) {
             selectVisualOnly("Rogue");
             return true;
         }
-        // 2. Warrior Selection
-        if (checkClick(mouseX, mouseY, buttonX, topPos + 97, buttonWidth, buttonHeight)) {
+        if (checkClick(mouseX, mouseY, leftPos + (int)(xSize * 0.411), boxY, boxW, boxH)) {
             selectVisualOnly("Warrior");
             return true;
         }
-        // 3. Mage Selection
-        if (checkClick(mouseX, mouseY, buttonX, topPos + 135, buttonWidth, buttonHeight)) {
+        if (checkClick(mouseX, mouseY, leftPos + (int)(xSize * 0.619), boxY, boxW, boxH)) {
             selectVisualOnly("Mage");
             return true;
         }
 
-        // 4. CONFIRM BUTTON CLICK
-        if (checkClick(mouseX, mouseY, leftPos + 94, topPos + 181, 55, 18)) {
+        // Choose Button Click
+        if (checkClick(mouseX, mouseY, leftPos + (int)(xSize * 0.290), topPos + (int)(ySize * 0.665), (int)(xSize * 0.44), (int)(ySize * 0.08))) {
             if (!selectedClass.isEmpty()) {
                 confirmAndSend();
             }
             return true;
         }
 
-        // 5. X BUTTON CLICK
-        if (checkClick(mouseX, mouseY, leftPos + 177, topPos + 183, 18, 18)) {
+        // --- X BUTTON CLICK FIX ---
+        // Must use the EXACT same coordinates as the render() hover
+        int xBtnX = leftPos + (int)(xSize * 0.924);
+        int xBtnY = topPos + (int)(ySize * 0.245);
+        int xBtnWidth = (int)(xSize * 0.047);
+        int xBtnHeight = (int)(ySize * 0.038);
+
+        if (checkClick(mouseX, mouseY, xBtnX, xBtnY, xBtnWidth, xBtnHeight)) {
             this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
             this.onClose();
             return true;
@@ -119,7 +127,6 @@ public class ClassSelectionScreen extends Screen {
 
     private void confirmAndSend() {
         this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-        // Only sends the packet when the player clicks the actual CONFIRM button
         Messages.sendToServer(new PacketSelectClass(this.selectedClass));
         this.onClose();
     }
