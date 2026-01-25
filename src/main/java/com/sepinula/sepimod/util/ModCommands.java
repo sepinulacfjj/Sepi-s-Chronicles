@@ -26,6 +26,10 @@ public class ModCommands {
                                     stats.setMana(100);
                                     stats.setMind(100);
 
+                                    // Fill bars to max instantly
+                                    stats.setCurrentStamina(stats.getMaxStamina());
+                                    stats.setCurrentMana(stats.getMaxMana());
+
                                     // REFRESH PHYSICAL ATTRIBUTES (Hearts, Speed, etc.)
                                     StatLogicHandler.applyStatModifiers(player, stats);
 
@@ -47,11 +51,17 @@ public class ModCommands {
                                     stats.setMana(0);
                                     stats.setMind(0);
 
+                                    // FIXED: Force the actual bars to empty out immediately
+                                    stats.setCurrentStamina(0);
+                                    stats.setCurrentMana(0);
+
                                     // REFRESH PHYSICAL ATTRIBUTES (Clears extra hearts and speed)
                                     StatLogicHandler.applyStatModifiers(player, stats);
 
+                                    // This tells the Client "Hey, everything is 0 now!"
                                     ModDataAttachments.sync(player);
-                                    context.getSource().sendSuccess(() -> Component.literal("§aStat levels have been reset!"), true);
+
+                                    context.getSource().sendSuccess(() -> Component.literal("§aStat levels and bars have been reset!"), true);
                                     return 1;
                                 }))
                         // --- RESET POINTS ---
@@ -64,7 +74,7 @@ public class ModCommands {
                                     context.getSource().sendSuccess(() -> Component.literal("§eTraining points have been cleared!"), true);
                                     return 1;
                                 }))
-                        // --- ADD TRAINING POINTS (WITH 999 CAP LOGIC) ---
+                        // --- ADD TRAINING POINTS ---
                         .then(Commands.literal("training_points")
                                 .then(Commands.argument("amount", IntegerArgumentType.integer(1))
                                         .executes(context -> {
@@ -78,7 +88,7 @@ public class ModCommands {
                                                 return 0;
                                             }
 
-                                            stats.setAvailablePoints(current + amount);
+                                            stats.setAvailablePoints(Math.min(999, current + amount));
                                             ModDataAttachments.sync(player);
 
                                             int finalPoints = stats.getAvailablePoints();

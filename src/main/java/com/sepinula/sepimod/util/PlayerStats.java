@@ -20,8 +20,9 @@ public class PlayerStats {
                     Codec.INT.fieldOf("charisma").forGetter(PlayerStats::getCharisma),
                     Codec.INT.fieldOf("availablePoints").forGetter(PlayerStats::getAvailablePoints),
                     Codec.INT.fieldOf("trainingPoints").forGetter(PlayerStats::getTrainingPoints),
-                    // --- ADDED TO CODEC ---
-                    Codec.FLOAT.fieldOf("currentMana").forGetter(PlayerStats::getCurrentMana)
+                    Codec.FLOAT.fieldOf("currentMana").forGetter(PlayerStats::getCurrentMana),
+                    // --- ADDED STAMINA TO CODEC ---
+                    Codec.FLOAT.fieldOf("currentStamina").forGetter(PlayerStats::getCurrentStamina)
             ).apply(instance, PlayerStats::new));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, PlayerStats> STREAM_CODEC =
@@ -31,22 +32,25 @@ public class PlayerStats {
     private int strength, agility, constitution, willpower, mind, mana, dexterity, charisma;
     private int availablePoints, trainingPoints;
 
-    // --- ADDED FIELD ---
     private float currentMana;
+    // --- ADDED FIELD ---
+    private float currentStamina;
 
     public PlayerStats() {
         this.playerClass = "NONE";
         this.trainingPoints = 100;
         this.availablePoints = 0;
-        this.currentMana = 20.0f; // Start with some mana
+        this.currentMana = 20.0f;
+        this.currentStamina = 20.0f; // Initial start
     }
 
     // --- UPDATED CONSTRUCTOR ---
-    public PlayerStats(String pc, int str, int agi, int con, int wil, int min, int man, int dex, int cha, int ap, int tp, float cm) {
+    public PlayerStats(String pc, int str, int agi, int con, int wil, int min, int man, int dex, int cha, int ap, int tp, float cm, float cs) {
         this.playerClass = pc; this.strength = str; this.agility = agi; this.constitution = con;
         this.willpower = wil; this.mind = min; this.mana = man; this.dexterity = dex;
         this.charisma = cha; this.availablePoints = ap; this.trainingPoints = tp;
         this.currentMana = cm;
+        this.currentStamina = cs;
     }
 
     // --- CLAMPING HELPERS ---
@@ -66,12 +70,7 @@ public class PlayerStats {
         }
     }
 
-    // --- MANA LOGIC HELPERS ---
-
-    /**
-     * Calculates Max Mana based on the Mana Stat.
-     * Base 100 + 10 per level.
-     */
+    // --- MANA LOGIC ---
     public float getMaxMana() {
         return 100.0f + (this.mana * 10.0f);
     }
@@ -79,8 +78,32 @@ public class PlayerStats {
     public float getCurrentMana() { return currentMana; }
 
     public void setCurrentMana(float val) {
-        // Clamp current mana between 0 and the player's current Max Mana
         this.currentMana = Math.max(0, Math.min(val, getMaxMana()));
+    }
+
+    public void addMana(float amount) { setCurrentMana(this.currentMana + amount); }
+
+    // --- STAMINA LOGIC (Constitution Scaling) ---
+    /**
+     * Calculates Max Stamina based on Constitution.
+     * Base 100 + 15 per level of Constitution.
+     */
+    public float getMaxStamina() {
+        return 100.0f + (this.constitution * 15.0f);
+    }
+
+    public float getCurrentStamina() { return currentStamina; }
+
+    public void setCurrentStamina(float val) {
+        this.currentStamina = Math.max(0, Math.min(val, getMaxStamina()));
+    }
+
+    public void addStamina(float amount) {
+        setCurrentStamina(this.currentStamina + amount);
+    }
+
+    public void subStamina(float amount) {
+        setCurrentStamina(this.currentStamina - amount);
     }
 
     // --- GETTERS AND SETTERS ---

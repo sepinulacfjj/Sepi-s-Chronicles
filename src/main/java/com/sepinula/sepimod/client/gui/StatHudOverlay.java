@@ -21,9 +21,9 @@ public class StatHudOverlay {
 
     @SubscribeEvent
     public static void onRenderGui(RenderGuiLayerEvent.Pre event) {
-        if (event.getName().equals(VanillaGuiLayers.PLAYER_HEALTH)) {
-            event.setCanceled(true);
-        }
+        if (event.getName().equals(VanillaGuiLayers.PLAYER_HEALTH)) event.setCanceled(true);
+        if (event.getName().equals(VanillaGuiLayers.FOOD_LEVEL)) event.setCanceled(true);
+
         if (event.getName().equals(VanillaGuiLayers.HOTBAR)) {
             renderDBCStyleBars(event.getGuiGraphics());
         }
@@ -43,33 +43,23 @@ public class StatHudOverlay {
         RenderSystem.setShaderTexture(0, HUD_TEXTURE);
         RenderSystem.enableBlend();
 
-        // --- 1. DRAW FRAME FIRST (The Background) ---
-        // Draws the main HUD frame from your texture
+        // DRAW FRAME
         graphics.blit(HUD_TEXTURE, x, y, 0, 0, 168, 45, 256, 256);
 
-        // --- 2. DRAW BARS SECOND (The Overlay) ---
-
-        // HEALTH (Red)
-        float healthPct = player.getHealth() / player.getMaxHealth();
+        // HEALTH
+        float healthPct = Math.max(0, Math.min(1, player.getHealth() / player.getMaxHealth()));
         int healthWidth = (int) (healthPct * 121);
-        if (healthWidth > 0) {
-            // Draws the red bar at your adjusted X+26 position
-            graphics.blit(HUD_TEXTURE, x + 26, y + 21, 26, 45, healthWidth, 7, 256, 256);
-        }
+        if (healthWidth > 0) graphics.blit(HUD_TEXTURE, x + 26, y + 21, 26, 45, healthWidth, 7, 256, 256);
 
-        // STAMINA (Yellow)
-        float staminaPct = player.getFoodData().getFoodLevel() / 20f;
-        int staminaWidth = (int) (staminaPct * 128);
-        if (staminaWidth > 0) {
-            graphics.blit(HUD_TEXTURE, x + 21, y + 32, 21, 56, staminaWidth, 4, 256, 256);
-        }
+        // STAMINA - Clamped to 128 pixels max
+        float staminaPct = stats.getMaxStamina() > 0 ? stats.getCurrentStamina() / stats.getMaxStamina() : 0;
+        int staminaWidth = (int) (Math.max(0, Math.min(1, staminaPct)) * 128);
+        if (staminaWidth > 0) graphics.blit(HUD_TEXTURE, x + 21, y + 32, 21, 56, staminaWidth, 4, 256, 256);
 
-        // MANA (Blue)
-        float manaPct = stats.getCurrentMana() / stats.getMaxMana();
-        int manaWidth = (int) (manaPct * 128);
-        if (manaWidth > 0) {
-            graphics.blit(HUD_TEXTURE, x + 21, y + 37, 21, 61, manaWidth, 4, 256, 256);
-        }
+        // MANA - Clamped to 128 pixels max (This fixes the disappearing bug)
+        float manaPct = stats.getMaxMana() > 0 ? stats.getCurrentMana() / stats.getMaxMana() : 0;
+        int manaWidth = (int) (Math.max(0, Math.min(1, manaPct)) * 128);
+        if (manaWidth > 0) graphics.blit(HUD_TEXTURE, x + 21, y + 37, 21, 61, manaWidth, 4, 256, 256);
 
         RenderSystem.disableBlend();
     }
