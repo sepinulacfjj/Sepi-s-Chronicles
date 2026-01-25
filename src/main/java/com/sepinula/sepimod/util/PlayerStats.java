@@ -19,7 +19,9 @@ public class PlayerStats {
                     Codec.INT.fieldOf("dexterity").forGetter(PlayerStats::getDexterity),
                     Codec.INT.fieldOf("charisma").forGetter(PlayerStats::getCharisma),
                     Codec.INT.fieldOf("availablePoints").forGetter(PlayerStats::getAvailablePoints),
-                    Codec.INT.fieldOf("trainingPoints").forGetter(PlayerStats::getTrainingPoints)
+                    Codec.INT.fieldOf("trainingPoints").forGetter(PlayerStats::getTrainingPoints),
+                    // --- ADDED TO CODEC ---
+                    Codec.FLOAT.fieldOf("currentMana").forGetter(PlayerStats::getCurrentMana)
             ).apply(instance, PlayerStats::new));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, PlayerStats> STREAM_CODEC =
@@ -29,25 +31,29 @@ public class PlayerStats {
     private int strength, agility, constitution, willpower, mind, mana, dexterity, charisma;
     private int availablePoints, trainingPoints;
 
+    // --- ADDED FIELD ---
+    private float currentMana;
+
     public PlayerStats() {
         this.playerClass = "NONE";
         this.trainingPoints = 100;
         this.availablePoints = 0;
+        this.currentMana = 20.0f; // Start with some mana
     }
 
-    public PlayerStats(String pc, int str, int agi, int con, int wil, int min, int man, int dex, int cha, int ap, int tp) {
+    // --- UPDATED CONSTRUCTOR ---
+    public PlayerStats(String pc, int str, int agi, int con, int wil, int min, int man, int dex, int cha, int ap, int tp, float cm) {
         this.playerClass = pc; this.strength = str; this.agility = agi; this.constitution = con;
         this.willpower = wil; this.mind = min; this.mana = man; this.dexterity = dex;
         this.charisma = cha; this.availablePoints = ap; this.trainingPoints = tp;
+        this.currentMana = cm;
     }
 
     // --- CLAMPING HELPERS ---
-
     private int clamp(int value) {
         return Math.max(0, Math.min(value, 100));
     }
 
-    // New helper for training points (Capped at 999)
     private int clampPoints(int value) {
         return Math.max(0, Math.min(value, 999));
     }
@@ -56,12 +62,28 @@ public class PlayerStats {
         this.trainingPoints -= points;
         if (this.trainingPoints <= 0) {
             this.trainingPoints = 100;
-            // Use setAvailablePoints to ensure we hit the 999 cap during natural play
             this.setAvailablePoints(this.availablePoints + 1);
         }
     }
 
-    // --- GETTERS AND SETTERS WITH CLAMPING ---
+    // --- MANA LOGIC HELPERS ---
+
+    /**
+     * Calculates Max Mana based on the Mana Stat.
+     * Base 100 + 10 per level.
+     */
+    public float getMaxMana() {
+        return 100.0f + (this.mana * 10.0f);
+    }
+
+    public float getCurrentMana() { return currentMana; }
+
+    public void setCurrentMana(float val) {
+        // Clamp current mana between 0 and the player's current Max Mana
+        this.currentMana = Math.max(0, Math.min(val, getMaxMana()));
+    }
+
+    // --- GETTERS AND SETTERS ---
     public String getPlayerClass() { return playerClass; }
     public void setPlayerClass(String playerClass) { this.playerClass = playerClass; }
 
@@ -90,11 +112,7 @@ public class PlayerStats {
     public void setCharisma(int val) { this.charisma = clamp(val); }
 
     public int getAvailablePoints() { return availablePoints; }
-
-    // Updated to use clampPoints
-    public void setAvailablePoints(int availablePoints) {
-        this.availablePoints = clampPoints(availablePoints);
-    }
+    public void setAvailablePoints(int availablePoints) { this.availablePoints = clampPoints(availablePoints); }
 
     public int getTrainingPoints() { return trainingPoints; }
 }

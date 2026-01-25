@@ -25,6 +25,10 @@ public class ModCommands {
                                     stats.setCharisma(100);
                                     stats.setMana(100);
                                     stats.setMind(100);
+
+                                    // REFRESH PHYSICAL ATTRIBUTES (Hearts, Speed, etc.)
+                                    StatLogicHandler.applyStatModifiers(player, stats);
+
                                     ModDataAttachments.sync(player);
                                     context.getSource().sendSuccess(() -> Component.literal("§6[SepiMod] §fAll stats set to §dMAX§f!"), true);
                                     return 1;
@@ -42,6 +46,10 @@ public class ModCommands {
                                     stats.setCharisma(0);
                                     stats.setMana(0);
                                     stats.setMind(0);
+
+                                    // REFRESH PHYSICAL ATTRIBUTES (Clears extra hearts and speed)
+                                    StatLogicHandler.applyStatModifiers(player, stats);
+
                                     ModDataAttachments.sync(player);
                                     context.getSource().sendSuccess(() -> Component.literal("§aStat levels have been reset!"), true);
                                     return 1;
@@ -70,7 +78,6 @@ public class ModCommands {
                                                 return 0;
                                             }
 
-                                            // Points setter in PlayerStats.java should also have Math.min(val, 999)
                                             stats.setAvailablePoints(current + amount);
                                             ModDataAttachments.sync(player);
 

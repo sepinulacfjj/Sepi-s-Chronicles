@@ -3,6 +3,7 @@ package com.sepinula.sepimod.network;
 import com.sepinula.sepimod.SepiMod;
 import com.sepinula.sepimod.util.ModDataAttachments;
 import com.sepinula.sepimod.util.PlayerStats;
+import com.sepinula.sepimod.util.StatLogicHandler;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -12,18 +13,27 @@ import net.minecraft.server.level.ServerPlayer;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
 public record PacketUpdateStat(String statName) implements CustomPacketPayload {
+
     public static final Type<PacketUpdateStat> TYPE = new Type<>(ResourceLocation.fromNamespaceAndPath(SepiMod.MODID, "update_stat"));
+
     public static final StreamCodec<FriendlyByteBuf, PacketUpdateStat> STREAM_CODEC = StreamCodec.composite(
             ByteBufCodecs.STRING_UTF8, PacketUpdateStat::statName, PacketUpdateStat::new);
 
-    @Override public Type<? extends CustomPacketPayload> type() { return TYPE; }
+    @Override
+    public Type<? extends CustomPacketPayload> type() { return TYPE; }
 
     public static void handle(final PacketUpdateStat payload, final IPayloadContext context) {
         context.enqueueWork(() -> {
             ServerPlayer player = (ServerPlayer) context.player();
             PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
+
             if (stats.getAvailablePoints() > 0) {
-                switch (payload.statName()) {
+                String name = payload.statName().toLowerCase();
+
+                // Track if we need to heal (only for constitution)
+                boolean isConstitution = name.equals("constitution");
+
+                switch (name) {
                     case "strength" -> stats.setStrength(stats.getStrength() + 1);
                     case "agility" -> stats.setAgility(stats.getAgility() + 1);
                     case "constitution" -> stats.setConstitution(stats.getConstitution() + 1);
@@ -33,7 +43,18 @@ public record PacketUpdateStat(String statName) implements CustomPacketPayload {
                     case "dexterity" -> stats.setDexterity(stats.getDexterity() + 1);
                     case "charisma" -> stats.setCharisma(stats.getCharisma() + 1);
                 }
+
                 stats.setAvailablePoints(stats.getAvailablePoints() - 1);
+
+                // 1. Update the Max Health attribute first
+                StatLogicHandler.applyStatModifiers(player, stats);
+
+                // 2. If it was Constitution, heal the player by the amount added (1.0F = half heart)
+                if (isConstitution) {
+                    player.heal(1.0F);
+                }
+
+                // 3. Sync to client
                 ModDataAttachments.sync(player);
             }
         });
