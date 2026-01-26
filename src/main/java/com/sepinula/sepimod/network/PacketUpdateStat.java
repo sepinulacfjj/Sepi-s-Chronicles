@@ -29,8 +29,6 @@ public record PacketUpdateStat(String statName) implements CustomPacketPayload {
 
             if (stats.getAvailablePoints() > 0) {
                 String name = payload.statName().toLowerCase();
-
-                // Track if we need to heal (only for constitution)
                 boolean isConstitution = name.equals("constitution");
 
                 switch (name) {
@@ -40,21 +38,19 @@ public record PacketUpdateStat(String statName) implements CustomPacketPayload {
                     case "willpower" -> stats.setWillpower(stats.getWillpower() + 1);
                     case "mind" -> stats.setMind(stats.getMind() + 1);
                     case "mana" -> stats.setMana(stats.getMana() + 1);
-                    case "dexterity" -> stats.setDexterity(stats.getDexterity() + 1);
+                    case "defense" -> stats.setDefense(stats.getDefense() + 1); // Updated
                     case "charisma" -> stats.setCharisma(stats.getCharisma() + 1);
                 }
 
                 stats.setAvailablePoints(stats.getAvailablePoints() - 1);
 
-                // 1. Update the Max Health attribute first
+                // Update physical attributes (Health/Knockback Res)
                 StatLogicHandler.applyStatModifiers(player, stats);
 
-                // 2. If it was Constitution, heal the player by the amount added (1.0F = half heart)
                 if (isConstitution) {
                     player.heal(1.0F);
                 }
 
-                // 3. Sync to client
                 ModDataAttachments.sync(player);
             }
         });

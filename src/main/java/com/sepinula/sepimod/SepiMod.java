@@ -1,11 +1,14 @@
 package com.sepinula.sepimod;
 
+import com.sepinula.sepimod.client.event.ClientEvents;
 import com.sepinula.sepimod.init.*;
 import com.sepinula.sepimod.item.BasicStaffClientExtensions;
 import com.sepinula.sepimod.util.ModCommands;
 import com.sepinula.sepimod.util.ModDataAttachments;
+import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.fml.common.Mod;
+import net.neoforged.fml.loading.FMLEnvironment;
 import net.neoforged.neoforge.client.extensions.common.RegisterClientExtensionsEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
@@ -21,6 +24,11 @@ public class SepiMod {
         ModCreativeTabs.register(modEventBus);
         ModDataAttachments.register(modEventBus);
 
+        // Register Client Events (Fixes the 'bus' deprecation error)
+        if (FMLEnvironment.dist == Dist.CLIENT) {
+            ClientEvents.init(modEventBus);
+        }
+
         // Client Setup (Connects the 3D Model)
         modEventBus.addListener(this::registerClientExtensions);
 
@@ -29,7 +37,6 @@ public class SepiMod {
     }
 
     private void registerClientExtensions(RegisterClientExtensionsEvent event) {
-        // Link the Item to its 3D Extension
         event.registerItem(new BasicStaffClientExtensions(), ModItems.BASIC_STAFF);
     }
 

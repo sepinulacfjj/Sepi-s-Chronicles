@@ -14,6 +14,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class StatUpgradeScreen extends Screen {
     private static final ResourceLocation GUI_TEXTURE = ResourceLocation.fromNamespaceAndPath(SepiMod.MODID, "textures/gui/stat_menu.png");
 
@@ -53,22 +56,43 @@ public class StatUpgradeScreen extends Screen {
         renderStatValue(graphics, mouseX, mouseY, stats.getStrength(), "strength", leftPos + 228, topPos + 199, leftPos + 94, topPos + 184);
         renderStatValue(graphics, mouseX, mouseY, stats.getAgility(), "agility", leftPos + 228, topPos + 245, leftPos + 94, topPos + 229);
         renderStatValue(graphics, mouseX, mouseY, stats.getConstitution(), "constitution", leftPos + 232, topPos + 289, leftPos + 94, topPos + 274);
-        renderStatValue(graphics, mouseX, mouseY, stats.getDexterity(), "dexterity", leftPos + 228, topPos + 335, leftPos + 94, topPos + 319);
+        renderStatValue(graphics, mouseX, mouseY, stats.getDefense(), "defense", leftPos + 228, topPos + 335, leftPos + 94, topPos + 319);
         renderStatValue(graphics, mouseX, mouseY, stats.getWillpower(), "willpower", leftPos + 392, topPos + 199, leftPos + 260, topPos + 184);
         renderStatValue(graphics, mouseX, mouseY, stats.getCharisma(), "charisma", leftPos + 397, topPos + 244, leftPos + 260, topPos + 229);
         renderStatValue(graphics, mouseX, mouseY, stats.getMana(), "mana", leftPos + 397, topPos + 289, leftPos + 260, topPos + 274);
         renderStatValue(graphics, mouseX, mouseY, stats.getMind(), "mind", leftPos + 392, topPos + 334, leftPos + 260, topPos + 319);
 
-        // --- PURPLE TRAINING POINTS (Supports 999) ---
+        // --- PURPLE TRAINING POINTS ---
         String pointsVal = String.valueOf(stats.getAvailablePoints());
-        graphics.pose().pushPose();
-        // Adjusted X position (422) to ensure 3-digit numbers like 999 stay centered
-        graphics.pose().translate(leftPos + 430, topPos + 162, 0);
-        graphics.pose().scale(pointsScale, pointsScale, 1.0f);
+        int pX = leftPos + 430;
+        int pY = topPos + 162;
 
-        // Color changed to God Tier Purple (0xB048FF)
+        graphics.pose().pushPose();
+        graphics.pose().translate(pX, pY, 0);
+        graphics.pose().scale(pointsScale, pointsScale, 1.0f);
         graphics.drawString(this.font, pointsVal, 0, 0, 0xB048FF, true);
         graphics.pose().popPose();
+
+        // --- XP PROGRESS HOVER POP-UP ---
+        // We define a small box around the number to trigger the hover
+        if (mouseX >= pX - 10 && mouseX <= pX + 50 && mouseY >= pY && mouseY <= pY + 25) {
+            List<Component> tooltip = new ArrayList<>();
+            tooltip.add(Component.literal("§d§lNext Training Point"));
+
+            int currentXp = (int) stats.getTotalXpGained();
+            int goalXp = (int) stats.getXpNeededForNextPoint();
+            int remaining = goalXp - currentXp;
+
+            tooltip.add(Component.literal("§7Progress: §f" + currentXp + " §8/ §f" + goalXp + " XP"));
+            tooltip.add(Component.literal("§7Remaining: §e" + Math.max(0, remaining) + " XP"));
+
+            // Visual progress bar inside the tooltip
+            float percent = Math.min(1.0f, (float)currentXp / goalXp);
+            String bar = "§a" + "█".repeat((int)(percent * 10)) + "§8" + "█".repeat(10 - (int)(percent * 10));
+            tooltip.add(Component.literal(bar + " §7(" + (int)(percent * 100) + "%)"));
+
+            graphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
+        }
 
         // Exit buttons highlights
         if (mouseX >= leftPos + 201 && mouseX <= leftPos + 314 && mouseY >= topPos + 362 && mouseY <= topPos + 385)
@@ -82,7 +106,6 @@ public class StatUpgradeScreen extends Screen {
         else if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH)
             graphics.fill(btnX, btnY, btnX + btnW, btnY + btnH, 0x30FFFFFF);
 
-        // Reverted: Numbers are White, "MAX" is Purple
         boolean isMax = value >= 100;
         String valStr = isMax ? "MAX" : String.valueOf(value);
         int color = isMax ? 0xB048FF : 0xFFFFFF;
@@ -101,7 +124,7 @@ public class StatUpgradeScreen extends Screen {
         if (check(mouseX, mouseY, leftPos + 94, topPos + 184)) handleStatClick("strength");
         else if (check(mouseX, mouseY, leftPos + 94, topPos + 229)) handleStatClick("agility");
         else if (check(mouseX, mouseY, leftPos + 94, topPos + 274)) handleStatClick("constitution");
-        else if (check(mouseX, mouseY, leftPos + 94, topPos + 319)) handleStatClick("dexterity");
+        else if (check(mouseX, mouseY, leftPos + 94, topPos + 319)) handleStatClick("defense");
         else if (check(mouseX, mouseY, leftPos + 260, topPos + 184)) handleStatClick("willpower");
         else if (check(mouseX, mouseY, leftPos + 260, topPos + 229)) handleStatClick("charisma");
         else if (check(mouseX, mouseY, leftPos + 260, topPos + 274)) handleStatClick("mana");
@@ -125,7 +148,7 @@ public class StatUpgradeScreen extends Screen {
             case "willpower" -> stats.getWillpower();
             case "mind" -> stats.getMind();
             case "mana" -> stats.getMana();
-            case "dexterity" -> stats.getDexterity();
+            case "defense" -> stats.getDefense();
             case "charisma" -> stats.getCharisma();
             default -> 100;
         };

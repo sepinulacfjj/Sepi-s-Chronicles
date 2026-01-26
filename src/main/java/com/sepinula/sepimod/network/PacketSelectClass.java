@@ -3,6 +3,7 @@ package com.sepinula.sepimod.network;
 import com.sepinula.sepimod.SepiMod;
 import com.sepinula.sepimod.util.ModDataAttachments;
 import com.sepinula.sepimod.util.PlayerStats;
+import com.sepinula.sepimod.util.RpgArchetype;
 import net.minecraft.network.FriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -26,7 +27,16 @@ public record PacketSelectClass(String className) implements CustomPacketPayload
         context.enqueueWork(() -> {
             ServerPlayer player = (ServerPlayer) context.player();
             PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
-            stats.setPlayerClass(payload.className());
+
+            // Fix: Convert the String from the packet to the RpgArchetype Enum
+            try {
+                RpgArchetype selected = RpgArchetype.valueOf(payload.className().toUpperCase());
+                stats.setArchetype(selected);
+            } catch (IllegalArgumentException e) {
+                // Default to NONE if something goes wrong
+                stats.setArchetype(RpgArchetype.NONE);
+            }
+
             ModDataAttachments.sync(player);
         });
     }

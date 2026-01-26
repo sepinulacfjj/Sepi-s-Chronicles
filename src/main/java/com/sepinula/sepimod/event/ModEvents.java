@@ -6,40 +6,42 @@ import com.sepinula.sepimod.init.ModEntities;
 import com.sepinula.sepimod.util.ModDataAttachments;
 import com.sepinula.sepimod.util.PlayerStats;
 import com.sepinula.sepimod.util.StatLogicHandler;
-import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.damagesource.DamageTypes;
+import net.minecraft.world.effect.MobEffectInstance;
+import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.entity.npc.Villager;
-import net.minecraft.core.component.DataComponents;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.trading.MerchantOffer;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.entity.living.LivingEntityUseItemEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
-import net.neoforged.neoforge.event.entity.player.AttackEntityEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
-import net.neoforged.neoforge.event.tick.PlayerTickEvent;
-import net.neoforged.neoforge.event.entity.living.LivingEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
+import net.neoforged.neoforge.event.entity.player.PlayerXpEvent;
+import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 
-@EventBusSubscriber(modid = SepiMod.MODID) // Tells NeoForge to listen for events in this class
+@EventBusSubscriber(modid = SepiMod.MODID)
 public class ModEvents {
 
-    // Unique ID for the speed buff so it doesn't conflict with other mods
     private static final ResourceLocation AGILITY_SPRINT_ID = ResourceLocation.fromNamespaceAndPath(SepiMod.MODID, "agility_sprint_bonus");
-    // Cooldown used to keep the FOV "zoomed in" for a split second after stopping a sprint
     private static int speedCooldown = 2;
 
     @SubscribeEvent
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
-            PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS); // Fetch player's RPG stats
-            StatLogicHandler.applyStatModifiers(player, stats); // Apply permanent buffs like Max Health
-            ModDataAttachments.sync(player); // Send stat data from server to client (for the UI)
+            PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
+            StatLogicHandler.applyStatModifiers(player, stats);
+            ModDataAttachments.sync(player);
         }
     }
 
@@ -47,130 +49,125 @@ public class ModEvents {
     public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
-            StatLogicHandler.applyStatModifiers(player, stats); // Re-apply buffs after death
+
+            // FULL RECOVERY ON RESPAWN
+            player.setHealth(player.getMaxHealth());
+            stats.setCurrentStamina(stats.getMaxStamina());
+            stats.setCurrentMana(stats.getMaxMana());
+
+            StatLogicHandler.applyStatModifiers(player, stats);
             ModDataAttachments.sync(player);
         }
     }
 
     @SubscribeEvent
     public static void registerAttributes(EntityAttributeCreationEvent event) {
-        // Essential for custom mobs: Gives Baby Goblin its base health/speed/attack
         event.put(ModEntities.BabyGOBLIN.get(), Baby_GoblinEntity.createAttributes().build());
     }
 
     @SubscribeEvent
-    public static void onPlayerAttack(AttackEntityEvent event) {
-        // Arm swinging and vanilla hits are always allowed
-    }
-
-    @SubscribeEvent
     public static void onPlayerTakeDamage(LivingIncomingDamageEvent event) {
-        // --- 1. DEFENDER LOGIC (When a player is being hit) ---
         if (event.getEntity() instanceof ServerPlayer player) {
             PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
-            int dex = stats.getDexterity();
-            int str = stats.getStrength();
 
-            // Heavier strength makes stamina drain faster when taking hits (simulates bulkiness)
-            float weightPenalty = 1.0f + (str * 0.015f);
-
-            if (player.isBlocking()) {
-                stats.subStamina(2.5f * weightPenalty); // Shield block stamina cost
-            } else {
-                stats.subStamina(1.5f * weightPenalty); // Getting hit flat stamina cost
+            // --- 1. FATAL DAMAGE CHECK ---
+            // Void, /kill, and basic magic/poison cannot be dodged or mitigated
+            if (event.getSource().is(DamageTypes.FELL_OUT_OF_WORLD) ||
+                    event.getSource().is(DamageTypes.GENERIC_KILL) ||
+                    event.getSource().is(DamageTypes.MAGIC) ||
+                    event.getSource().is(DamageTypes.INDIRECT_MAGIC)) {
+                return;
             }
 
-            // Dexterity-based Dodge system
-            if (dex > 0) {
-                float dodgeCost = stats.getMaxStamina() * 0.10f; // Dodging costs 10% max stamina
-                if (stats.getCurrentStamina() >= dodgeCost) {
-                    double dodgeChance = dex * 0.004; // 0.4% dodge chance per level of Dex
-                    if (player.getRandom().nextDouble() < dodgeChance) {
-                        event.setCanceled(true); // Stop the damage entirely
-                        player.displayClientMessage(Component.literal("§b* Dodged! *"), true);
-                        stats.subStamina(dodgeCost);
-                        ModDataAttachments.sync(player);
-                        return;
-                    }
+            // --- 2. DODGE SYSTEM (Agility) ---
+            // Max 25% dodge chance at 100 Agility. Doesn't work on fall damage.
+            if (!event.getSource().is(DamageTypes.FALL)) {
+                double dodgeChance = Math.min(0.25, stats.getAgility() * 0.0025);
+                if (player.getRandom().nextDouble() < dodgeChance) {
+                    event.setCanceled(true);
+                    player.displayClientMessage(Component.literal("§b* Dodged! *"), true);
+                    return;
                 }
-                // If player doesn't dodge, Dex still provides minor damage reduction (1% per level, max 80%)
-                float reduction = Math.min(0.8f, dex * 0.01f);
-                event.setAmount(event.getAmount() * (1.0f - reduction));
             }
+
+            // --- 3. DEFENSE REDUCTION (DEF) ---
+            // Reduction 1% per level, max 80%
+            float reduction = Math.min(0.8f, stats.getDefense() * 0.01f);
+            event.setAmount(event.getAmount() * (1.0f - reduction));
             ModDataAttachments.sync(player);
         }
 
-        // --- 2. ATTACKER LOGIC (When a player hits something else) ---
+        // --- 4. ATTACKER STRENGTH BONUS ---
         if (event.getSource().getEntity() instanceof ServerPlayer attacker) {
             PlayerStats attackerStats = attacker.getData(ModDataAttachments.PLAYER_STATS);
             int str = attackerStats.getStrength();
-
-            // Scaling cost: Higher Strength = massive damage but massive stamina use
             float attackCost = 3.0f * (1.0f + (str * 0.08f));
 
-            // Only apply Strength bonus if the player has enough stamina for a 'Heavy Hit'
             if (attackerStats.getCurrentStamina() >= attackCost) {
-                float strengthBonus = str * 0.5f; // +0.5 damage per Strength level
+                float strengthBonus = str * 0.5f;
                 event.setAmount(event.getAmount() + strengthBonus);
                 attackerStats.subStamina(attackCost);
             }
-            // If they are out of stamina, they just deal Vanilla damage (no bonus added)
-
             ModDataAttachments.sync(attacker);
         }
     }
 
     @SubscribeEvent
     public static void onPlayerTick(PlayerTickEvent.Post event) {
-        // Only run logic on the server-side every "tick" (20 times per second)
         if (event.getEntity() instanceof ServerPlayer player && !player.level().isClientSide) {
             PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
             int con = stats.getConstitution();
             int agi = stats.getAgility();
+            int str = stats.getStrength();
 
-            float staminaRegen = 0.03f + (con * 0.005f); // Constitution boosts stamina recovery speed
             boolean needsSync = false;
 
-            AttributeInstance speedAttr = player.getAttribute(Attributes.MOVEMENT_SPEED);
-            if (speedAttr != null) {
-                if (player.isSprinting()) {
-                    if (stats.getCurrentStamina() <= 0.1f) {
-                        player.setSprinting(false); // Force stop if exhausted
-                        speedCooldown = 20; // Start FOV delay timer
-                        needsSync = true;
-                    } else {
-                        // Apply Agility speed bonus during sprint only
-                        if (!speedAttr.hasModifier(AGILITY_SPRINT_ID) && agi > 0) {
-                            speedAttr.addTransientModifier(new AttributeModifier(AGILITY_SPRINT_ID,
-                                    agi * 0.01D, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
-                        }
-                        stats.subStamina(0.65f); // Constant stamina drain while sprinting
-                        needsSync = true;
-                    }
-                } else {
-                    // FOV Delay: Keeps the speed modifier for 1 second after sprint stops for smoothness
-                    if (speedCooldown > 0) {
-                        speedCooldown--;
-                    } else if (speedAttr.hasModifier(AGILITY_SPRINT_ID)) {
-                        speedAttr.removeModifier(AGILITY_SPRINT_ID);
-                        needsSync = true;
-                    }
-
-                    // Regenerate stamina if not blocking and not sprinting
-                    if (!player.isBlocking() && stats.getCurrentStamina() < stats.getMaxStamina()) {
-                        stats.addStamina(staminaRegen);
-                        if (player.tickCount % 5 == 0) needsSync = true;
-                    }
-                }
+            // --- 1. MINING SPEED (Strength) ---
+            if (str >= 50) {
+                player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 2, 1, false, false, false));
             }
 
-            // Passive stamina drain for holding up a shield
-            if (player.isBlocking()) {
-                stats.subStamina(0.15f);
+            // --- 2. STAMINA REGEN & HUNGER ---
+            boolean hasHungerEffect = player.hasEffect(MobEffects.HUNGER);
+            int hungerLevel = player.getFoodData().getFoodLevel();
+
+            if (hungerLevel <= 0) {
+                stats.subStamina(0.2f); // Drain stamina when starving
                 needsSync = true;
             }
 
-            // Passive Health Regen based on Constitution (Happens every 1 second)
+            if (player.isSprinting()) {
+                if (stats.getCurrentStamina() <= 0.1f) {
+                    player.setSprinting(false);
+                    speedCooldown = 20;
+                    needsSync = true;
+                } else {
+                    AttributeInstance speedAttr = player.getAttribute(Attributes.MOVEMENT_SPEED);
+                    if (speedAttr != null && !speedAttr.hasModifier(AGILITY_SPRINT_ID) && agi > 0) {
+                        speedAttr.addTransientModifier(new AttributeModifier(AGILITY_SPRINT_ID,
+                                agi * 0.01D, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
+                    }
+                    stats.subStamina(0.65f);
+                    needsSync = true;
+                }
+            } else {
+                // Passive regeneration: Higher CON = faster regen
+                // Regeneration is disabled if player has Hunger effect
+                if (!player.isBlocking() && !hasHungerEffect && stats.getCurrentStamina() < stats.getMaxStamina()) {
+                    float regenRate = 0.03f + (con * 0.005f);
+                    stats.addStamina(regenRate);
+                    if (player.tickCount % 5 == 0) needsSync = true;
+                }
+            }
+
+            // --- 3. TRAINING MILESTONES (XP Tracking) ---
+            if (stats.getTotalXpGained() >= stats.getXpNeededForNextPoint()) {
+                stats.setTrainingPoints(stats.getTrainingPoints() + 1);
+                stats.setAvailablePoints(stats.getAvailablePoints() + 1);
+                player.displayClientMessage(Component.literal("§6§l+1 Training Point!"), false);
+                needsSync = true;
+            }
+
             if (player.tickCount % 20 == 0) {
                 if (player.getHealth() < player.getMaxHealth() && con > 0) {
                     player.heal(con * 0.05f);
@@ -179,36 +176,14 @@ public class ModEvents {
             } else if (needsSync) {
                 ModDataAttachments.sync(player);
             }
-
-            // Every 2 minutes (2400 ticks), try to award a Training Point
-            if (player.tickCount % 2400 == 0) {
-                applyXpStyleProgress(player, stats);
-            }
-        }
-    }
-
-    private static void applyXpStyleProgress(ServerPlayer player, PlayerStats stats) {
-        // Sum of all stats to determine "Total Level"
-        int totalLevel = stats.getStrength() + stats.getAgility() + stats.getConstitution() +
-                stats.getDexterity() + stats.getWillpower() + stats.getMind() +
-                stats.getMana() + stats.getCharisma();
-
-        // Higher total level makes it harder to get the next free Training Point
-        int difficultyThreshold = 1 + (totalLevel / 50);
-        if (player.getRandom().nextInt(difficultyThreshold) == 0) {
-            stats.addTrainingPoints(1);
-            checkAndNotify(player, stats);
         }
     }
 
     @SubscribeEvent
-    public static void onPlayerJump(LivingEvent.LivingJumpEvent event) {
+    public static void onXpPickup(PlayerXpEvent.PickupXp event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
-            // Jumping cost scales with Strength (Heavier legs)
-            float jumpCost = 4.0f * (1.0f + (stats.getStrength() * 0.02f));
-            stats.subStamina(jumpCost);
-            applyXpStyleProgress(player, stats); // Jumping can occasionally grant training progress
+            stats.addXp(event.getOrb().getValue()); // Add raw experience to our RPG tracking
             ModDataAttachments.sync(player);
         }
     }
@@ -220,7 +195,6 @@ public class ModEvents {
                 PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
                 int charisma = stats.getCharisma();
                 if (charisma > 0) {
-                    // Charisma provides a discount on all villager trades (max 90% off)
                     float discountFactor = Math.max(0.1F, 1.0F - (charisma * 0.01F));
                     for (MerchantOffer offer : villager.getOffers()) {
                         int baseCost = offer.getBaseCostA().getCount();
@@ -234,12 +208,30 @@ public class ModEvents {
     @SubscribeEvent
     public static void onFinishEating(LivingEntityUseItemEvent.Finish event) {
         if (event.getEntity() instanceof ServerPlayer player) {
-            if (event.getItem().has(DataComponents.FOOD)) {
+            ItemStack item = event.getItem();
+            if (item.has(DataComponents.FOOD)) {
                 PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
-                float bonus = stats.getConstitution() * 0.5f; // Constitution makes food more effective
-                player.heal(2.0f + bonus); // Restore Health
-                stats.addMana(15.0f + bonus); // Restore Mana
-                stats.addStamina(30.0f + bonus); // Restore Stamina
+                float conBonus = stats.getConstitution() * 0.2f;
+
+                float staminaRestore = 20.0f;
+                float healthRestore = 1.0f;
+                float manaRestore = 10.0f;
+
+                // --- EDIBLE SPECIFIC REGEN ---
+                if (item.is(Items.COOKED_PORKCHOP) || item.is(Items.COOKED_BEEF)) {
+                    staminaRestore = 60.0f;
+                    healthRestore = 3.0f;
+                } else if (item.is(Items.DRIED_KELP) || item.is(Items.COOKIE)) {
+                    staminaRestore = 5.0f;
+                    healthRestore = 0.5f;
+                } else if (item.is(Items.PORKCHOP) || item.is(Items.BEEF)) {
+                    staminaRestore = 25.0f;
+                    healthRestore = 1.5f;
+                }
+
+                player.heal(healthRestore + (conBonus * 0.1f));
+                stats.addMana(manaRestore + conBonus);
+                stats.addStamina(staminaRestore + (conBonus * 2.0f));
                 ModDataAttachments.sync(player);
             }
         }
@@ -247,16 +239,8 @@ public class ModEvents {
 
     @SubscribeEvent
     public static void onPlayerUseItem(PlayerInteractEvent.RightClickItem event) {
-        // Allows the player to eat food even if their hunger bar is 100% full
         if (event.getItemStack().has(DataComponents.FOOD)) {
             event.getEntity().startUsingItem(event.getHand());
-        }
-    }
-
-    private static void checkAndNotify(ServerPlayer player, PlayerStats stats) {
-        ModDataAttachments.sync(player);
-        if (stats.getTrainingPoints() >= 100) {
-            player.displayClientMessage(Component.literal("§6[SepiMod] §fTraining complete!"), true);
         }
     }
 }
