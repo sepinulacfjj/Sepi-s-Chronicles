@@ -20,9 +20,7 @@ import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
-import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
@@ -32,7 +30,6 @@ import org.lwjgl.glfw.GLFW;
 
 public class ClientEvents {
 
-    // Renamed translation keys for better organization in the Controls menu
     public static final KeyMapping classKey = new KeyMapping("key.sepimod.open_class", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "key.categories.sepimod");
     public static final KeyMapping statsKey = new KeyMapping("key.sepimod.open_stats", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_J, "key.categories.sepimod");
     public static final KeyMapping lockOnKey = new KeyMapping("key.sepimod.lock_on", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_Z, "key.categories.sepimod");
@@ -67,7 +64,6 @@ public class ClientEvents {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || mc.level == null || mc.screen != null) return;
 
-        // --- Class Selection Key ---
         while (classKey.consumeClick()) {
             PlayerStats stats = mc.player.getData(ModDataAttachments.PLAYER_STATS);
             if (stats.getArchetype() == RpgArchetype.NONE) {
@@ -77,7 +73,6 @@ public class ClientEvents {
             }
         }
 
-        // --- Stat Upgrade Key (With Class Check) ---
         while (statsKey.consumeClick()) {
             PlayerStats stats = mc.player.getData(ModDataAttachments.PLAYER_STATS);
             if (stats.getArchetype() == RpgArchetype.NONE) {
@@ -87,7 +82,6 @@ public class ClientEvents {
             }
         }
 
-        // --- Lock On Key ---
         while (lockOnKey.consumeClick()) {
             isLockedOn = !isLockedOn;
             if (isLockedOn) {

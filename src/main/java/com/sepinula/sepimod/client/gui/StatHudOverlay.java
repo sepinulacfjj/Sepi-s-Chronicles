@@ -22,7 +22,7 @@ public class StatHudOverlay {
     @SubscribeEvent
     public static void onRenderGui(RenderGuiLayerEvent.Pre event) {
         if (event.getName().equals(VanillaGuiLayers.PLAYER_HEALTH)) event.setCanceled(true);
-        if (event.getName().equals(VanillaGuiLayers.FOOD_LEVEL)) event.setCanceled(true);
+        //if (event.getName().equals(VanillaGuiLayers.FOOD_LEVEL)) event.setCanceled(true);
 
         if (event.getName().equals(VanillaGuiLayers.HOTBAR)) {
             renderDBCStyleBars(event.getGuiGraphics());

@@ -15,12 +15,12 @@ public class PlayerStats {
                     Codec.STRING.fieldOf("archetype").forGetter(s -> s.getArchetype().name()),
                     Codec.INT.fieldOf("strength").forGetter(PlayerStats::getStrengthRaw),
                     Codec.INT.fieldOf("agility").forGetter(PlayerStats::getAgilityRaw),
-                    Codec.INT.fieldOf("constitution").forGetter(PlayerStats::getConstitution),
+                    Codec.INT.fieldOf("constitution").forGetter(PlayerStats::getConstitutionRaw),
                     Codec.INT.fieldOf("willpower").forGetter(PlayerStats::getWillpowerRaw),
                     Codec.INT.fieldOf("mind").forGetter(PlayerStats::getMindRaw),
                     Codec.INT.fieldOf("mana").forGetter(PlayerStats::getManaRaw),
                     Codec.INT.fieldOf("defense").forGetter(PlayerStats::getDefenseRaw),
-                    Codec.INT.fieldOf("charisma").forGetter(PlayerStats::getCharisma),
+                    Codec.INT.fieldOf("charisma").forGetter(PlayerStats::getCharismaRaw),
                     Codec.INT.fieldOf("availablePoints").forGetter(PlayerStats::getAvailablePoints),
                     Codec.INT.fieldOf("trainingPoints").forGetter(PlayerStats::getTrainingPoints),
                     Codec.FLOAT.fieldOf("currentMana").forGetter(PlayerStats::getCurrentMana),
@@ -58,12 +58,12 @@ public class PlayerStats {
             buffer.writeEnum(stats.getArchetype());
             buffer.writeInt(stats.getStrengthRaw());
             buffer.writeInt(stats.getAgilityRaw());
-            buffer.writeInt(stats.getConstitution());
+            buffer.writeInt(stats.getConstitutionRaw());
             buffer.writeInt(stats.getWillpowerRaw());
             buffer.writeInt(stats.getMindRaw());
             buffer.writeInt(stats.getManaRaw());
             buffer.writeInt(stats.getDefenseRaw());
-            buffer.writeInt(stats.getCharisma());
+            buffer.writeInt(stats.getCharismaRaw());
             buffer.writeInt(stats.getAvailablePoints());
             buffer.writeInt(stats.getTrainingPoints());
             buffer.writeFloat(stats.getCurrentMana());
@@ -129,18 +129,17 @@ public class PlayerStats {
     public float getMaxStamina() { return 100.0f + (getAgility() * 2.0f); }
 
     public void tickStaminaRegen(Player player) {
-        if (player.hasEffect(MobEffects.HUNGER) || player.getFoodData().getFoodLevel() < 6) {
-            staminaTickCounter = 0;
-            return;
-        }
         if (this.currentStamina >= getMaxStamina()) {
             staminaTickCounter = 0;
             return;
         }
-        int ticksToWait = Math.max(2, 40 - (getConstitution() * 38 / 100));
+
+        int ticksToWait = Math.max(1, 5 - (getConstitution() / 25));
         staminaTickCounter++;
+
         if (staminaTickCounter >= ticksToWait) {
-            this.addStamina(1.0f);
+            float regenAmount = 1.5f + (getConstitution() * 0.1f);
+            this.addStamina(regenAmount);
             staminaTickCounter = 0;
             if (player instanceof ServerPlayer sp) ModDataAttachments.sync(sp);
         }
@@ -158,36 +157,47 @@ public class PlayerStats {
     public RpgArchetype getArchetype() { return archetype; }
     public void setArchetype(RpgArchetype archetype) { this.archetype = archetype; }
 
+    // Strength
     public int getStrength() { return clampTotal(strength + archetype.baseStr); }
     public int getStrengthRaw() { return strength; }
     public void setStrength(int val) { this.strength = clampSpent(val); }
 
+    // Agility
     public int getAgility() { return clampTotal(agility + archetype.baseAgi); }
     public int getAgilityRaw() { return agility; }
     public void setAgility(int val) { this.agility = clampSpent(val); }
 
-    public int getConstitution() { return clampSpent(constitution); }
+    // Constitution
+    public int getConstitution() { return clampTotal(constitution + archetype.baseCon); }
+    public int getConstitutionRaw() { return constitution; }
     public void setConstitution(int val) { this.constitution = clampSpent(val); }
 
+    // Willpower
     public int getWillpower() { return clampTotal(willpower + archetype.baseWil); }
     public int getWillpowerRaw() { return willpower; }
     public void setWillpower(int val) { this.willpower = clampSpent(val); }
 
+    // Mind
     public int getMind() { return clampTotal(mind + archetype.baseMnd); }
     public int getMindRaw() { return mind; }
     public void setMind(int val) { this.mind = clampSpent(val); }
 
+    // Mana (Stat)
     public int getMana() { return clampTotal(mana + archetype.baseMana); }
     public int getManaRaw() { return mana; }
     public void setMana(int val) { this.mana = clampSpent(val); }
 
+    // Defense
     public int getDefense() { return clampTotal(defense + archetype.baseDef); }
     public int getDefenseRaw() { return defense; }
     public void setDefense(int val) { this.defense = clampSpent(val); }
 
-    public int getCharisma() { return clampSpent(charisma); }
+    // Charisma
+    public int getCharisma() { return clampTotal(charisma + archetype.baseCha); }
+    public int getCharismaRaw() { return charisma; }
     public void setCharisma(int val) { this.charisma = clampSpent(val); }
 
+    // Points and Logic
     public int getAvailablePoints() { return availablePoints; }
     public void setAvailablePoints(int availablePoints) { this.availablePoints = availablePoints; }
 

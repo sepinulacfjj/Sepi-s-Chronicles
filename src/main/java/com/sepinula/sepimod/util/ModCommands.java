@@ -19,7 +19,6 @@ public class ModCommands {
 
         LiteralArgumentBuilder<CommandSourceStack> statsCommand = Commands.literal("stats");
 
-        // Commands for specific TARGETS
         statsCommand.then(Commands.argument("targets", EntityArgument.players())
                 .then(Commands.literal("max").executes(context -> performMax(context.getSource(), EntityArgument.getPlayers(context, "targets"))))
                 .then(Commands.literal("reset").executes(context -> performReset(context.getSource(), EntityArgument.getPlayers(context, "targets"))))
@@ -38,7 +37,6 @@ public class ModCommands {
                 .then(addStatNode("mind"))
         );
 
-        // Shortcut Commands for SELF
         statsCommand.then(Commands.literal("max").executes(context -> performMax(context.getSource(), Collections.singleton(context.getSource().getPlayerOrException()))));
         statsCommand.then(Commands.literal("reset").executes(context -> performReset(context.getSource(), Collections.singleton(context.getSource().getPlayerOrException()))));
         statsCommand.then(Commands.literal("reset_points").executes(context -> performResetPoints(context.getSource(), Collections.singleton(context.getSource().getPlayerOrException()))));
@@ -55,8 +53,6 @@ public class ModCommands {
             stats.setStrength(100); stats.setAgility(100); stats.setConstitution(100);
             stats.setDefense(100); stats.setWillpower(100); stats.setCharisma(100);
             stats.setMana(100); stats.setMind(100);
-
-            // Set to 800 to hit your new cap perfectly
             stats.setAvailablePoints(800);
             stats.setTrainingPoints(800);
             sync(player);
@@ -97,8 +93,6 @@ public class ModCommands {
     private static int performAddTrainingPoints(CommandSourceStack source, Collection<ServerPlayer> targets, int amount) {
         for (ServerPlayer player : targets) {
             PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
-
-            // Calculate how many points we can add before hitting 800
             int currentPoints = stats.getTrainingPoints();
             int canAdd = 800 - currentPoints;
             int actualAdd = Math.min(amount, canAdd);
@@ -114,50 +108,61 @@ public class ModCommands {
     }
 
     private static LiteralArgumentBuilder<CommandSourceStack> addStatNode(String statName) {
-        return Commands.literal(statName).then(Commands.argument("amount", IntegerArgumentType.integer())
-                .executes(context -> {
+        return Commands.literal(statName)
+                .then(Commands.literal("reset").executes(context -> {
                     Collection<ServerPlayer> targets = EntityArgument.getPlayers(context, "targets");
-                    int amount = IntegerArgumentType.getInteger(context, "amount");
-
                     for (ServerPlayer player : targets) {
                         PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
-                        int currentRaw = getRawValue(stats, statName);
-
-                        if (currentRaw >= 100 && amount > 0) {
-                            context.getSource().sendFailure(Component.literal("§c" + player.getScoreboardName() + " is already at max " + statName + "!"));
-                            continue;
-                        }
-
-                        int newValue = Math.min(100, Math.max(0, currentRaw + amount));
-                        setRawValue(stats, statName, newValue);
-
+                        setRawValue(stats, statName, 0);
                         recalculateTrainingPoints(stats);
                         sync(player);
-                        context.getSource().sendSuccess(() -> Component.literal("§6[SepiMod] §f" + statName + " updated to §e" + newValue + "§f. XP bar synced."), true);
                     }
+                    context.getSource().sendSuccess(() -> Component.literal("§6[SepiMod] §f" + statName + " reset to 0."), true);
                     return targets.size();
-                }));
+                }))
+                .then(Commands.argument("amount", IntegerArgumentType.integer())
+                        .executes(context -> {
+                            Collection<ServerPlayer> targets = EntityArgument.getPlayers(context, "targets");
+                            int amount = IntegerArgumentType.getInteger(context, "amount");
+
+                            for (ServerPlayer player : targets) {
+                                PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
+                                int currentRaw = getRawValue(stats, statName);
+
+                                if (currentRaw >= 100 && amount > 0) {
+                                    context.getSource().sendFailure(Component.literal("§c" + player.getScoreboardName() + " is already at max " + statName + "!"));
+                                    continue;
+                                }
+
+                                int newValue = Math.min(100, Math.max(0, currentRaw + amount));
+                                setRawValue(stats, statName, newValue);
+
+                                recalculateTrainingPoints(stats);
+                                sync(player);
+                                context.getSource().sendSuccess(() -> Component.literal("§6[SepiMod] §f" + statName + " updated to §e" + newValue + "§f. XP bar synced."), true);
+                            }
+                            return targets.size();
+                        }));
     }
 
     private static void recalculateTrainingPoints(PlayerStats stats) {
-        int total = stats.getStrengthRaw() + stats.getAgility() + stats.getConstitution() +
-                stats.getWillpower() + stats.getDefenseRaw() + stats.getCharisma() +
-                stats.getManaRaw() + stats.getMind() + stats.getAvailablePoints();
+        int total = stats.getStrengthRaw() + stats.getAgilityRaw() + stats.getConstitution() +
+                stats.getWillpowerRaw() + stats.getDefenseRaw() + stats.getCharisma() +
+                stats.getManaRaw() + stats.getMindRaw() + stats.getAvailablePoints();
 
-        // Final fail-safe: training points can NEVER exceed 800
         stats.setTrainingPoints(Math.min(800, total));
     }
 
     private static int getRawValue(PlayerStats stats, String stat) {
         return switch (stat) {
             case "strength" -> stats.getStrengthRaw();
-            case "agility" -> stats.getAgility();
+            case "agility" -> stats.getAgilityRaw();
             case "constitution" -> stats.getConstitution();
-            case "willpower" -> stats.getWillpower();
+            case "willpower" -> stats.getWillpowerRaw();
             case "defense" -> stats.getDefenseRaw();
             case "charisma" -> stats.getCharisma();
             case "mana" -> stats.getManaRaw();
-            case "mind" -> stats.getMind();
+            case "mind" -> stats.getMindRaw();
             default -> 0;
         };
     }

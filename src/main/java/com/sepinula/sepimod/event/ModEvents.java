@@ -1,5 +1,6 @@
 package com.sepinula.sepimod.event;
 
+import com.mojang.blaze3d.shaders.Effect;
 import com.sepinula.sepimod.SepiMod;
 import com.sepinula.sepimod.entity.Baby_GoblinEntity;
 import com.sepinula.sepimod.init.ModEntities;
@@ -27,6 +28,7 @@ import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.entity.living.LivingEntityUseItemEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
@@ -74,8 +76,15 @@ public class ModEvents {
     public static void onPlayerTakeDamage(LivingIncomingDamageEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
+
+            // New logic: Blocks dodging for environmental heat/magic damage
             if (event.getSource().is(DamageTypes.FELL_OUT_OF_WORLD) || event.getSource().is(DamageTypes.GENERIC_KILL) ||
-                    event.getSource().is(DamageTypes.MAGIC) || event.getSource().is(DamageTypes.INDIRECT_MAGIC)) return;
+                    event.getSource().is(DamageTypes.MAGIC) || event.getSource().is(DamageTypes.INDIRECT_MAGIC) ||
+                    event.getSource().is(DamageTypes.IN_FIRE) || event.getSource().is(DamageTypes.ON_FIRE) ||
+                    event.getSource().is(DamageTypes.LAVA) || event.getSource().is(DamageTypes.HOT_FLOOR) ||
+                    event.getSource().is(Tags.DamageTypes.IS_POISON) ||
+                    event.getSource().is(DamageTypes.WITHER)) return;
+
             if (!event.getSource().is(DamageTypes.FALL)) {
                 double dodgeChance = Math.min(0.25, stats.getAgility() * 0.0025);
                 if (player.getRandom().nextDouble() < dodgeChance) {
@@ -125,7 +134,10 @@ public class ModEvents {
 
             AttributeInstance speedAttr = player.getAttribute(Attributes.MOVEMENT_SPEED);
             if (player.isSprinting()) {
-                if (stats.getCurrentStamina() <= 0.1f) {
+                // TO REMOVE (Old logic): if (stats.getCurrentStamina() <= 0.1f) {
+
+                // New logic: Blocks sprinting if stamina is empty OR player has Hunger effect
+                if (stats.getCurrentStamina() <= 0.1f || hasHungerEffect) {
                     player.setSprinting(false);
                     if (speedAttr != null && speedAttr.hasModifier(AGILITY_SPRINT_ID)) {
                         speedAttr.removeModifier(AGILITY_SPRINT_ID);
@@ -161,12 +173,9 @@ public class ModEvents {
                 needsSync = true;
             }
 
-            // Logic that runs every second (20 ticks)
             if (player.tickCount % 20 == 0) {
-                // Constitution: Health Regen
                 if (player.getHealth() < player.getMaxHealth() && con > 0) player.heal(con * 0.05f);
 
-                // Mana Stat: Passive Mana Regen (Base 1.0 + 0.1 per level)
                 if (stats.getCurrentMana() < stats.getMaxMana()) {
                     float manaRegen = 1.0f + (mna * 0.1f);
                     stats.addMana(manaRegen);
@@ -183,14 +192,10 @@ public class ModEvents {
     public static void onXpPickup(PlayerXpEvent.PickupXp event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
-
             int xpValue = event.getOrb().getValue();
-
-            // Mind Stat: Level 50+ Double Raw Experience
             if (stats.getMind() >= 50) {
                 xpValue *= 2;
             }
-
             if (stats.getTrainingPoints() < 800) {
                 stats.addXp(xpValue);
                 ModDataAttachments.sync(player);
