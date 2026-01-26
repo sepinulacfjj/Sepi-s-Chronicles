@@ -55,11 +55,13 @@ public class ModCommands {
             stats.setStrength(100); stats.setAgility(100); stats.setConstitution(100);
             stats.setDefense(100); stats.setWillpower(100); stats.setCharisma(100);
             stats.setMana(100); stats.setMind(100);
+
+            // Set to 800 to hit your new cap perfectly
             stats.setAvailablePoints(800);
             stats.setTrainingPoints(800);
             sync(player);
         }
-        source.sendSuccess(() -> Component.literal("§6[SepiMod] §fStats and XP scale maxed."), true);
+        source.sendSuccess(() -> Component.literal("§6[SepiMod] §fStats maxed and points set to 800."), true);
         return targets.size();
     }
 
@@ -76,11 +78,7 @@ public class ModCommands {
         for (ServerPlayer player : targets) {
             PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
             stats.setAvailablePoints(0);
-
-            // Recalculate training points based on current raw stats
-            // This ensures the XP bar length matches the actual stats currently held.
             recalculateTrainingPoints(stats);
-
             sync(player);
         }
         source.sendSuccess(() -> Component.literal("§eAvailable points cleared and XP bar synced."), true);
@@ -99,11 +97,19 @@ public class ModCommands {
     private static int performAddTrainingPoints(CommandSourceStack source, Collection<ServerPlayer> targets, int amount) {
         for (ServerPlayer player : targets) {
             PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
-            stats.setAvailablePoints(Math.max(0, stats.getAvailablePoints() + amount));
-            stats.setTrainingPoints(Math.max(0, stats.getTrainingPoints() + amount));
+
+            // Calculate how many points we can add before hitting 800
+            int currentPoints = stats.getTrainingPoints();
+            int canAdd = 800 - currentPoints;
+            int actualAdd = Math.min(amount, canAdd);
+
+            if (actualAdd > 0 || amount < 0) {
+                stats.setAvailablePoints(Math.max(0, stats.getAvailablePoints() + actualAdd));
+                stats.setTrainingPoints(Math.max(0, stats.getTrainingPoints() + actualAdd));
+            }
             sync(player);
         }
-        source.sendSuccess(() -> Component.literal("§6[SepiMod] §fUpdated points and XP bar scale."), true);
+        source.sendSuccess(() -> Component.literal("§6[SepiMod] §fPoints updated (Capped at 800)."), true);
         return targets.size();
     }
 
@@ -125,9 +131,7 @@ public class ModCommands {
                         int newValue = Math.min(100, Math.max(0, currentRaw + amount));
                         setRawValue(stats, statName, newValue);
 
-                        // Always recalculate to ensure XP bar is perfect
                         recalculateTrainingPoints(stats);
-
                         sync(player);
                         context.getSource().sendSuccess(() -> Component.literal("§6[SepiMod] §f" + statName + " updated to §e" + newValue + "§f. XP bar synced."), true);
                     }
@@ -136,11 +140,12 @@ public class ModCommands {
     }
 
     private static void recalculateTrainingPoints(PlayerStats stats) {
-        // Training points define the XP cost. It should be the sum of all raw stats + any unspent points.
         int total = stats.getStrengthRaw() + stats.getAgility() + stats.getConstitution() +
                 stats.getWillpower() + stats.getDefenseRaw() + stats.getCharisma() +
                 stats.getManaRaw() + stats.getMind() + stats.getAvailablePoints();
-        stats.setTrainingPoints(total);
+
+        // Final fail-safe: training points can NEVER exceed 800
+        stats.setTrainingPoints(Math.min(800, total));
     }
 
     private static int getRawValue(PlayerStats stats, String stat) {

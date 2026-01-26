@@ -3,6 +3,7 @@ package com.sepinula.sepimod.event;
 import com.sepinula.sepimod.SepiMod;
 import com.sepinula.sepimod.entity.Baby_GoblinEntity;
 import com.sepinula.sepimod.init.ModEntities;
+import com.sepinula.sepimod.init.ModItems;
 import com.sepinula.sepimod.util.ModDataAttachments;
 import com.sepinula.sepimod.util.PlayerStats;
 import com.sepinula.sepimod.util.StatLogicHandler;
@@ -10,6 +11,8 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.sounds.SoundEvents;
+import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.damagesource.DamageTypes;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
@@ -17,9 +20,11 @@ import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.npc.Villager;
+import net.minecraft.world.entity.projectile.LargeFireball;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.trading.MerchantOffer;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
@@ -34,7 +39,6 @@ import net.neoforged.neoforge.event.tick.PlayerTickEvent;
 public class ModEvents {
 
     private static final ResourceLocation AGILITY_SPRINT_ID = ResourceLocation.fromNamespaceAndPath(SepiMod.MODID, "agility_sprint_bonus");
-    private static int speedCooldown = 2;
 
     @SubscribeEvent
     public static void onPlayerLoggedIn(PlayerEvent.PlayerLoggedInEvent event) {
@@ -49,13 +53,14 @@ public class ModEvents {
     public static void onPlayerRespawn(PlayerEvent.PlayerRespawnEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
-
-            // FULL RECOVERY ON RESPAWN
+            StatLogicHandler.applyStatModifiers(player, stats);
             player.setHealth(player.getMaxHealth());
             stats.setCurrentStamina(stats.getMaxStamina());
             stats.setCurrentMana(stats.getMaxMana());
-
-            StatLogicHandler.applyStatModifiers(player, stats);
+            int totalStats = stats.getStrengthRaw() + stats.getAgility() + stats.getConstitution() +
+                    stats.getWillpower() + stats.getDefenseRaw() + stats.getCharisma() +
+                    stats.getManaRaw() + stats.getMind() + stats.getAvailablePoints();
+            stats.setTrainingPoints(Math.min(800, totalStats));
             ModDataAttachments.sync(player);
         }
     }
@@ -69,18 +74,8 @@ public class ModEvents {
     public static void onPlayerTakeDamage(LivingIncomingDamageEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
-
-            // --- 1. FATAL DAMAGE CHECK ---
-            // Void, /kill, and basic magic/poison cannot be dodged or mitigated
-            if (event.getSource().is(DamageTypes.FELL_OUT_OF_WORLD) ||
-                    event.getSource().is(DamageTypes.GENERIC_KILL) ||
-                    event.getSource().is(DamageTypes.MAGIC) ||
-                    event.getSource().is(DamageTypes.INDIRECT_MAGIC)) {
-                return;
-            }
-
-            // --- 2. DODGE SYSTEM (Agility) ---
-            // Max 25% dodge chance at 100 Agility. Doesn't work on fall damage.
+            if (event.getSource().is(DamageTypes.FELL_OUT_OF_WORLD) || event.getSource().is(DamageTypes.GENERIC_KILL) ||
+                    event.getSource().is(DamageTypes.MAGIC) || event.getSource().is(DamageTypes.INDIRECT_MAGIC)) return;
             if (!event.getSource().is(DamageTypes.FALL)) {
                 double dodgeChance = Math.min(0.25, stats.getAgility() * 0.0025);
                 if (player.getRandom().nextDouble() < dodgeChance) {
@@ -89,20 +84,14 @@ public class ModEvents {
                     return;
                 }
             }
-
-            // --- 3. DEFENSE REDUCTION (DEF) ---
-            // Reduction 1% per level, max 80%
             float reduction = Math.min(0.8f, stats.getDefense() * 0.01f);
             event.setAmount(event.getAmount() * (1.0f - reduction));
             ModDataAttachments.sync(player);
         }
-
-        // --- 4. ATTACKER STRENGTH BONUS ---
         if (event.getSource().getEntity() instanceof ServerPlayer attacker) {
             PlayerStats attackerStats = attacker.getData(ModDataAttachments.PLAYER_STATS);
             int str = attackerStats.getStrength();
             float attackCost = 3.0f * (1.0f + (str * 0.08f));
-
             if (attackerStats.getCurrentStamina() >= attackCost) {
                 float strengthBonus = str * 0.5f;
                 event.setAmount(event.getAmount() + strengthBonus);
@@ -118,31 +107,31 @@ public class ModEvents {
             PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
             int con = stats.getConstitution();
             int agi = stats.getAgility();
-            int str = stats.getStrength();
-
+            int mna = stats.getMana();
+            int foodLevel = player.getFoodData().getFoodLevel();
+            boolean hasHungerEffect = player.hasEffect(MobEffects.HUNGER);
             boolean needsSync = false;
 
-            // --- 1. MINING SPEED (Strength) ---
-            if (str >= 50) {
-                player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 2, 1, false, false, false));
+            int hasteLevel = stats.getMiningHasteLevel();
+            if (hasteLevel >= 0 && player.swinging) {
+                player.addEffect(new MobEffectInstance(MobEffects.DIG_SPEED, 5, hasteLevel, false, false, false));
             }
 
-            // --- 2. STAMINA REGEN & HUNGER ---
-            boolean hasHungerEffect = player.hasEffect(MobEffects.HUNGER);
-            int hungerLevel = player.getFoodData().getFoodLevel();
-
-            if (hungerLevel <= 0) {
-                stats.subStamina(0.2f); // Drain stamina when starving
+            if (foodLevel <= 0) {
+                float drainRate = hasHungerEffect ? 0.5f : 0.25f;
+                stats.subStamina(drainRate);
                 needsSync = true;
             }
 
+            AttributeInstance speedAttr = player.getAttribute(Attributes.MOVEMENT_SPEED);
             if (player.isSprinting()) {
                 if (stats.getCurrentStamina() <= 0.1f) {
                     player.setSprinting(false);
-                    speedCooldown = 20;
+                    if (speedAttr != null && speedAttr.hasModifier(AGILITY_SPRINT_ID)) {
+                        speedAttr.removeModifier(AGILITY_SPRINT_ID);
+                    }
                     needsSync = true;
                 } else {
-                    AttributeInstance speedAttr = player.getAttribute(Attributes.MOVEMENT_SPEED);
                     if (speedAttr != null && !speedAttr.hasModifier(AGILITY_SPRINT_ID) && agi > 0) {
                         speedAttr.addTransientModifier(new AttributeModifier(AGILITY_SPRINT_ID,
                                 agi * 0.01D, AttributeModifier.Operation.ADD_MULTIPLIED_BASE));
@@ -151,27 +140,38 @@ public class ModEvents {
                     needsSync = true;
                 }
             } else {
-                // Passive regeneration: Higher CON = faster regen
-                // Regeneration is disabled if player has Hunger effect
-                if (!player.isBlocking() && !hasHungerEffect && stats.getCurrentStamina() < stats.getMaxStamina()) {
-                    float regenRate = 0.03f + (con * 0.005f);
-                    stats.addStamina(regenRate);
-                    if (player.tickCount % 5 == 0) needsSync = true;
+                if (speedAttr != null && speedAttr.hasModifier(AGILITY_SPRINT_ID)) {
+                    speedAttr.removeModifier(AGILITY_SPRINT_ID);
                 }
+                stats.tickStaminaRegen(player);
             }
 
-            // --- 3. TRAINING MILESTONES (XP Tracking) ---
-            if (stats.getTotalXpGained() >= stats.getXpNeededForNextPoint()) {
+            if (stats.getTrainingPoints() >= 800) {
+                if (stats.getTotalXpGained() > 0) {
+                    stats.resetProgressAfterCap();
+                    needsSync = true;
+                }
+            } else if (stats.getTotalXpGained() >= stats.getXpNeededForNextPoint()) {
                 stats.setTrainingPoints(stats.getTrainingPoints() + 1);
                 stats.setAvailablePoints(stats.getAvailablePoints() + 1);
-                player.displayClientMessage(Component.literal("§6§l+1 Training Point!"), false);
+                if (stats.getTrainingPoints() == 800)
+                    player.displayClientMessage(Component.literal("§6§lMAX LEVEL REACHED (800)!"), false);
+                else player.displayClientMessage(Component.literal("§6§l+1 Training Point!"), false);
+                stats.resetProgressAfterCap();
                 needsSync = true;
             }
 
+            // Logic that runs every second (20 ticks)
             if (player.tickCount % 20 == 0) {
-                if (player.getHealth() < player.getMaxHealth() && con > 0) {
-                    player.heal(con * 0.05f);
+                // Constitution: Health Regen
+                if (player.getHealth() < player.getMaxHealth() && con > 0) player.heal(con * 0.05f);
+
+                // Mana Stat: Passive Mana Regen (Base 1.0 + 0.1 per level)
+                if (stats.getCurrentMana() < stats.getMaxMana()) {
+                    float manaRegen = 1.0f + (mna * 0.1f);
+                    stats.addMana(manaRegen);
                 }
+
                 ModDataAttachments.sync(player);
             } else if (needsSync) {
                 ModDataAttachments.sync(player);
@@ -183,8 +183,18 @@ public class ModEvents {
     public static void onXpPickup(PlayerXpEvent.PickupXp event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
-            stats.addXp(event.getOrb().getValue()); // Add raw experience to our RPG tracking
-            ModDataAttachments.sync(player);
+
+            int xpValue = event.getOrb().getValue();
+
+            // Mind Stat: Level 50+ Double Raw Experience
+            if (stats.getMind() >= 50) {
+                xpValue *= 2;
+            }
+
+            if (stats.getTrainingPoints() < 800) {
+                stats.addXp(xpValue);
+                ModDataAttachments.sync(player);
+            }
         }
     }
 
@@ -212,23 +222,14 @@ public class ModEvents {
             if (item.has(DataComponents.FOOD)) {
                 PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
                 float conBonus = stats.getConstitution() * 0.2f;
-
-                float staminaRestore = 20.0f;
-                float healthRestore = 1.0f;
-                float manaRestore = 10.0f;
-
-                // --- EDIBLE SPECIFIC REGEN ---
+                float staminaRestore = 20.0f, healthRestore = 1.0f, manaRestore = 10.0f;
                 if (item.is(Items.COOKED_PORKCHOP) || item.is(Items.COOKED_BEEF)) {
                     staminaRestore = 60.0f;
                     healthRestore = 3.0f;
                 } else if (item.is(Items.DRIED_KELP) || item.is(Items.COOKIE)) {
                     staminaRestore = 5.0f;
                     healthRestore = 0.5f;
-                } else if (item.is(Items.PORKCHOP) || item.is(Items.BEEF)) {
-                    staminaRestore = 25.0f;
-                    healthRestore = 1.5f;
                 }
-
                 player.heal(healthRestore + (conBonus * 0.1f));
                 stats.addMana(manaRestore + conBonus);
                 stats.addStamina(staminaRestore + (conBonus * 2.0f));
@@ -241,6 +242,29 @@ public class ModEvents {
     public static void onPlayerUseItem(PlayerInteractEvent.RightClickItem event) {
         if (event.getItemStack().has(DataComponents.FOOD)) {
             event.getEntity().startUsingItem(event.getHand());
+        }
+
+        ItemStack stack = event.getItemStack();
+        if (stack.is(ModItems.BASIC_STAFF.get())) {
+            if (event.getEntity() instanceof ServerPlayer player) {
+                PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
+                float fireballCost = 15.0f;
+
+                if (stats.getCurrentMana() >= fireballCost) {
+                    stats.subMana(fireballCost);
+                    Vec3 look = player.getLookAngle();
+                    LargeFireball fireball = new LargeFireball(player.level(), player, look, 1);
+                    fireball.setPos(player.getX(), player.getEyeY(), player.getZ());
+                    player.level().addFreshEntity(fireball);
+                    player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
+                            SoundEvents.FIRECHARGE_USE, SoundSource.PLAYERS, 1.0F, 1.0F);
+                    player.getCooldowns().addCooldown(stack.getItem(), 20);
+
+                    ModDataAttachments.sync(player);
+                } else {
+                    player.displayClientMessage(Component.literal("§cNot enough Mana!"), true);
+                }
+            }
         }
     }
 }

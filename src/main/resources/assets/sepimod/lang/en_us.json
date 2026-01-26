@@ -1,5 +1,9 @@
 {
   "creativetab.sepimod": "Sepi's Chronicles",
   "item.sepimod.basic_staff": "Basic Staff",
-  "item.sepimod.goblin_spawn_egg": "Goblin Spawn Egg"
+  "item.sepimod.goblin_spawn_egg": "Goblin Spawn Egg",
+  "key.categories.sepimod": "Sepi's Chronicles Mod",
+  "key.sepimod.open_stats": "Open Stat Menu",
+  "key.sepimod.open_class": "Open Class Selection",
+  "key.sepimod.lock_on": "Lock On"
 }

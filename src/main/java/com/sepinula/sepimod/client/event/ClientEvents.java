@@ -1,6 +1,7 @@
 package com.sepinula.sepimod.client.event;
 
 import com.mojang.blaze3d.platform.InputConstants;
+import com.sepinula.sepimod.SepiMod;
 import com.sepinula.sepimod.client.gui.ClassSelectionScreen;
 import com.sepinula.sepimod.client.gui.StatUpgradeScreen;
 import com.sepinula.sepimod.client.model.Baby_GoblinModel;
@@ -19,7 +20,9 @@ import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
@@ -27,12 +30,11 @@ import net.neoforged.neoforge.client.event.ViewportEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import org.lwjgl.glfw.GLFW;
 
-import java.util.Optional;
-
 public class ClientEvents {
 
-    public static final KeyMapping classKey = new KeyMapping("key.sepimod.class", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "key.categories.sepimod");
-    public static final KeyMapping statsKey = new KeyMapping("key.sepimod.stats", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_J, "key.categories.sepimod");
+    // Renamed translation keys for better organization in the Controls menu
+    public static final KeyMapping classKey = new KeyMapping("key.sepimod.open_class", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "key.categories.sepimod");
+    public static final KeyMapping statsKey = new KeyMapping("key.sepimod.open_stats", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_J, "key.categories.sepimod");
     public static final KeyMapping lockOnKey = new KeyMapping("key.sepimod.lock_on", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_Z, "key.categories.sepimod");
 
     private static boolean isLockedOn = false;
@@ -63,23 +65,29 @@ public class ClientEvents {
 
     private static void onClientTick(ClientTickEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null || mc.level == null) return;
+        if (mc.player == null || mc.level == null || mc.screen != null) return;
 
-        // Change this section in ClientEvents.java
+        // --- Class Selection Key ---
         while (classKey.consumeClick()) {
             PlayerStats stats = mc.player.getData(ModDataAttachments.PLAYER_STATS);
-            // Check if archetype is NONE using the Enum
             if (stats.getArchetype() == RpgArchetype.NONE) {
                 mc.setScreen(new ClassSelectionScreen());
             } else {
-                mc.player.displayClientMessage(Component.literal("§cYou already have a class!"), true);
+                mc.player.displayClientMessage(Component.literal("§cYou already have a class selected!"), true);
             }
         }
 
+        // --- Stat Upgrade Key (With Class Check) ---
         while (statsKey.consumeClick()) {
-            mc.setScreen(new StatUpgradeScreen());
+            PlayerStats stats = mc.player.getData(ModDataAttachments.PLAYER_STATS);
+            if (stats.getArchetype() == RpgArchetype.NONE) {
+                mc.player.displayClientMessage(Component.literal("§6You must pick a class (Press O) before upgrading stats!"), true);
+            } else {
+                mc.setScreen(new StatUpgradeScreen());
+            }
         }
 
+        // --- Lock On Key ---
         while (lockOnKey.consumeClick()) {
             isLockedOn = !isLockedOn;
             if (isLockedOn) {
@@ -110,8 +118,6 @@ public class ClientEvents {
         if (isLockedOn && target != null && mc.player != null) {
             float partialTicks = (float) event.getPartialTick();
             Vec3 playerPos = mc.player.getEyePosition(partialTicks);
-
-            // Focus on the middle of the entity
             Vec3 targetPos = target.getBoundingBox().getCenter();
 
             double diffX = targetPos.x - playerPos.x;
@@ -143,12 +149,8 @@ public class ClientEvents {
         Vec3 reachVec = eyePos.add(viewVec.scale(distance));
         AABB searchBox = camera.getBoundingBox().expandTowards(viewVec.scale(distance)).inflate(1.0D);
 
-        // ProjectileUtil is the standard way to raytrace for entities in modern MC
         EntityHitResult hitResult = ProjectileUtil.getEntityHitResult(
-                camera,
-                eyePos,
-                reachVec,
-                searchBox,
+                camera, eyePos, reachVec, searchBox,
                 entity -> entity instanceof LivingEntity && entity.isAlive() && !entity.isSpectator(),
                 distance * distance
         );

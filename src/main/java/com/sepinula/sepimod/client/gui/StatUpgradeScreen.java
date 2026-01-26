@@ -52,7 +52,8 @@ public class StatUpgradeScreen extends Screen {
 
         PlayerStats stats = this.minecraft.player.getData(ModDataAttachments.PLAYER_STATS);
 
-        // --- STAT COLUMNS ---
+        // --- STAT COLUMNS (Using Total Stat for Display, but keeping keys unique) ---
+        // Strength, Defense, and Mana now use getStrength(), getDefense(), and getMana() to show Archetype bonuses.
         renderStatValue(graphics, mouseX, mouseY, stats.getStrength(), "strength", leftPos + 228, topPos + 199, leftPos + 94, topPos + 184);
         renderStatValue(graphics, mouseX, mouseY, stats.getAgility(), "agility", leftPos + 228, topPos + 245, leftPos + 94, topPos + 229);
         renderStatValue(graphics, mouseX, mouseY, stats.getConstitution(), "constitution", leftPos + 232, topPos + 289, leftPos + 94, topPos + 274);
@@ -73,32 +74,13 @@ public class StatUpgradeScreen extends Screen {
         graphics.drawString(this.font, pointsVal, 0, 0, 0xB048FF, true);
         graphics.pose().popPose();
 
-        // --- XP PROGRESS HOVER POP-UP ---
-        // We define a small box around the number to trigger the hover
+        // --- XP PROGRESS HOVER POP-UP (800 CAP) ---
         if (mouseX >= pX - 10 && mouseX <= pX + 50 && mouseY >= pY && mouseY <= pY + 25) {
-            List<Component> tooltip = new ArrayList<>();
-            tooltip.add(Component.literal("§d§lNext Training Point"));
-
-            int currentXp = (int) stats.getTotalXpGained();
-            int goalXp = (int) stats.getXpNeededForNextPoint();
-            int remaining = goalXp - currentXp;
-
-            tooltip.add(Component.literal("§7Progress: §f" + currentXp + " §8/ §f" + goalXp + " XP"));
-            tooltip.add(Component.literal("§7Remaining: §e" + Math.max(0, remaining) + " XP"));
-
-            // Visual progress bar inside the tooltip
-            float percent = Math.min(1.0f, (float)currentXp / goalXp);
-            String bar = "§a" + "█".repeat((int)(percent * 10)) + "§8" + "█".repeat(10 - (int)(percent * 10));
-            tooltip.add(Component.literal(bar + " §7(" + (int)(percent * 100) + "%)"));
-
-            graphics.renderComponentTooltip(this.font, tooltip, mouseX, mouseY);
+            renderXpTooltip(graphics, stats, mouseX, mouseY);
         }
 
-        // Exit buttons highlights
-        if (mouseX >= leftPos + 201 && mouseX <= leftPos + 314 && mouseY >= topPos + 362 && mouseY <= topPos + 385)
-            graphics.fill(leftPos + 201, topPos + 362, leftPos + 314, topPos + 385, 0x40FFFFFF);
-        if (mouseX >= leftPos + 471 && mouseX <= leftPos + 497 && mouseY >= topPos + 126 && mouseY <= topPos + 145)
-            graphics.fill(leftPos + 471, topPos + 126, leftPos + 497, topPos + 145, 0x40FFFFFF);
+        // --- EXIT BUTTON HIGHLIGHTS ---
+        renderButtonHighlights(graphics, mouseX, mouseY, leftPos, topPos);
     }
 
     private void renderStatValue(GuiGraphics graphics, int mouseX, int mouseY, int value, String statKey, int textX, int textY, int btnX, int btnY) {
@@ -121,6 +103,7 @@ public class StatUpgradeScreen extends Screen {
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         int leftPos = (this.width - xSize) / 2;
         int topPos = (this.height - ySize) / 2;
+
         if (check(mouseX, mouseY, leftPos + 94, topPos + 184)) handleStatClick("strength");
         else if (check(mouseX, mouseY, leftPos + 94, topPos + 229)) handleStatClick("agility");
         else if (check(mouseX, mouseY, leftPos + 94, topPos + 274)) handleStatClick("constitution");
@@ -129,6 +112,7 @@ public class StatUpgradeScreen extends Screen {
         else if (check(mouseX, mouseY, leftPos + 260, topPos + 229)) handleStatClick("charisma");
         else if (check(mouseX, mouseY, leftPos + 260, topPos + 274)) handleStatClick("mana");
         else if (check(mouseX, mouseY, leftPos + 260, topPos + 319)) handleStatClick("mind");
+
         else if (mouseX >= leftPos + 201 && mouseX <= leftPos + 314 && mouseY >= topPos + 362 && mouseY <= topPos + 385) {
             this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
             this.onClose();
@@ -141,25 +125,52 @@ public class StatUpgradeScreen extends Screen {
 
     private void handleStatClick(String stat) {
         PlayerStats stats = this.minecraft.player.getData(ModDataAttachments.PLAYER_STATS);
-        int val = switch(stat) {
-            case "strength" -> stats.getStrength();
+
+        // We CHECK against the RAW value so archetype bonuses don't "eat" your 100-point limit.
+        int rawVal = switch(stat) {
+            case "strength" -> stats.getStrengthRaw();
             case "agility" -> stats.getAgility();
             case "constitution" -> stats.getConstitution();
             case "willpower" -> stats.getWillpower();
             case "mind" -> stats.getMind();
-            case "mana" -> stats.getMana();
-            case "defense" -> stats.getDefense();
+            case "mana" -> stats.getManaRaw();
+            case "defense" -> stats.getDefenseRaw();
             case "charisma" -> stats.getCharisma();
             default -> 100;
         };
-        if (stats.getAvailablePoints() > 0 && val < 100) {
+
+        if (stats.getAvailablePoints() > 0 && rawVal < 100) {
             this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
             Messages.sendToServer(new PacketUpdateStat(stat));
             this.clickedStat = stat;
             this.clickTimer = 5;
-        } else if (val >= 100) {
+        } else if (rawVal >= 100) {
             this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
         }
+    }
+
+    private void renderXpTooltip(GuiGraphics graphics, PlayerStats stats, int mx, int my) {
+        List<Component> tooltip = new ArrayList<>();
+        tooltip.add(Component.literal("§d§lNext Training Point"));
+        if (stats.getTrainingPoints() >= 800) {
+            tooltip.add(Component.literal("§7Progress: §e0 §8/ §eMAX XP"));
+            tooltip.add(Component.literal("§a██████████ §7(100%)"));
+        } else {
+            int currentXp = (int) stats.getTotalXpGained();
+            int goalXp = (int) stats.getXpNeededForNextPoint();
+            float percent = Math.min(1.0f, (float)currentXp / goalXp);
+            tooltip.add(Component.literal("§7Progress: §f" + currentXp + " §8/ §f" + goalXp + " XP"));
+            String bar = "§a" + "█".repeat((int)(percent * 10)) + "§8" + "█".repeat(10 - (int)(percent * 10));
+            tooltip.add(Component.literal(bar + " §7(" + (int)(percent * 100) + "%)"));
+        }
+        graphics.renderComponentTooltip(this.font, tooltip, mx, my);
+    }
+
+    private void renderButtonHighlights(GuiGraphics graphics, int mx, int my, int left, int top) {
+        if (mx >= left + 201 && mx <= left + 314 && my >= top + 362 && my <= top + 385)
+            graphics.fill(left + 201, top + 362, left + 314, top + 385, 0x40FFFFFF);
+        if (mx >= left + 471 && mx <= left + 497 && my >= top + 126 && my <= top + 145)
+            graphics.fill(left + 471, top + 126, left + 497, top + 145, 0x40FFFFFF);
     }
 
     private boolean check(double mx, double my, int x, int y) { return mx >= x && mx <= x + btnW && my >= y && my <= y + btnH; }

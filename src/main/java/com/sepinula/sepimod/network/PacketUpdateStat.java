@@ -31,14 +31,15 @@ public record PacketUpdateStat(String statName) implements CustomPacketPayload {
                 String name = payload.statName().toLowerCase();
                 boolean isConstitution = name.equals("constitution");
 
+                // FIX: Use getStatRaw() so class bonuses aren't added to the permanent save data
                 switch (name) {
-                    case "strength" -> stats.setStrength(stats.getStrength() + 1);
-                    case "agility" -> stats.setAgility(stats.getAgility() + 1);
+                    case "strength" -> stats.setStrength(stats.getStrengthRaw() + 1);
+                    case "agility" -> stats.setAgility(stats.getAgilityRaw() + 1);
                     case "constitution" -> stats.setConstitution(stats.getConstitution() + 1);
-                    case "willpower" -> stats.setWillpower(stats.getWillpower() + 1);
-                    case "mind" -> stats.setMind(stats.getMind() + 1);
-                    case "mana" -> stats.setMana(stats.getMana() + 1);
-                    case "defense" -> stats.setDefense(stats.getDefense() + 1); // Updated
+                    case "willpower" -> stats.setWillpower(stats.getWillpowerRaw() + 1);
+                    case "mind" -> stats.setMind(stats.getMindRaw() + 1);
+                    case "mana" -> stats.setMana(stats.getManaRaw() + 1);
+                    case "defense" -> stats.setDefense(stats.getDefenseRaw() + 1);
                     case "charisma" -> stats.setCharisma(stats.getCharisma() + 1);
                 }
 
