@@ -45,9 +45,9 @@ public class SpellHudOverlay {
 
         int screenWidth = event.getGuiGraphics().guiWidth();
         int screenHeight = event.getGuiGraphics().guiHeight();
-        int y = screenHeight - 82;
+        int y = screenHeight - 55;
         int total = capacity * 34;
-        int startX = screenWidth - total - 12;
+        int startX = 12;
 
         GuiGraphics graphics = event.getGuiGraphics();
 
@@ -87,7 +87,7 @@ public class SpellHudOverlay {
                 graphics.drawString(
                         mc.font,
                         selectedSpell.displayName(),
-                        screenWidth - 12 - mc.font.width(selectedSpell.displayName()),
+                        12,
                         y - 12,
                         0xFFFFE6A5
                 );            }
