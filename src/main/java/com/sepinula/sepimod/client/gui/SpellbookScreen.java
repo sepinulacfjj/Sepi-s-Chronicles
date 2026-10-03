@@ -93,11 +93,11 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                         );
                         combineFirst = -1;
                     }
-                }).bounds(x + 115, y + 68, 42, 16).build()
+                }).bounds(x + 130, y + 67, 42, 13).build()
         );
 
         addRenderableWidget(
-                Button.builder(Component.literal("Combine"), b -> {
+                Button.builder(Component.empty(), b -> {
                     if (combineFirst >= 0
                             && combineSecond >= 0
                             && combineFirst != combineSecond) {
@@ -113,7 +113,7 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                         combineFirst = -1;
                         combineSecond = -1;
                     }
-                }).bounds(x + 62, y + 68, 50, 16).build()
+                }).bounds(x + 47, y + 67, 81, 13).build()
         );
     }
 
@@ -283,16 +283,8 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
             int mouseX,
             int mouseY
     ) {
-        graphics.drawString(
-                font,
-                "SPELLBOOK",
-                titleLabelX,
-                titleLabelY,
-                0xFFE8DCC7
-        );
-
-        // The spellbook is intentionally a standalone interface; the player's
-        // normal inventory is not rendered here.
+        // The background artwork contains the page/header layout. Dynamic
+        // spell names and icons are rendered separately in renderBg().
     }
 
     private void drawSpellIcon(
