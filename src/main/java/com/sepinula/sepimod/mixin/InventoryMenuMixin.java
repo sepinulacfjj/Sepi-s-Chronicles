@@ -65,7 +65,7 @@ public abstract class InventoryMenuMixin {
             ItemStack copy = source.copy();
 
             if (!menu.getSlot(SEPI_SPELLBOOK_SLOT).mayPlace(source)
-                    || !this.moveItemStackTo(source, SEPI_SPELLBOOK_SLOT, SEPI_SPELLBOOK_SLOT + 1, false)) {
+                    || !((AbstractContainerMenuAccessor) this).sepimod$moveItemStackTo(source, SEPI_SPELLBOOK_SLOT, SEPI_SPELLBOOK_SLOT + 1, false)) {
                 cir.setReturnValue(ItemStack.EMPTY);
                 return;
             }
