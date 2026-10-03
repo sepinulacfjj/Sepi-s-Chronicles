@@ -1,16 +1,18 @@
 package com.sepinula.sepimod.spellbook;
 
+import com.sepinula.sepimod.network.PacketSyncSpellbookData;
 import com.sepinula.sepimod.util.ModDataAttachments;
-import net.minecraft.world.Container;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.SimpleContainer;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 /**
- * One-slot container that is backed by the player's spellbook attachment.
+ * One-slot container backed by the player's spellbook attachment.
  *
- * The container is a bridge between player data and Minecraft's normal Slot
- * system. The actual item is still stored in PlayerSpellbookData.
+ * The actual item remains player data on the server. The container is the
+ * bridge used by menu slots and vanilla inventory interactions.
  */
 public class PlayerSpellbookContainer extends SimpleContainer {
 
@@ -28,9 +30,16 @@ public class PlayerSpellbookContainer extends SimpleContainer {
                 return;
             }
 
-            player.getData(ModDataAttachments.PLAYER_SPELLBOOK_DATA).setSpellbook(
-                    container.getItem(0)
-            );
+            var data = player.getData(ModDataAttachments.PLAYER_SPELLBOOK_DATA);
+            data.setSpellbook(container.getItem(0));
+            SpellbookHelper.enforceCapacity(player);
+
+            if (player instanceof ServerPlayer serverPlayer) {
+                PacketDistributor.sendToPlayer(
+                        serverPlayer,
+                        PacketSyncSpellbookData.from(data)
+                );
+            }
         });
     }
 
