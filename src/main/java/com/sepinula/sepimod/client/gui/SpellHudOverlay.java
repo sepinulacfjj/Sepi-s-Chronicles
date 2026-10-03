@@ -18,6 +18,21 @@ import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 @EventBusSubscriber(modid = SepiMod.MODID, value = Dist.CLIENT)
 public class SpellHudOverlay {
 
+    private static final ResourceLocation EMPTY_ICON =
+            ResourceLocation.fromNamespaceAndPath(SepiMod.MODID, "textures/icon/empty_box_icon.png");
+
+    private static final ResourceLocation FIREBALL_ICON =
+            ResourceLocation.fromNamespaceAndPath(SepiMod.MODID, "textures/icon/fireball_icon.png");
+
+    private static final ResourceLocation GUST_ICON =
+            ResourceLocation.fromNamespaceAndPath(SepiMod.MODID, "textures/icon/gust_icon.png");
+
+    private static final ResourceLocation ICE_SHARD_ICON =
+            ResourceLocation.fromNamespaceAndPath(SepiMod.MODID, "textures/icon/ice_shard_icon.png");
+
+    private static final ResourceLocation FIRE_WIND_ICON =
+            ResourceLocation.fromNamespaceAndPath(SepiMod.MODID, "textures/icon/fire_wind_icon.png");
+
     @SubscribeEvent
     public static void render(RenderGuiLayerEvent.Post event) {
         if (!event.getName().equals(VanillaGuiLayers.HOTBAR)) {
@@ -82,12 +97,44 @@ public class SpellHudOverlay {
                 );
 
                 if (spell != null) {
+                    ResourceLocation icon = switch (spell.id().getPath()) {
+                        case "fireball" -> FIREBALL_ICON;
+                        case "gust" -> GUST_ICON;
+                        case "ice_shard" -> ICE_SHARD_ICON;
+                        case "fire_wind" -> FIRE_WIND_ICON;
+                        default -> EMPTY_ICON;
+                    };
+
+                    graphics.blit(
+                            icon,
+                            x + 8,
+                            y + 8,
+                            0,
+                            0,
+                            16,
+                            16,
+                            16,
+                            16
+                    );
+
                     graphics.drawCenteredString(
                             mc.font,
                             spell.displayName(),
                             x + 16,
                             y + 34,
                             selected ? 0xFFFFE6A5 : 0xFFE8DCC7
+                    );
+                } else {
+                    graphics.blit(
+                            EMPTY_ICON,
+                            x + 8,
+                            y + 8,
+                            0,
+                            0,
+                            16,
+                            16,
+                            16,
+                            16
                     );
                 }
             }
