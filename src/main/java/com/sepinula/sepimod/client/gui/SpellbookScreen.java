@@ -121,7 +121,7 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         for (int i = 0; i < 9; i++) {
             int sx = leftPos + 62 + i * 21;
-            int sy = topPos + 28;
+            int sy = topPos + 93;
 
             if (mouseX >= sx
                     && mouseX < sx + 18
@@ -195,12 +195,13 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                 font,
                 "ACTIVE SPELLS",
                 x + 62,
-                y + 18,
+                y + 82,
                 0xFFD8C8A8
         );
 
         for (int i = 0; i < capacity; i++) {
             int slotX = x + 62 + i * 21;
+            int slotY = y + 93;
             int border =
                     i == data.getSelectedSpellIndex()
                             ? 0xFFE7C46A
@@ -208,17 +209,17 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
 
             graphics.fill(
                     slotX - 1,
-                    y + 27,
+                    slotY - 1,
                     slotX + 19,
-                    y + 47,
+                    slotY + 19,
                     border
             );
 
             graphics.fill(
                     slotX,
-                    y + 28,
+                    slotY,
                     slotX + 18,
-                    y + 46,
+                    slotY + 18,
                     0xFF3B2E3B
             );
 
@@ -228,13 +229,13 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                 );
 
                 if (spell != null) {
-                    drawSpellIcon(graphics, spell, slotX + 1, y + 29, 16, 16);
+                    drawSpellIcon(graphics, spell, slotX + 1, slotY + 1, 16, 16);
                 }
             } else {
                 graphics.blit(
                         EMPTY_ICON,
                         slotX + 1,
-                        y + 29,
+                        slotY + 1,
                         0,
                         0,
                         16,
@@ -244,8 +245,6 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                 );
             }
         }
-
-        graphics.drawString(font, "KNOWN SPELLS", x + 62, y + 7, 0xFFD8C8A8);
 
         List<String> known = data.getKnownSpells();
 
@@ -267,24 +266,6 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
             }
         }
 
-        graphics.drawString(
-                font,
-                "BOOK",
-                x + 20,
-                y + 14,
-                0xFFD8C8A8
-        );
-
-    }
-
-    @Override
-    protected void renderLabels(
-            GuiGraphics graphics,
-            int mouseX,
-            int mouseY
-    ) {
-        // The background artwork contains the page/header layout. Dynamic
-        // spell names and icons are rendered separately in renderBg().
     }
 
     private void drawSpellIcon(
