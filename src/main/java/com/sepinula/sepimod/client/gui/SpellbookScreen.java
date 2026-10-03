@@ -20,6 +20,8 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
     private int combineFirst = -1;
     private int combineSecond = -1;
 
+    private static final float GUI_SCALE = 1.5f;
+
     private static final ResourceLocation BACKGROUND =
             ResourceLocation.fromNamespaceAndPath("sepimod", "textures/gui/spellbook_background.png");
 
@@ -47,8 +49,8 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
             Component title
     ) {
         super(menu, inventory, title);
-        this.imageWidth = 220;
-        this.imageHeight = 208;
+        this.imageWidth = 264;
+        this.imageHeight = 249;
         this.titleLabelX = 72;
         this.titleLabelY = 7;
         this.inventoryLabelX = 8;
@@ -56,7 +58,7 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
     }
 
     private static int s(int value) {
-        return Math.round(value * 1.25f);
+        return Math.round(value * GUI_SCALE);
     }
 
     @Override
@@ -102,8 +104,7 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
         removeButton.setAlpha(0.0F);
         addRenderableWidget(removeButton);
 
-        addRenderableWidget(
-                Button.builder(Component.empty(), b -> {
+        Button combineButton = Button.builder(Component.empty(), b -> {
                     if (combineFirst >= 0
                             && combineSecond >= 0
                             && combineFirst != combineSecond) {
@@ -119,8 +120,10 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                         combineFirst = -1;
                         combineSecond = -1;
                     }
-                }).bounds(x + s(47), y + s(67), s(81), s(13)).build()
-        );
+                }).bounds(x + s(47), y + s(67), s(81), s(13)).build();
+
+        combineButton.setAlpha(0.0F);
+        addRenderableWidget(combineButton);
     }
 
     @Override
@@ -169,24 +172,33 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
         );
 
         if (minecraft.getResourceManager().getResource(BACKGROUND).isPresent()) {
+            graphics.pose().pushPose();
+            graphics.pose().translate(x, y, 0);
+            graphics.pose().scale(GUI_SCALE, GUI_SCALE, 1.0f);
+
             graphics.blit(
                     BACKGROUND,
-                    x,
-                    y,
                     0,
                     0,
-                    imageWidth,
-                    imageHeight,
+                    0,
+                    0,
+                    176,
+                    166,
                     176,
                     166
             );
+
+            graphics.pose().popPose();
         } else {
             graphics.fill(x + 4, y + 4, x + imageWidth - 4, y + 70, 0xFF241D29);
             graphics.fill(x + 7, y + 7, x + imageWidth - 7, y + 69, 0xFF302533);
         }
 
+        graphics.pose().pushPose();
+        graphics.pose().translate(x, y, 0);
+        graphics.pose().scale(GUI_SCALE, GUI_SCALE, 1.0f);
+
         PlayerSpellData data =
-                minecraft.player.getData(ModDataAttachments.PLAYER_SPELL_DATA);
 
         int capacity = Math.min(
                 9,
@@ -200,14 +212,14 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
         graphics.drawString(
                 font,
                 "ACTIVE SPELLS",
-                x + s(62),
-                y + s(82),
+                s(62),
+                s(82),
                 0xFFD8C8A8
         );
 
         for (int i = 0; i < capacity; i++) {
-            int slotX = x + s(62 + i * 21);
-            int slotY = y + s(93);
+            int slotX = s(62 + i * 21);
+            int slotY = s(93);
             int border =
                     i == data.getSelectedSpellIndex()
                             ? 0xFFE7C46A
@@ -260,18 +272,19 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
             );
 
             if (spell != null) {
-                drawSpellIcon(graphics, spell, x + s(62), y + s(27 + row * 10), s(10), s(10));
+                drawSpellIcon(graphics, spell, s(62), s(27 + row * 10), s(10), s(10));
 
                 graphics.drawString(
                         font,
                         spell.displayName(),
-                        x + s(74),
-                        y + s(28 + row * 10),
+                        s(74),
+                        s(28 + row * 10),
                         0xFFE8DCC7
                 );
             }
         }
 
+        graphics.pose().popPose();
     }
 
     private void drawSpellIcon(
