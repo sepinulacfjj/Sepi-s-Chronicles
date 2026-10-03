@@ -8,6 +8,7 @@ import com.sepinula.sepimod.util.ModDataAttachments;
 import com.sepinula.sepimod.util.PlayerSpellData;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
+import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -87,6 +88,20 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                     )
                     .bounds(x + s(146), y + s(16 + i * 10), s(14), s(10))
                     .build();
+
+            PlayerSpellData playerSpellData =
+                    minecraft.player.getData(ModDataAttachments.PLAYER_SPELL_DATA);
+            if (knownIndex < playerSpellData.getKnownSpells().size()) {
+                Spell knownSpell = SpellRegistry.get(
+                        ResourceLocation.parse(playerSpellData.getKnownSpells().get(knownIndex))
+                );
+
+                if (knownSpell != null) {
+                    addButton.setTooltip(
+                            Tooltip.create(Component.literal("Add " + knownSpell.displayName()))
+                    );
+                }
+            }
 
             addButton.setAlpha(0.0F);
             addRenderableWidget(addButton);
@@ -226,22 +241,22 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
         graphics.drawString(
                 font,
                 "ACTIVE SPELLS",
-                s(62),
-                s(82),
+                62,
+                82,
                 0xFFD8C8A8
         );
 
         for (int i = 0; i < capacity; i++) {
-            int slotX = s(62 + i * 21);
-            int slotY = s(93);
+            int slotX = 62 + i * 21;
+            int slotY = 93;
             // The background already contains the slot frames.
             // Only the selected slot receives a dynamic highlight.
             if (i == data.getSelectedSpellIndex()) {
                 graphics.fill(
-                        slotX - s(1),
-                        slotY - s(1),
-                        slotX + s(19),
-                        slotY + s(19),
+                        slotX - 1,
+                        slotY - 1,
+                        slotX + 19,
+                        slotY + 19,
                         0xFFE7C46A
                 );
             }
@@ -252,7 +267,7 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                 );
 
                 if (spell != null) {
-                    drawSpellIcon(graphics, spell, slotX + s(1), slotY + s(1), s(16), s(16));
+                    drawSpellIcon(graphics, spell, slotX + 1, slotY + 1, 16, 16);
                 }
             }
         }
@@ -265,8 +280,8 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                     graphics.drawCenteredString(
                             font,
                             selectedSpell.displayName(),
-                            s(62 + data.getSelectedSpellIndex() * 21 + 8),
-                            s(116),
+                            62 + data.getSelectedSpellIndex() * 21 + 8,
+                            116,
                             0xFF2B241D
                     );
                 }
