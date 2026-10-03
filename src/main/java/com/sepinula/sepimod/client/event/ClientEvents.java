@@ -38,7 +38,7 @@ public class ClientEvents {
     public static final KeyMapping classKey = new KeyMapping("key.sepimod.open_class", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "key.categories.sepimod");
     public static final KeyMapping statsKey = new KeyMapping("key.sepimod.open_stats", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_J, "key.categories.sepimod");
     public static final KeyMapping lockOnKey = new KeyMapping("key.sepimod.lock_on", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_Z, "key.categories.sepimod");
-    public static final KeyMapping spellbookKey = new KeyMapping("key.sepimod.open_spellbook", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_B, "key.categories.sepimod");
+    public static final KeyMapping spellbookKey = new KeyMapping("key.sepimod.open_spellbook", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_C, "key.categories.sepimod");
     public static final KeyMapping spellPreviousKey = new KeyMapping("key.sepimod.spell_previous", InputConstants.Type.KEYSYM, GLFW.GLFW_MOUSE_BUTTON_4, "key.categories.sepimod");
     public static final KeyMapping spellNextKey = new KeyMapping("key.sepimod.spell_next", InputConstants.Type.KEYSYM, GLFW.GLFW_MOUSE_BUTTON_5, "key.categories.sepimod");
     public static final KeyMapping spellCastKey = new KeyMapping("key.sepimod.spell_cast", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.categories.sepimod");
