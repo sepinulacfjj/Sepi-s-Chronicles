@@ -23,6 +23,7 @@ public class SepiMod {
         ModItems.register(modEventBus);
         ModCreativeTabs.register(modEventBus);
         ModDataAttachments.register(modEventBus);
+        ModMenus.register(modEventBus);
 
         // Register Client Events (Fixes the 'bus' deprecation error)
         if (FMLEnvironment.dist == Dist.CLIENT) {
