@@ -50,7 +50,8 @@ public class PlayerSpellbookData {
 
     public void setSpellbook(ItemStack spellbook) {
         this.spellbook = spellbook.copy();
-        this.clientEquipped = hasSpellbook();
+        this.clientEquipped = !this.spellbook.isEmpty()
+                && this.spellbook.getItem() instanceof SpellbookItem;
         this.clientCapacity = getSpellSlotCapacity();
     }
 
