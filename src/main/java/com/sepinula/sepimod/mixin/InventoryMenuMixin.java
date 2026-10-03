@@ -3,6 +3,11 @@ package com.sepinula.sepimod.mixin;
 import com.sepinula.sepimod.spellbook.PlayerSpellbookContainer;
 import com.sepinula.sepimod.spellbook.SpellbookItem;
 import com.sepinula.sepimod.spellbook.SpellbookSlot;
+import com.sepinula.sepimod.network.PacketSyncSpellbookData;
+import com.sepinula.sepimod.util.ModDataAttachments;
+import com.sepinula.sepimod.spellbook.SpellbookHelper;
+import net.neoforged.neoforge.network.PacketDistributor;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.entity.player.Inventory;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.InventoryMenu;
@@ -24,6 +29,25 @@ public abstract class InventoryMenuMixin {
     private void sepimod$addSpellbookSlot(Inventory playerInventory, boolean active, Player owner, CallbackInfo ci) {
         ((AbstractContainerMenuAccessor) this).sepimod$addSlot(
                 new SpellbookSlot(new PlayerSpellbookContainer(owner), 0, 151, 60)
+        );
+    }
+
+    @Inject(method = "removed", at = @At("TAIL"))
+    private void sepimod$syncSpellbookWhenClosed(Player player, CallbackInfo ci) {
+        if (!(player instanceof ServerPlayer serverPlayer)) {
+            return;
+        }
+
+        InventoryMenu menu = (InventoryMenu) (Object) this;
+        ItemStack equipped = menu.getSlot(SEPI_SPELLBOOK_SLOT).getItem().copy();
+
+        var data = player.getData(ModDataAttachments.PLAYER_SPELLBOOK_DATA);
+        data.setSpellbook(equipped);
+        SpellbookHelper.enforceCapacity(player);
+
+        PacketDistributor.sendToPlayer(
+                serverPlayer,
+                PacketSyncSpellbookData.from(data)
         );
     }
 
