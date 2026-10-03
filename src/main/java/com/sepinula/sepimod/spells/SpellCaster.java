@@ -23,6 +23,9 @@ public final class SpellCaster {
         }
 
         float cost = manaCost(spellId);
+        if (player.getCooldowns().isOnCooldown(com.sepinula.sepimod.init.ModItems.IRON_SPELLBOOK.get())) {
+            return false;
+        }
         PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
 
         if (stats.getCurrentMana() < cost) {
