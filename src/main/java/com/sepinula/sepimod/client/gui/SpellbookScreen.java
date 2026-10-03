@@ -252,13 +252,11 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
             );
 
             if (spell != null) {
-                drawSpellIcon(graphics, spell, s(62), s(27 + row * 10), s(10), s(10));
-
                 graphics.drawString(
                         font,
                         spell.displayName(),
-                        s(74),
-                        s(28 + row * 10),
+                        s(78),
+                        s(24 + row * 10),
                         0xFFE8DCC7
                 );
             }
