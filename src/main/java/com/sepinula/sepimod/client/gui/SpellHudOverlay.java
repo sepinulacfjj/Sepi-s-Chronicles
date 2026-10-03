@@ -43,10 +43,11 @@ public class SpellHudOverlay {
             return;
         }
 
-        int centerX = event.getGuiGraphics().guiWidth() / 2;
-        int y = event.getGuiGraphics().guiHeight() - 82;
+        int screenWidth = event.getGuiGraphics().guiWidth();
+        int screenHeight = event.getGuiGraphics().guiHeight();
+        int y = screenHeight - 82;
         int total = capacity * 34;
-        int startX = centerX - total / 2;
+        int startX = screenWidth - total - 12;
 
         GuiGraphics graphics = event.getGuiGraphics();
 
@@ -83,10 +84,10 @@ public class SpellHudOverlay {
             );
 
             if (selectedSpell != null) {
-                graphics.drawCenteredString(
+                graphics.drawRightAlignedString(
                         mc.font,
                         selectedSpell.displayName(),
-                        centerX,
+                        screenWidth - 12,
                         y - 12,
                         0xFFFFE6A5
                 );
