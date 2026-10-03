@@ -19,6 +19,7 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
 
     private int combineFirst = -1;
     private int combineSecond = -1;
+    private int selectedKnownSpell = -1;
 
     private static final float GUI_SCALE = 1.5f;
 
@@ -27,6 +28,9 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
 
     private static final ResourceLocation COMBINE_BUTTON =
             ResourceLocation.fromNamespaceAndPath("sepimod", "textures/button/combine.png");
+
+    private static final ResourceLocation REMOVE_BUTTON =
+            ResourceLocation.fromNamespaceAndPath("sepimod", "textures/button/remove.png");
 
     private static final ResourceLocation EMPTY_ICON =
             ResourceLocation.fromNamespaceAndPath("sepimod", "textures/icon/empty_box_icon.png");
@@ -128,6 +132,19 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        List<String> known = minecraft.player.getData(ModDataAttachments.PLAYER_SPELL_DATA).getKnownSpells();
+
+        for (int i = 0; i < Math.min(5, known.size()); i++) {
+            int knownX = leftPos + s(78);
+            int knownY = topPos + s(20 + i * 10);
+
+            if (mouseX >= knownX && mouseX < knownX + s(70)
+                    && mouseY >= knownY && mouseY < knownY + s(10)) {
+                selectedKnownSpell = i;
+                return true;
+            }
+        }
+
         for (int i = 0; i < 9; i++) {
             int sx = leftPos + s(62 + i * 21);
             int sy = topPos + s(93);
@@ -188,7 +205,22 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                     166
             );
 
-            graphics.pose().popPose();
+            List<String> known = data.getKnownSpells();
+
+        if (selectedKnownSpell >= 0 && selectedKnownSpell < known.size()) {
+            Spell selected = SpellRegistry.get(ResourceLocation.parse(known.get(selectedKnownSpell)));
+            if (selected != null) {
+                graphics.drawString(
+                        font,
+                        selected.displayName(),
+                        s(62),
+                        s(55),
+                        0xFF2B241D
+                );
+            }
+        }
+
+        graphics.pose().popPose();
         } else {
             graphics.fill(x + 4, y + 4, x + imageWidth - 4, y + 70, 0xFF241D29);
             graphics.fill(x + 7, y + 7, x + imageWidth - 7, y + 69, 0xFF302533);
@@ -244,24 +276,6 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
             }
         }
 
-        List<String> known = data.getKnownSpells();
-
-        for (int row = 0; row < Math.min(5, known.size()); row++) {
-            Spell spell = SpellRegistry.get(
-                    ResourceLocation.parse(known.get(row))
-            );
-
-            if (spell != null) {
-                graphics.drawString(
-                        font,
-                        spell.displayName(),
-                        s(78),
-                        s(24 + row * 10),
-                        0xFFE8DCC7
-                );
-            }
-        }
-
         graphics.pose().popPose();
     }
 
@@ -312,6 +326,36 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
     ) {
         renderBackground(graphics, mouseX, mouseY, partialTick);
         super.render(graphics, mouseX, mouseY, partialTick);
+
+        graphics.pose().pushPose();
+        graphics.pose().translate(leftPos, topPos, 0);
+        graphics.pose().scale(GUI_SCALE, GUI_SCALE, 1.0f);
+
+        graphics.blit(
+                COMBINE_BUTTON,
+                47,
+                67,
+                0,
+                0,
+                81,
+                13,
+                81,
+                13
+        );
+
+        graphics.blit(
+                REMOVE_BUTTON,
+                130,
+                67,
+                0,
+                0,
+                42,
+                13,
+                42,
+                13
+        );
+
+        graphics.pose().popPose();
 
         renderTooltip(graphics, mouseX, mouseY);
     }
