@@ -3,11 +3,16 @@ package com.sepinula.sepimod.client.event;
 import com.mojang.blaze3d.platform.InputConstants;
 import com.sepinula.sepimod.SepiMod;
 import com.sepinula.sepimod.client.gui.ClassSelectionScreen;
+import com.sepinula.sepimod.client.gui.SpellbookScreen;
 import com.sepinula.sepimod.client.gui.StatUpgradeScreen;
 import com.sepinula.sepimod.client.model.Baby_GoblinModel;
 import com.sepinula.sepimod.client.renderer.Baby_GoblinRenderer;
 import com.sepinula.sepimod.init.ModEntities;
+import com.sepinula.sepimod.init.ModMenus;
 import com.sepinula.sepimod.init.ModModelLayers;
+import com.sepinula.sepimod.network.Messages;
+import com.sepinula.sepimod.network.PacketSpellbookAction;
+import com.sepinula.sepimod.spellbook.SpellbookHelper;
 import com.sepinula.sepimod.util.ModDataAttachments;
 import com.sepinula.sepimod.util.PlayerStats;
 import com.sepinula.sepimod.util.RpgArchetype;
@@ -24,15 +29,19 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.client.event.ViewportEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import org.lwjgl.glfw.GLFW;
 
 public class ClientEvents {
-
     public static final KeyMapping classKey = new KeyMapping("key.sepimod.open_class", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "key.categories.sepimod");
     public static final KeyMapping statsKey = new KeyMapping("key.sepimod.open_stats", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_J, "key.categories.sepimod");
     public static final KeyMapping lockOnKey = new KeyMapping("key.sepimod.lock_on", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_Z, "key.categories.sepimod");
+    public static final KeyMapping spellbookKey = new KeyMapping("key.sepimod.open_spellbook", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_B, "key.categories.sepimod");
+    public static final KeyMapping spellPreviousKey = new KeyMapping("key.sepimod.spell_previous", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_LEFT_BRACKET, "key.categories.sepimod");
+    public static final KeyMapping spellNextKey = new KeyMapping("key.sepimod.spell_next", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_RIGHT_BRACKET, "key.categories.sepimod");
+    public static final KeyMapping spellCastKey = new KeyMapping("key.sepimod.spell_cast", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.categories.sepimod");
 
     private static boolean isLockedOn = false;
     private static LivingEntity target = null;
@@ -41,7 +50,7 @@ public class ClientEvents {
         modBus.addListener(ClientEvents::onKeyRegister);
         modBus.addListener(ClientEvents::registerRenderers);
         modBus.addListener(ClientEvents::registerLayers);
-
+        modBus.addListener(ClientEvents::registerScreens);
         NeoForge.EVENT_BUS.addListener(ClientEvents::onClientTick);
         NeoForge.EVENT_BUS.addListener(ClientEvents::onComputeCameraAngles);
     }
@@ -50,6 +59,14 @@ public class ClientEvents {
         event.register(classKey);
         event.register(statsKey);
         event.register(lockOnKey);
+        event.register(spellbookKey);
+        event.register(spellPreviousKey);
+        event.register(spellNextKey);
+        event.register(spellCastKey);
+    }
+
+    private static void registerScreens(RegisterMenuScreensEvent event) {
+        event.register(ModMenus.SPELLBOOK.get(), SpellbookScreen::new);
     }
 
     private static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
@@ -62,48 +79,58 @@ public class ClientEvents {
 
     private static void onClientTick(ClientTickEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null || mc.level == null || mc.screen != null) return;
+        if (mc.player == null || mc.level == null) return;
 
-        while (classKey.consumeClick()) {
-            PlayerStats stats = mc.player.getData(ModDataAttachments.PLAYER_STATS);
-            if (stats.getArchetype() == RpgArchetype.NONE) {
-                mc.setScreen(new ClassSelectionScreen());
-            } else {
-                mc.player.displayClientMessage(Component.literal("§cYou already have a class selected!"), true);
+        if (mc.screen == null) {
+            while (classKey.consumeClick()) {
+                PlayerStats stats = mc.player.getData(ModDataAttachments.PLAYER_STATS);
+                if (stats.getArchetype() == RpgArchetype.NONE) mc.setScreen(new ClassSelectionScreen());
+                else mc.player.displayClientMessage(Component.literal("§cYou already have a class selected!"), true);
             }
-        }
 
-        while (statsKey.consumeClick()) {
-            PlayerStats stats = mc.player.getData(ModDataAttachments.PLAYER_STATS);
-            if (stats.getArchetype() == RpgArchetype.NONE) {
-                mc.player.displayClientMessage(Component.literal("§6You must pick a class (Press O) before upgrading stats!"), true);
-            } else {
-                mc.setScreen(new StatUpgradeScreen());
+            while (statsKey.consumeClick()) {
+                PlayerStats stats = mc.player.getData(ModDataAttachments.PLAYER_STATS);
+                if (stats.getArchetype() == RpgArchetype.NONE) mc.player.displayClientMessage(Component.literal("§6You must pick a class (Press O) before upgrading stats!"), true);
+                else mc.setScreen(new StatUpgradeScreen());
             }
-        }
 
-        while (lockOnKey.consumeClick()) {
-            isLockedOn = !isLockedOn;
-            if (isLockedOn) {
-                target = findTarget(mc);
-                if (target == null) {
-                    isLockedOn = false;
-                    mc.player.displayClientMessage(Component.literal("§cNo target in crosshair!"), true);
+            while (spellbookKey.consumeClick()) {
+                Messages.sendToServer(new PacketSpellbookAction(PacketSpellbookAction.OPEN, 0, 0));
+            }
+
+            while (spellPreviousKey.consumeClick()) {
+                if (SpellbookHelper.hasSpellbook(mc.player)) Messages.sendToServer(new PacketSpellbookAction(PacketSpellbookAction.PREVIOUS, 0, 0));
+            }
+
+            while (spellNextKey.consumeClick()) {
+                if (SpellbookHelper.hasSpellbook(mc.player)) Messages.sendToServer(new PacketSpellbookAction(PacketSpellbookAction.NEXT, 0, 0));
+            }
+
+            while (spellCastKey.consumeClick()) {
+                if (SpellbookHelper.hasSpellbook(mc.player)) Messages.sendToServer(new PacketSpellbookAction(PacketSpellbookAction.CAST, 0, 0));
+            }
+
+            while (lockOnKey.consumeClick()) {
+                isLockedOn = !isLockedOn;
+                if (isLockedOn) {
+                    target = findTarget(mc);
+                    if (target == null) {
+                        isLockedOn = false;
+                        mc.player.displayClientMessage(Component.literal("§cNo target in crosshair!"), true);
+                    } else {
+                        mc.player.displayClientMessage(Component.literal("§aLocked on: " + target.getDisplayName().getString()), true);
+                    }
                 } else {
-                    mc.player.displayClientMessage(Component.literal("§aLocked on: " + target.getDisplayName().getString()), true);
+                    target = null;
+                    mc.player.displayClientMessage(Component.literal("§7Lock-on: Disabled"), true);
                 }
-            } else {
-                target = null;
-                mc.player.displayClientMessage(Component.literal("§7Lock-on: Disabled"), true);
             }
         }
 
-        if (isLockedOn && target != null) {
-            if (!target.isAlive() || mc.player.distanceTo(target) > 20.0f || !mc.player.hasLineOfSight(target)) {
-                target = null;
-                isLockedOn = false;
-                mc.player.displayClientMessage(Component.literal("§7Lock-on lost"), true);
-            }
+        if (isLockedOn && target != null && (!target.isAlive() || mc.player.distanceTo(target) > 20.0f || !mc.player.hasLineOfSight(target))) {
+            target = null;
+            isLockedOn = false;
+            mc.player.displayClientMessage(Component.literal("§7Lock-on lost"), true);
         }
     }
 
@@ -113,21 +140,16 @@ public class ClientEvents {
             float partialTicks = (float) event.getPartialTick();
             Vec3 playerPos = mc.player.getEyePosition(partialTicks);
             Vec3 targetPos = target.getBoundingBox().getCenter();
-
             double diffX = targetPos.x - playerPos.x;
             double diffY = targetPos.y - playerPos.y;
             double diffZ = targetPos.z - playerPos.z;
             double diffXZ = Math.sqrt(diffX * diffX + diffZ * diffZ);
-
             float targetYaw = (float) (Math.toDegrees(Math.atan2(-diffX, diffZ)));
             float targetPitch = (float) (-Math.toDegrees(Math.atan2(diffY, diffXZ)));
-
             float newYaw = lerpAngle(mc.player.getYRot(), targetYaw, 0.4f);
             float newPitch = lerpAngle(mc.player.getXRot(), targetPitch, 0.4f);
-
             mc.player.setYRot(newYaw);
             mc.player.setXRot(newPitch);
-
             event.setYaw(newYaw);
             event.setPitch(newPitch);
         }
@@ -136,22 +158,14 @@ public class ClientEvents {
     private static LivingEntity findTarget(Minecraft mc) {
         Entity camera = mc.getCameraEntity();
         if (camera == null) return null;
-
         double distance = 20.0D;
         Vec3 eyePos = camera.getEyePosition(1.0F);
         Vec3 viewVec = camera.getViewVector(1.0F);
         Vec3 reachVec = eyePos.add(viewVec.scale(distance));
         AABB searchBox = camera.getBoundingBox().expandTowards(viewVec.scale(distance)).inflate(1.0D);
-
-        EntityHitResult hitResult = ProjectileUtil.getEntityHitResult(
-                camera, eyePos, reachVec, searchBox,
-                entity -> entity instanceof LivingEntity && entity.isAlive() && !entity.isSpectator(),
-                distance * distance
-        );
-
-        if (hitResult != null && hitResult.getEntity() instanceof LivingEntity living) {
-            return living;
-        }
+        EntityHitResult hitResult = ProjectileUtil.getEntityHitResult(camera, eyePos, reachVec, searchBox,
+                entity -> entity instanceof LivingEntity && entity.isAlive() && !entity.isSpectator(), distance * distance);
+        if (hitResult != null && hitResult.getEntity() instanceof LivingEntity living) return living;
         return null;
     }
 
