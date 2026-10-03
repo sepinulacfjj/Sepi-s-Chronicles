@@ -1,6 +1,7 @@
 package com.sepinula.sepimod.client.gui;
 
 import com.sepinula.sepimod.SepiMod;
+import com.sepinula.sepimod.spellbook.SpellbookHelper;
 import com.sepinula.sepimod.spells.Spell;
 import com.sepinula.sepimod.spells.SpellRegistry;
 import com.sepinula.sepimod.util.ModDataAttachments;
@@ -16,33 +17,79 @@ import net.neoforged.neoforge.client.gui.VanillaGuiLayers;
 
 @EventBusSubscriber(modid = SepiMod.MODID, value = Dist.CLIENT)
 public class SpellHudOverlay {
+
     @SubscribeEvent
     public static void render(RenderGuiLayerEvent.Post event) {
-        if (!event.getName().equals(VanillaGuiLayers.HOTBAR)) return;
+        if (!event.getName().equals(VanillaGuiLayers.HOTBAR)) {
+            return;
+        }
 
         Minecraft mc = Minecraft.getInstance();
-        if (mc.player == null || mc.options.hideGui) return;
+        if (mc.player == null || mc.options.hideGui) {
+            return;
+        }
+
+        if (!SpellbookHelper.hasSpellbook(mc.player)) {
+            return;
+        }
 
         PlayerSpellData data = mc.player.getData(ModDataAttachments.PLAYER_SPELL_DATA);
-        if (data.getActiveSpells().isEmpty()) return;
+        int capacity = Math.min(
+                9,
+                Math.max(0, SpellbookHelper.getCapacity(mc.player))
+        );
+
+        if (capacity == 0) {
+            return;
+        }
 
         int centerX = event.getGuiGraphics().guiWidth() / 2;
-        int y = event.getGuiGraphics().guiHeight() - 48;
-        int total = data.getActiveSpells().size() * 34;
+        int y = event.getGuiGraphics().guiHeight() - 82;
+        int total = capacity * 34;
         int startX = centerX - total / 2;
 
         GuiGraphics graphics = event.getGuiGraphics();
 
-        for (int i = 0; i < data.getActiveSpells().size(); i++) {
+        for (int i = 0; i < capacity; i++) {
             int x = startX + i * 34;
             boolean selected = i == data.getSelectedSpellIndex();
 
-            graphics.fill(x, y, x + 32, y + 32, selected ? 0xFFD8B85A : 0xAA111016);
+            graphics.fill(
+                    x, y, x + 32, y + 32,
+                    selected ? 0xFFD8B85A : 0xAA111016
+            );
             graphics.fill(x + 2, y + 2, x + 30, y + 30, 0xFF2A2230);
 
-            Spell spell = SpellRegistry.get(ResourceLocation.parse(data.getActiveSpells().get(i)));
-            if (spell != null) {
-                graphics.drawCenteredString(mc.font, spell.displayName(), x + 16, y + 34, selected ? 0xFFFFE6A5 : 0xFFE8DCC7);
+            if (i < data.getActiveSpells().size()) {
+                Spell spell = SpellRegistry.get(
+                        ResourceLocation.parse(data.getActiveSpells().get(i))
+                );
+
+                if (spell != null) {
+                    graphics.drawCenteredString(
+                            mc.font,
+                            spell.displayName(),
+                            x + 16,
+                            y + 34,
+                            selected ? 0xFFFFE6A5 : 0xFFE8DCC7
+                    );
+                }
+            }
+        }
+
+        if (!data.getSelectedSpellId().isEmpty()) {
+            Spell selectedSpell = SpellRegistry.get(
+                    ResourceLocation.parse(data.getSelectedSpellId())
+            );
+
+            if (selectedSpell != null) {
+                graphics.drawCenteredString(
+                        mc.font,
+                        selectedSpell.displayName(),
+                        centerX,
+                        y - 12,
+                        0xFFFFE6A5
+                );
             }
         }
     }
