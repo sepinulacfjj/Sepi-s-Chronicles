@@ -148,6 +148,42 @@ public class PlayerSpellData {
                 (selectedSpellIndex - 1 + activeSpells.size()) % activeSpells.size();
     }
 
+    
+    /**
+     * Combines two active spell slots into one result spell.
+     *
+     * The two input slots are removed and the resulting spell is placed at
+     * the lower of the two original positions. The player must already know
+     * the resulting spell.
+     */
+    public boolean combineActiveSpells(int firstIndex, int secondIndex, com.sepinula.sepimod.spells.Spell result) {
+        if (result == null
+                || firstIndex < 0
+                || secondIndex < 0
+                || firstIndex >= activeSpells.size()
+                || secondIndex >= activeSpells.size()
+                || firstIndex == secondIndex) {
+            return false;
+        }
+
+        String firstSpell = activeSpells.get(firstIndex);
+        String secondSpell = activeSpells.get(secondIndex);
+
+        if (!knowsSpell(result.id().toString())) {
+            return false;
+        }
+
+        int lowerIndex = Math.min(firstIndex, secondIndex);
+        int higherIndex = Math.max(firstIndex, secondIndex);
+
+        activeSpells.remove(higherIndex);
+        activeSpells.remove(lowerIndex);
+        activeSpells.add(lowerIndex, result.id().toString());
+
+        clampSelectedIndex();
+        return true;
+    }
+
     public String getSelectedSpellId() {
         if (activeSpells.isEmpty()) {
             return "";
