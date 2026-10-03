@@ -117,13 +117,6 @@ public class SpellHudOverlay {
                             16
                     );
 
-                    graphics.drawCenteredString(
-                            mc.font,
-                            spell.displayName(),
-                            x + 16,
-                            y + 34,
-                            selected ? 0xFFFFE6A5 : 0xFFE8DCC7
-                    );
                 } else {
                     graphics.blit(
                             EMPTY_ICON,
@@ -137,6 +130,23 @@ public class SpellHudOverlay {
                             16
                     );
                 }
+            }
+        }
+
+        // Only the spell currently selected for casting gets a name.
+        String selectedId = data.getSelectedSpellId();
+        if (!selectedId.isEmpty()) {
+            Spell selectedSpell = SpellRegistry.get(ResourceLocation.parse(selectedId));
+            if (selectedSpell != null) {
+                int selectedX = startX + data.getSelectedSpellIndex() * 34 + 16;
+
+                graphics.drawCenteredString(
+                        mc.font,
+                        selectedSpell.displayName(),
+                        selectedX,
+                        y + 34,
+                        0xFFFFE6A5
+                );
             }
         }
 
