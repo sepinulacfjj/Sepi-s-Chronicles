@@ -17,11 +17,17 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(InventoryMenu.class)
 public abstract class InventoryMenuMixin {
 
+    @org.spongepowered.asm.mixin.Shadow
+    protected abstract Slot addSlot(Slot slot);
+
+    @org.spongepowered.asm.mixin.Shadow
+    protected abstract boolean moveItemStackTo(ItemStack stack, int startIndex, int endIndex, boolean reverseDirection);
+
     public static final int SEPI_SPELLBOOK_SLOT = 46;
 
     @Inject(method = "<init>", at = @At("TAIL"))
     private void sepimod$addSpellbookSlot(Inventory playerInventory, boolean active, Player owner, CallbackInfo ci) {
-        ((InventoryMenu) (Object) this).addSlot(
+        this.addSlot(
                 new SpellbookSlot(new PlayerSpellbookContainer(owner), 0, 151, 18)
         );
     }
@@ -40,7 +46,7 @@ public abstract class InventoryMenuMixin {
             ItemStack source = spellbookSlot.getItem();
             ItemStack copy = source.copy();
 
-            if (!menu.moveItemStackTo(source, 9, 45, true)) {
+            if (!this.moveItemStackTo(source, 9, 45, true)) {
                 cir.setReturnValue(ItemStack.EMPTY);
                 return;
             }
@@ -64,7 +70,7 @@ public abstract class InventoryMenuMixin {
             ItemStack copy = source.copy();
 
             if (!menu.getSlot(SEPI_SPELLBOOK_SLOT).mayPlace(source)
-                    || !menu.moveItemStackTo(source, SEPI_SPELLBOOK_SLOT, SEPI_SPELLBOOK_SLOT + 1, false)) {
+                    || !this.moveItemStackTo(source, SEPI_SPELLBOOK_SLOT, SEPI_SPELLBOOK_SLOT + 1, false)) {
                 cir.setReturnValue(ItemStack.EMPTY);
                 return;
             }
