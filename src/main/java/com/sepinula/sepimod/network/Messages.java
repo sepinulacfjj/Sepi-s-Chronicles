@@ -13,10 +13,11 @@ public class Messages {
     public static void register(RegisterPayloadHandlersEvent event) {
         final PayloadRegistrar registrar = event.registrar(SepiMod.MODID);
 
-        // Registering the records we created
         registrar.playToServer(PacketUpdateStat.TYPE, PacketUpdateStat.STREAM_CODEC, PacketUpdateStat::handle);
         registrar.playToServer(PacketSelectClass.TYPE, PacketSelectClass.STREAM_CODEC, PacketSelectClass::handle);
+        registrar.playToServer(PacketSpellbookAction.TYPE, PacketSpellbookAction.STREAM_CODEC, PacketSpellbookAction::handle);
         registrar.playToClient(PacketSyncStats.TYPE, PacketSyncStats.STREAM_CODEC, PacketSyncStats::handle);
+        registrar.playToClient(PacketSyncSpellData.TYPE, PacketSyncSpellData.STREAM_CODEC, PacketSyncSpellData::handle);
         registrar.playToClient(PacketOpenClassScreen.TYPE, PacketOpenClassScreen.STREAM_CODEC, PacketOpenClassScreen::handle);
     }
 
