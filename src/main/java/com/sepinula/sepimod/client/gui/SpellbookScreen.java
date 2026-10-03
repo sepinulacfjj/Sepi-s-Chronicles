@@ -7,8 +7,6 @@ import com.sepinula.sepimod.spells.SpellRegistry;
 import com.sepinula.sepimod.util.ModDataAttachments;
 import com.sepinula.sepimod.util.PlayerSpellData;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.components.Button;
-import net.minecraft.client.gui.components.Tooltip;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
@@ -21,7 +19,12 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
     private int combineFirst = -1;
     private int combineSecond = -1;
     private boolean showSelectedSpellName = false;
-
+    private static final int ACTIVE_Y = 27;
+    private static final int KNOWN_Y = 57;
+    private static final int KNOWN_ROW_HEIGHT = 9;
+    private static final int BUTTON_Y = 108;
+    private static final int SELECTED_Y = 126;
+    private static final int SELECTED_ICON_Y = 138;
     private static final float GUI_SCALE = 1.5f;
 
     private static final ResourceLocation BACKGROUND =
@@ -69,80 +72,6 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
     @Override
     protected void init() {
         super.init();
-
-        int x = leftPos;
-        int y = topPos;
-
-        for (int i = 0; i < 5; i++) {
-            final int knownIndex = i;
-
-            Button addButton = Button.builder(
-                            Component.empty(),
-                            b -> Messages.sendToServer(
-                                    new PacketSpellbookAction(
-                                            PacketSpellbookAction.ADD_KNOWN,
-                                            knownIndex,
-                                            0
-                                    )
-                            )
-                    )
-                    .bounds(x + s(146), y + s(16 + i * 10), s(14), s(10))
-                    .build();
-
-            PlayerSpellData playerSpellData =
-                    minecraft.player.getData(ModDataAttachments.PLAYER_SPELL_DATA);
-            if (knownIndex < playerSpellData.getKnownSpells().size()) {
-                Spell knownSpell = SpellRegistry.get(
-                        ResourceLocation.parse(playerSpellData.getKnownSpells().get(knownIndex))
-                );
-
-                if (knownSpell != null) {
-                    addButton.setTooltip(
-                            Tooltip.create(Component.literal("Add " + knownSpell.displayName()))
-                    );
-                }
-            }
-
-            addButton.setAlpha(0.0F);
-            addRenderableWidget(addButton);
-        }
-
-        Button removeButton = Button.builder(Component.empty(), b -> {
-                    if (combineFirst >= 0) {
-                        Messages.sendToServer(
-                                new PacketSpellbookAction(
-                                        PacketSpellbookAction.REMOVE_ACTIVE,
-                                        combineFirst,
-                                        0
-                                )
-                        );
-                        combineFirst = -1;
-                    }
-                }).bounds(x + s(130), y + s(67), s(42), s(13)).build();
-
-        removeButton.setAlpha(0.0F);
-        addRenderableWidget(removeButton);
-
-        Button combineButton = Button.builder(Component.empty(), b -> {
-                    if (combineFirst >= 0
-                            && combineSecond >= 0
-                            && combineFirst != combineSecond) {
-
-                        Messages.sendToServer(
-                                new PacketSpellbookAction(
-                                        PacketSpellbookAction.COMBINE,
-                                        combineFirst,
-                                        combineSecond
-                                )
-                        );
-
-                        combineFirst = -1;
-                        combineSecond = -1;
-                    }
-                }).bounds(x + s(47), y + s(67), s(81), s(13)).build();
-
-        combineButton.setAlpha(0.0F);
-        addRenderableWidget(combineButton);
     }
 
     @Override
@@ -241,14 +170,14 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
         graphics.drawString(
                 font,
                 "ACTIVE SPELLS",
-                62,
-                82,
+                10,
+                15,
                 0xFFD8C8A8
         );
 
         for (int i = 0; i < capacity; i++) {
-            int slotX = 62 + i * 21;
-            int slotY = 93;
+            int slotX = 10 + i * 21;
+            int slotY = ACTIVE_Y;
             // The background already contains the slot frames.
             // Only the selected slot receives a dynamic highlight.
             if (i == data.getSelectedSpellIndex()) {
@@ -272,16 +201,68 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
             }
         }
 
+        graphics.drawString(
+                font,
+                "KNOWN SPELLS",
+                10,
+                47,
+                0xFFD8C8A8
+        );
+
+        for (int i = 0; i < Math.min(5, data.getKnownSpells().size()); i++) {
+            Spell knownSpell = SpellRegistry.get(
+                    ResourceLocation.parse(data.getKnownSpells().get(i))
+            );
+
+            if (knownSpell != null) {
+                graphics.drawString(
+                        font,
+                        knownSpell.displayName(),
+                        10,
+                        KNOWN_Y + i * KNOWN_ROW_HEIGHT,
+                        0xFF2B241D
+                );
+
+                graphics.drawString(
+                        font,
+                        "+",
+                        151,
+                        KNOWN_Y + i * KNOWN_ROW_HEIGHT,
+                        0xFF2B241D
+                );
+            }
+        }
+
         if (showSelectedSpellName) {
             String selectedId = data.getSelectedSpellId();
             if (!selectedId.isEmpty()) {
                 Spell selectedSpell = SpellRegistry.get(ResourceLocation.parse(selectedId));
                 if (selectedSpell != null) {
-                    graphics.drawCenteredString(
+                    graphics.drawString(
+                            font,
+                            "SELECTED SPELLS",
+                            10,
+                            SELECTED_Y,
+                            0xFFD8C8A8
+                    );
+
+                    int selectedIndex = data.getSelectedSpellIndex();
+                    int selectedIconX = 10;
+
+                    drawSpellIcon(
+                            graphics,
+                            selectedSpell,
+                            selectedIconX,
+                            SELECTED_ICON_Y,
+                            16,
+                            16
+                    );
+
+                    graphics.drawString(
                             font,
                             selectedSpell.displayName(),
-                            62 + data.getSelectedSpellIndex() * 21 + 8,
-                            116,
+                            30,
+                            SELECTED_ICON_Y + 4,
                             0xFF2B241D
                     );
                 }
@@ -345,8 +326,8 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
 
         graphics.blit(
                 COMBINE_BUTTON,
-                47,
-                67,
+                4,
+                BUTTON_Y,
                 0,
                 0,
                 81,
@@ -357,13 +338,13 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
 
         graphics.blit(
                 REMOVE_BUTTON,
-                130,
-                67,
+                90,
+                BUTTON_Y,
                 0,
                 0,
-                42,
+                81,
                 13,
-                42,
+                81,
                 13
         );
 
