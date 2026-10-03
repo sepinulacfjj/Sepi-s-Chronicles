@@ -199,6 +199,7 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
         graphics.pose().scale(GUI_SCALE, GUI_SCALE, 1.0f);
 
         PlayerSpellData data =
+                minecraft.player.getData(ModDataAttachments.PLAYER_SPELL_DATA);
 
         int capacity = Math.min(
                 9,
