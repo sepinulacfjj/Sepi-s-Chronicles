@@ -13,52 +13,90 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimod.spellbook.SpellbookMenu> {
+
     private int combineFirst = -1;
     private int combineSecond = -1;
+
     private static final ResourceLocation BACKGROUND =
             ResourceLocation.fromNamespaceAndPath("sepimod", "textures/gui/spellbook.png");
 
-    public SpellbookScreen(com.sepinula.sepimod.spellbook.SpellbookMenu menu, Inventory inventory, Component title) {
+    public SpellbookScreen(
+            com.sepinula.sepimod.spellbook.SpellbookMenu menu,
+            Inventory inventory,
+            Component title
+    ) {
         super(menu, inventory, title);
         this.imageWidth = 176;
         this.imageHeight = 166;
         this.titleLabelX = 72;
-        this.inventoryLabelX = 8;
         this.titleLabelY = 7;
+        this.inventoryLabelX = 8;
         this.inventoryLabelY = 74;
     }
 
     @Override
     protected void init() {
         super.init();
+
         int x = leftPos;
         int y = topPos;
 
         for (int i = 0; i < 5; i++) {
             final int knownIndex = i;
-            addRenderableWidget(Button.builder(Component.literal("+"), b ->
-                    Messages.sendToServer(new PacketSpellbookAction(PacketSpellbookAction.ADD_KNOWN, knownIndex, 0)))
-                    .bounds(x + 146, y + 16 + i * 10, 14, 10).build());
+
+            addRenderableWidget(
+                    Button.builder(
+                                    Component.literal("+"),
+                                    b -> Messages.sendToServer(
+                                            new PacketSpellbookAction(
+                                                    PacketSpellbookAction.ADD_KNOWN,
+                                                    knownIndex,
+                                                    0
+                                            )
+                                    )
+                            )
+                            .bounds(x + 146, y + 16 + i * 10, 14, 10)
+                            .build()
+            );
         }
 
-        addRenderableWidget(Button.builder(Component.literal("Remove"), b -> {
-            if (combineFirst >= 0) {
-                Messages.sendToServer(new PacketSpellbookAction(PacketSpellbookAction.REMOVE_ACTIVE, combineFirst, 0));
-                combineFirst = -1;
-            }
-        }).bounds(x + 115, y + 68, 42, 16).build());
+        addRenderableWidget(
+                Button.builder(Component.literal("Remove"), b -> {
+                    if (combineFirst >= 0) {
+                        Messages.sendToServer(
+                                new PacketSpellbookAction(
+                                        PacketSpellbookAction.REMOVE_ACTIVE,
+                                        combineFirst,
+                                        0
+                                )
+                        );
+                        combineFirst = -1;
+                    }
+                }).bounds(x + 115, y + 68, 42, 16).build()
+        );
 
-        addRenderableWidget(Button.builder(Component.literal("Combine"), b -> {
-            if (combineFirst >= 0 && combineSecond >= 0 && combineFirst != combineSecond) {
-                Messages.sendToServer(new PacketSpellbookAction(PacketSpellbookAction.COMBINE, combineFirst, combineSecond));
-                combineFirst = -1;
-                combineSecond = -1;
-            }
-        }).bounds(x + 62, y + 68, 50, 16).build());
+        addRenderableWidget(
+                Button.builder(Component.literal("Combine"), b -> {
+                    if (combineFirst >= 0
+                            && combineSecond >= 0
+                            && combineFirst != combineSecond) {
+
+                        Messages.sendToServer(
+                                new PacketSpellbookAction(
+                                        PacketSpellbookAction.COMBINE,
+                                        combineFirst,
+                                        combineSecond
+                                )
+                        );
+
+                        combineFirst = -1;
+                        combineSecond = -1;
+                    }
+                }).bounds(x + 62, y + 68, 50, 16).build()
+        );
     }
 
     @Override
@@ -66,79 +104,199 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
         for (int i = 0; i < 9; i++) {
             int sx = leftPos + 62 + i * 21;
             int sy = topPos + 28;
-            if (mouseX >= sx && mouseX < sx + 18 && mouseY >= sy && mouseY < sy + 18) {
-                if (combineFirst < 0) combineFirst = i;
-                else if (combineSecond < 0 && combineFirst != i) combineSecond = i;
-                else { combineFirst = i; combineSecond = -1; }
+
+            if (mouseX >= sx
+                    && mouseX < sx + 18
+                    && mouseY >= sy
+                    && mouseY < sy + 18) {
+
+                if (combineFirst < 0) {
+                    combineFirst = i;
+                } else if (combineSecond < 0 && combineFirst != i) {
+                    combineSecond = i;
+                } else {
+                    combineFirst = i;
+                    combineSecond = -1;
+                }
+
                 return true;
             }
         }
+
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
-    protected void renderBg(GuiGraphics graphics, float partialTick, int mouseX, int mouseY) {
+    protected void renderBg(
+            GuiGraphics graphics,
+            float partialTick,
+            int mouseX,
+            int mouseY
+    ) {
         int x = leftPos;
         int y = topPos;
 
-        graphics.fill(x, y, x + imageWidth, y + imageHeight, 0xFF17131A);
-        graphics.fill(x + 4, y + 4, x + imageWidth - 4, y + 70, 0xFF241D29);
-        graphics.fill(x + 7, y + 7, x + imageWidth - 7, y + 69, 0xFF302533);
+        graphics.fill(
+                x,
+                y,
+                x + imageWidth,
+                y + imageHeight,
+                0xFF17131A
+        );
 
-        // Replace this single texture later with your finished artwork.
-        // Expected path: assets/sepimod/textures/gui/spellbook.png
         if (minecraft.getResourceManager().getResource(BACKGROUND).isPresent()) {
-            graphics.blit(BACKGROUND, x, y, 0, 0, imageWidth, imageHeight, imageWidth, imageHeight);
+            graphics.blit(
+                    BACKGROUND,
+                    x,
+                    y,
+                    0,
+                    0,
+                    imageWidth,
+                    imageHeight,
+                    imageWidth,
+                    imageHeight
+            );
+        } else {
+            graphics.fill(x + 4, y + 4, x + imageWidth - 4, y + 70, 0xFF241D29);
+            graphics.fill(x + 7, y + 7, x + imageWidth - 7, y + 69, 0xFF302533);
         }
 
-        graphics.fill(x + 12, y + 22, x + 52, y + 66, 0xFF17131A);
+        PlayerSpellData data =
+                minecraft.player.getData(ModDataAttachments.PLAYER_SPELL_DATA);
 
-        PlayerSpellData data = minecraft.player.getData(ModDataAttachments.PLAYER_SPELL_DATA);
-        int capacity = Math.max(0, Math.min(9, com.sepinula.sepimod.spellbook.SpellbookHelper.getCapacity(minecraft.player)));
+        int capacity = Math.min(
+                9,
+                Math.max(
+                        0,
+                        com.sepinula.sepimod.spellbook.SpellbookHelper
+                                .getCapacity(minecraft.player)
+                )
+        );
+
+        graphics.drawString(
+                font,
+                "ACTIVE SPELLS",
+                x + 62,
+                y + 18,
+                0xFFD8C8A8
+        );
 
         for (int i = 0; i < capacity; i++) {
             int slotX = x + 62 + i * 21;
-            int border = i == data.getSelectedSpellIndex() ? 0xFFE7C46A : 0xFF111016;
-            graphics.fill(slotX - 1, y + 27, slotX + 19, y + 47, border);
-            graphics.fill(slotX, y + 28, slotX + 18, y + 46, 0xFF3B2E3B);
+            int border =
+                    i == data.getSelectedSpellIndex()
+                            ? 0xFFE7C46A
+                            : 0xFF111016;
+
+            graphics.fill(
+                    slotX - 1,
+                    y + 27,
+                    slotX + 19,
+                    y + 47,
+                    border
+            );
+
+            graphics.fill(
+                    slotX,
+                    y + 28,
+                    slotX + 18,
+                    y + 46,
+                    0xFF3B2E3B
+            );
 
             if (i < data.getActiveSpells().size()) {
-                Spell spell = SpellRegistry.get(ResourceLocation.parse(data.getActiveSpells().get(i)));
+                Spell spell = SpellRegistry.get(
+                        ResourceLocation.parse(data.getActiveSpells().get(i))
+                );
+
                 if (spell != null) {
-                    graphics.drawCenteredString(font, spell.displayName(), slotX + 9, y + 48, 0xFFE8DCC7);
+                    graphics.drawCenteredString(
+                            font,
+                            spell.displayName(),
+                            slotX + 9,
+                            y + 49,
+                            0xFFE8DCC7
+                    );
                 }
             }
         }
 
-        graphics.drawString(font, "Known", x + 62, y + 7, 0xFFD8C8A8);
+        graphics.drawString(font, "KNOWN SPELLS", x + 62, y + 7, 0xFFD8C8A8);
 
         List<String> known = data.getKnownSpells();
-        int row = 0;
-        for (String id : known) {
-            if (row >= 2) break;
-            Spell spell = SpellRegistry.get(ResourceLocation.parse(id));
+
+        for (int row = 0; row < Math.min(5, known.size()); row++) {
+            Spell spell = SpellRegistry.get(
+                    ResourceLocation.parse(known.get(row))
+            );
+
             if (spell != null) {
-                graphics.drawString(font, spell.displayName(), x + 62, y + 18 + row * 12, 0xFFE8DCC7);
+                graphics.drawString(
+                        font,
+                        spell.displayName(),
+                        x + 62,
+                        y + 28 + row * 10,
+                        0xFFE8DCC7
+                );
             }
-            row++;
         }
 
-        graphics.drawString(font, "Book", x + 20, y + 14, 0xFFD8C8A8);
-        graphics.drawString(font, "Active Spells", x + 62, y + 18, 0xFFD8C8A8);
+        graphics.drawString(
+                font,
+                "BOOK",
+                x + 20,
+                y + 14,
+                0xFFD8C8A8
+        );
 
-        // Vanilla inventory background.
-        graphics.blit(net.minecraft.resources.ResourceLocation.withDefaultNamespace("textures/gui/container/inventory.png"),
-                x, y + 72, 0, 0, 176, 94, 256, 256);
+        // Only render the lower inventory section that actually fits inside
+        // this 176x166 screen. The previous source rectangle started at the
+        // top of the vanilla texture, which is why the inventory looked cut off.
+        graphics.blit(
+                ResourceLocation.withDefaultNamespace(
+                        "textures/gui/container/inventory.png"
+                ),
+                x,
+                y + 72,
+                0,
+                72,
+                176,
+                94,
+                256,
+                256
+        );
     }
 
     @Override
-    protected void renderLabels(GuiGraphics graphics, int mouseX, int mouseY) {
-        graphics.drawString(font, "Spellbook", titleLabelX, titleLabelY, 0xFFE8DCC7);
-        graphics.drawString(font, "Inventory", inventoryLabelX, inventoryLabelY, 0xFFD8C8A8);
+    protected void renderLabels(
+            GuiGraphics graphics,
+            int mouseX,
+            int mouseY
+    ) {
+        graphics.drawString(
+                font,
+                "SPELLBOOK",
+                titleLabelX,
+                titleLabelY,
+                0xFFE8DCC7
+        );
+
+        graphics.drawString(
+                font,
+                "INVENTORY",
+                inventoryLabelX,
+                inventoryLabelY,
+                0xFFD8C8A8
+        );
     }
 
     @Override
-    public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
+    public void render(
+            GuiGraphics graphics,
+            int mouseX,
+            int mouseY,
+            float partialTick
+    ) {
         renderBackground(graphics, mouseX, mouseY, partialTick);
         super.render(graphics, mouseX, mouseY, partialTick);
         renderTooltip(graphics, mouseX, mouseY);
