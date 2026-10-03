@@ -9,10 +9,12 @@ import net.minecraft.world.SimpleContainer;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 /**
- * One-slot container backed by the player's spellbook attachment.
+ * One-slot view backed directly by the player's spellbook attachment.
  *
- * The actual item remains player data on the server. The container is the
- * bridge used by menu slots and vanilla inventory interactions.
+ * Unlike a normal SimpleContainer, this container does not keep a second
+ * independent copy of the item. That is important because the player's
+ * attachment is the persistent source of truth for the dedicated spellbook
+ * slot, including when a new InventoryMenu is created after reconnecting.
  */
 public class PlayerSpellbookContainer extends SimpleContainer {
 
@@ -21,46 +23,81 @@ public class PlayerSpellbookContainer extends SimpleContainer {
     public PlayerSpellbookContainer(Player player) {
         super(1);
         this.player = player;
+    }
 
-        ItemStack equipped = player.getData(ModDataAttachments.PLAYER_SPELLBOOK_DATA).getSpellbook();
-        super.setItem(0, equipped.copy());
+    @Override
+    public ItemStack getItem(int index) {
+        if (index != 0) {
+            return ItemStack.EMPTY;
+        }
 
-        addListener(container -> syncSpellbookData());
+        return player.getData(ModDataAttachments.PLAYER_SPELLBOOK_DATA)
+                .getSpellbook()
+                .copy();
     }
 
     @Override
     public void setItem(int index, ItemStack stack) {
-        super.setItem(index, stack);
-        syncSpellbookData();
-    }
-
-    @Override
-    public ItemStack removeItem(int index, int count) {
-        ItemStack result = super.removeItem(index, count);
-        syncSpellbookData();
-        return result;
-    }
-
-    @Override
-    public ItemStack removeItemNoUpdate(int index) {
-        ItemStack result = super.removeItemNoUpdate(index);
-        syncSpellbookData();
-        return result;
-    }
-
-    private void syncSpellbookData() {
-        if (player.level().isClientSide()) {
+        if (index != 0) {
             return;
         }
 
         var data = player.getData(ModDataAttachments.PLAYER_SPELLBOOK_DATA);
-        ItemStack current = getItem(0);
-        data.setSpellbook(current);
+        data.setSpellbook(stack);
         SpellbookHelper.enforceCapacity(player);
 
         if (player instanceof ServerPlayer serverPlayer) {
-            PacketDistributor.sendToPlayer(serverPlayer, PacketSyncSpellbookData.from(data));
+            PacketDistributor.sendToPlayer(
+                    serverPlayer,
+                    PacketSyncSpellbookData.from(data)
+            );
         }
+    }
+
+    @Override
+    public ItemStack removeItem(int index, int count) {
+        if (index != 0) {
+            return ItemStack.EMPTY;
+        }
+
+        ItemStack current = getItem(0);
+        if (current.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+
+        ItemStack removed = current.split(count);
+        setItem(0, current);
+        return removed;
+    }
+
+    @Override
+    public ItemStack removeItemNoUpdate(int index) {
+        if (index != 0) {
+            return ItemStack.EMPTY;
+        }
+
+        ItemStack current = getItem(0);
+        if (current.isEmpty()) {
+            return ItemStack.EMPTY;
+        }
+
+        setItem(0, ItemStack.EMPTY);
+        return current;
+    }
+
+    @Override
+    public boolean isEmpty() {
+        return getItem(0).isEmpty();
+    }
+
+    @Override
+    public void clearContent() {
+        setItem(0, ItemStack.EMPTY);
+    }
+
+    @Override
+    public void setChanged() {
+        // The attachment is updated immediately by setItem/removeItem.
     }
 
     @Override
