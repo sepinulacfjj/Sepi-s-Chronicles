@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import java.util.ArrayList;
 import java.util.List;
+import com.sepinula.sepimod.spells.Spell;
 import net.minecraft.util.Mth;
 
 /**
@@ -156,7 +157,7 @@ public class PlayerSpellData {
      * the lower of the two original positions. The player must already know
      * the resulting spell.
      */
-    public boolean combineActiveSpells(int firstIndex, int secondIndex, com.sepinula.sepimod.spells.Spell result) {
+    public boolean combineActiveSpells(int firstIndex, int secondIndex, Spell result) {
         if (result == null
                 || firstIndex < 0
                 || secondIndex < 0
@@ -169,9 +170,7 @@ public class PlayerSpellData {
         String firstSpell = activeSpells.get(firstIndex);
         String secondSpell = activeSpells.get(secondIndex);
 
-        if (!knowsSpell(result.id().toString())) {
-            return false;
-        }
+        learnSpell(result.id().toString());
 
         int lowerIndex = Math.min(firstIndex, secondIndex);
         int higherIndex = Math.max(firstIndex, secondIndex);
