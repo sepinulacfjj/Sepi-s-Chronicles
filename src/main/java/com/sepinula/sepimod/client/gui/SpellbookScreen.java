@@ -17,6 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimod.spellbook.SpellbookMenu> {
+    private int combineFirst = -1;
+    private int combineSecond = -1;
     private static final ResourceLocation BACKGROUND =
             ResourceLocation.fromNamespaceAndPath("sepimod", "textures/gui/spellbook.png");
 
@@ -34,32 +36,42 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
         int x = leftPos;
         int y = topPos;
 
-        addRenderableWidget(Button.builder(Component.literal("Add"), b -> {
-            PlayerSpellData data = minecraft.player.getData(ModDataAttachments.PLAYER_SPELL_DATA);
-            if (!data.getKnownSpells().isEmpty()) {
-                int index = Math.min(knownScrollIndex(), data.getKnownSpells().size() - 1);
-                Messages.sendToServer(new PacketSpellbookAction(PacketSpellbookAction.ADD_KNOWN, index, 0));
-            }
-        }).bounds(x + 104, y + 52, 30, 16).build());
+        for (int i = 0; i < 5; i++) {
+            final int knownIndex = i;
+            addRenderableWidget(Button.builder(Component.literal("+"), b ->
+                    Messages.sendToServer(new PacketSpellbookAction(PacketSpellbookAction.ADD_KNOWN, knownIndex, 0)))
+                    .bounds(x + 146, y + 16 + i * 10, 14, 10).build());
+        }
 
         addRenderableWidget(Button.builder(Component.literal("Remove"), b -> {
-            PlayerSpellData data = minecraft.player.getData(ModDataAttachments.PLAYER_SPELL_DATA);
-            int index = data.getSelectedSpellIndex();
-            if (index >= 0 && index < data.getActiveSpells().size()) {
-                Messages.sendToServer(new PacketSpellbookAction(PacketSpellbookAction.REMOVE_ACTIVE, index, 0));
+            if (combineFirst >= 0) {
+                Messages.sendToServer(new PacketSpellbookAction(PacketSpellbookAction.REMOVE_ACTIVE, combineFirst, 0));
+                combineFirst = -1;
             }
-        }).bounds(x + 137, y + 52, 32, 16).build());
+        }).bounds(x + 115, y + 68, 42, 16).build());
 
         addRenderableWidget(Button.builder(Component.literal("Combine"), b -> {
-            PlayerSpellData data = minecraft.player.getData(ModDataAttachments.PLAYER_SPELL_DATA);
-            if (data.getActiveSpells().size() >= 2) {
-                Messages.sendToServer(new PacketSpellbookAction(PacketSpellbookAction.COMBINE, 0, 1));
+            if (combineFirst >= 0 && combineSecond >= 0 && combineFirst != combineSecond) {
+                Messages.sendToServer(new PacketSpellbookAction(PacketSpellbookAction.COMBINE, combineFirst, combineSecond));
+                combineFirst = -1;
+                combineSecond = -1;
             }
         }).bounds(x + 62, y + 68, 50, 16).build());
     }
 
-    private int knownScrollIndex() {
-        return 0;
+    @Override
+    public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        for (int i = 0; i < 9; i++) {
+            int sx = leftPos + 62 + i * 21;
+            int sy = topPos + 28;
+            if (mouseX >= sx && mouseX < sx + 18 && mouseY >= sy && mouseY < sy + 18) {
+                if (combineFirst < 0) combineFirst = i;
+                else if (combineSecond < 0 && combineFirst != i) combineSecond = i;
+                else { combineFirst = i; combineSecond = -1; }
+                return true;
+            }
+        }
+        return super.mouseClicked(mouseX, mouseY, button);
     }
 
     @Override
