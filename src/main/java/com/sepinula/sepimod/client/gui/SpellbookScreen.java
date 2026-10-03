@@ -275,22 +275,6 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                 0xFFD8C8A8
         );
 
-        // Only render the lower inventory section that actually fits inside
-        // this 176x166 screen. The previous source rectangle started at the
-        // top of the vanilla texture, which is why the inventory looked cut off.
-        graphics.blit(
-                ResourceLocation.withDefaultNamespace(
-                        "textures/gui/container/inventory.png"
-                ),
-                x,
-                y + 72,
-                0,
-                72,
-                176,
-                94,
-                256,
-                256
-        );
     }
 
     @Override
@@ -307,13 +291,8 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                 0xFFE8DCC7
         );
 
-        graphics.drawString(
-                font,
-                "INVENTORY",
-                inventoryLabelX,
-                inventoryLabelY,
-                0xFFD8C8A8
-        );
+        // The spellbook is intentionally a standalone interface; the player's
+        // normal inventory is not rendered here.
     }
 
     private void drawSpellIcon(
