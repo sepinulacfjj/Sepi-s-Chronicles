@@ -132,6 +132,9 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
+        PlayerSpellData data =
+                minecraft.player.getData(ModDataAttachments.PLAYER_SPELL_DATA);
+
         for (int i = 0; i < 9; i++) {
             int sx = leftPos + s(62 + i * 21);
             int sy = topPos + s(93);
