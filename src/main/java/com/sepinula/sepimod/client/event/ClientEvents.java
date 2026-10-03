@@ -37,7 +37,8 @@ import org.lwjgl.glfw.GLFW;
 public class ClientEvents {
     public static final KeyMapping classKey = new KeyMapping("key.sepimod.open_class", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "key.categories.sepimod");
     public static final KeyMapping statsKey = new KeyMapping("key.sepimod.open_stats", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_J, "key.categories.sepimod");
-    public static final KeyMapping lockOnKey = new KeyMapping("key.sepimod.lock_on", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_V, "key.categories.sepimod");
+    public static final KeyMapping spellbookKey = new KeyMapping("key.sepimod.open_spellbook", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_C, "key.categories.sepimod");
+    public static final KeyMapping lockOnKey = new KeyMapping("key.sepimod.lock_on", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_Z, "key.categories.sepimod");
     public static final KeyMapping spellPreviousKey = new KeyMapping("key.sepimod.spell_previous", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_Z, "key.categories.sepimod");
     public static final KeyMapping spellNextKey = new KeyMapping("key.sepimod.spell_next", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_X, "key.categories.sepimod");
     public static final KeyMapping spellCastKey = new KeyMapping("key.sepimod.spell_cast", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.categories.sepimod");
@@ -60,6 +61,7 @@ public class ClientEvents {
         Minecraft.getInstance().options.keyLoadHotbarActivator.setKey(InputConstants.UNKNOWN);
         event.register(classKey);
         event.register(statsKey);
+        event.register(spellbookKey);
         event.register(lockOnKey);
         event.register(spellPreviousKey);
         event.register(spellNextKey);
@@ -87,6 +89,10 @@ public class ClientEvents {
                 PlayerStats stats = mc.player.getData(ModDataAttachments.PLAYER_STATS);
                 if (stats.getArchetype() == RpgArchetype.NONE) mc.setScreen(new ClassSelectionScreen());
                 else mc.player.displayClientMessage(Component.literal("§cYou already have a class selected!"), true);
+            }
+
+            while (spellbookKey.consumeClick()) {
+                Messages.sendToServer(new PacketSpellbookAction(PacketSpellbookAction.OPEN, 0, 0));
             }
 
             while (statsKey.consumeClick()) {
