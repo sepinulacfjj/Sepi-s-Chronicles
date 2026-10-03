@@ -13,6 +13,10 @@ public final class SpellbookHelper {
     private SpellbookHelper() {
     }
 
+    public static boolean hasSpellbook(Player player) {
+        return player.getData(ModDataAttachments.PLAYER_SPELLBOOK_DATA).hasSpellbook();
+    }
+
     public static int getCapacity(Player player) {
         return player.getData(ModDataAttachments.PLAYER_SPELLBOOK_DATA).getSpellSlotCapacity();
     }
