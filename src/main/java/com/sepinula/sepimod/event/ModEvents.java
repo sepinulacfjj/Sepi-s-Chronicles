@@ -7,6 +7,8 @@ import com.sepinula.sepimod.init.ModEntities;
 import com.sepinula.sepimod.init.ModItems;
 import com.sepinula.sepimod.util.ModDataAttachments;
 import com.sepinula.sepimod.util.PlayerStats;
+import com.sepinula.sepimod.network.PacketSyncSpellData;
+import com.sepinula.sepimod.spells.SpellRegistry;
 import com.sepinula.sepimod.util.StatLogicHandler;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.Component;
@@ -48,6 +50,11 @@ public class ModEvents {
             PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
             StatLogicHandler.applyStatModifiers(player, stats);
             ModDataAttachments.sync(player);
+            var spells = player.getData(ModDataAttachments.PLAYER_SPELL_DATA);
+            spells.learnSpell(SpellRegistry.FIREBALL.id().toString());
+            spells.learnSpell(SpellRegistry.GUST.id().toString());
+            spells.learnSpell(SpellRegistry.ICE_SHARD.id().toString());
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, PacketSyncSpellData.from(spells));
         }
     }
 
@@ -64,6 +71,8 @@ public class ModEvents {
                     stats.getManaRaw() + stats.getMind() + stats.getAvailablePoints();
             stats.setTrainingPoints(Math.min(800, totalStats));
             ModDataAttachments.sync(player);
+            var spells = player.getData(ModDataAttachments.PLAYER_SPELL_DATA);
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, PacketSyncSpellData.from(spells));
         }
     }
 
