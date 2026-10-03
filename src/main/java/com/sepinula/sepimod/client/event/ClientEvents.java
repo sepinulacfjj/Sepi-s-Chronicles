@@ -37,7 +37,7 @@ import org.lwjgl.glfw.GLFW;
 public class ClientEvents {
     public static final KeyMapping classKey = new KeyMapping("key.sepimod.open_class", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "key.categories.sepimod");
     public static final KeyMapping statsKey = new KeyMapping("key.sepimod.open_stats", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_J, "key.categories.sepimod");
-    public static final KeyMapping lockOnKey = new KeyMapping("key.sepimod.lock_on", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_Z, "key.categories.sepimod");
+    public static final KeyMapping lockOnKey = new KeyMapping("key.sepimod.lock_on", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_V, "key.categories.sepimod");
     public static final KeyMapping spellPreviousKey = new KeyMapping("key.sepimod.spell_previous", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_Z, "key.categories.sepimod");
     public static final KeyMapping spellNextKey = new KeyMapping("key.sepimod.spell_next", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_X, "key.categories.sepimod");
     public static final KeyMapping spellCastKey = new KeyMapping("key.sepimod.spell_cast", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.categories.sepimod");
@@ -55,6 +55,9 @@ public class ClientEvents {
     }
 
     private static void onKeyRegister(RegisterKeyMappingsEvent event) {
+        // Free C and X from vanilla Creative hotbar actions so the spell controls can use them.
+        Minecraft.getInstance().options.keySaveHotbarActivator.setKey(InputConstants.UNKNOWN);
+        Minecraft.getInstance().options.keyLoadHotbarActivator.setKey(InputConstants.UNKNOWN);
         event.register(classKey);
         event.register(statsKey);
         event.register(lockOnKey);
