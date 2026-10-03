@@ -12,6 +12,10 @@ import net.neoforged.neoforge.registries.DeferredRegister;
 public class ModItems {
     public static final DeferredRegister.Items ITEMS = DeferredRegister.createItems(SepiMod.MODID);
 
+    public static final DeferredItem<com.sepinula.sepimod.spellbook.SpellbookItem> IRON_SPELLBOOK = ITEMS.register("iron_spellbook",
+            () -> new com.sepinula.sepimod.spellbook.SpellbookItem(com.sepinula.sepimod.spellbook.SpellbookTier.IRON,
+                    new Item.Properties().rarity(Rarity.RARE)));
+
     public static final DeferredItem<BasicStaffItem> BASIC_STAFF = ITEMS.register("basic_staff",
             () -> new BasicStaffItem(new Item.Properties() // This creates your animated item
                     .stacksTo(1)
