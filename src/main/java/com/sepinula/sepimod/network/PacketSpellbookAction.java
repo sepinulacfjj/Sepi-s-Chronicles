@@ -27,6 +27,7 @@ public record PacketSpellbookAction(int action, int firstIndex, int secondIndex)
     public static final int NEXT = 4;
     public static final int PREVIOUS = 5;
     public static final int CAST = 6;
+    public static final int SELECT_ACTIVE = 7;
 
     public static final Type<PacketSpellbookAction> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(SepiMod.MODID, "spellbook_action"));
@@ -109,6 +110,15 @@ public record PacketSpellbookAction(int action, int firstIndex, int secondIndex)
                 }
                 case CAST -> {
                     changed = com.sepinula.sepimod.spells.SpellCaster.castSelected(player);
+                }
+                case SELECT_ACTIVE -> {
+                    var active = data.getActiveSpells();
+                    int index = payload.firstIndex();
+
+                    if (index >= 0 && index < active.size()) {
+                        data.setSelectedSpellIndex(index);
+                        changed = true;
+                    }
                 }
                 default -> {
                 }
