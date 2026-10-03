@@ -29,10 +29,11 @@ public class SpellHudOverlay {
             return;
         }
 
+        boolean spellbookEquipped = SpellbookHelper.hasSpellbook(mc.player);
         boolean spellbookInMainHand = mc.player.getMainHandItem().getItem() instanceof com.sepinula.sepimod.spellbook.SpellbookItem;
         boolean spellbookInOffHand = mc.player.getOffhandItem().getItem() instanceof com.sepinula.sepimod.spellbook.SpellbookItem;
 
-        if (!spellbookInMainHand && !spellbookInOffHand) {
+        if (!spellbookEquipped && !spellbookInMainHand && !spellbookInOffHand) {
             return;
         }
 
