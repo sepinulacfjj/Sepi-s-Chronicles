@@ -221,26 +221,17 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
         for (int i = 0; i < capacity; i++) {
             int slotX = s(62 + i * 21);
             int slotY = s(93);
-            int border =
-                    i == data.getSelectedSpellIndex()
-                            ? 0xFFE7C46A
-                            : 0xFF111016;
-
-            graphics.fill(
-                    slotX - s(1),
-                    slotY - s(1),
-                    slotX + s(19),
-                    slotY + s(19),
-                    border
-            );
-
-            graphics.fill(
-                    slotX,
-                    slotY,
-                    slotX + s(18),
-                    slotY + s(18),
-                    0xFF3B2E3B
-            );
+            // The background already contains the slot frames.
+            // Only the selected slot receives a dynamic highlight.
+            if (i == data.getSelectedSpellIndex()) {
+                graphics.fill(
+                        slotX - s(1),
+                        slotY - s(1),
+                        slotX + s(19),
+                        slotY + s(19),
+                        0xFFE7C46A
+                );
+            }
 
             if (i < data.getActiveSpells().size()) {
                 Spell spell = SpellRegistry.get(
@@ -250,18 +241,6 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                 if (spell != null) {
                     drawSpellIcon(graphics, spell, slotX + s(1), slotY + s(1), s(16), s(16));
                 }
-            } else {
-                graphics.blit(
-                        EMPTY_ICON,
-                        slotX + s(1),
-                        slotY + s(1),
-                        0,
-                        0,
-                        s(16),
-                        s(16),
-                        16,
-                        16
-                );
             }
         }
 
@@ -335,41 +314,6 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
     ) {
         renderBackground(graphics, mouseX, mouseY, partialTick);
         super.render(graphics, mouseX, mouseY, partialTick);
-
-        // The actual button is still a clickable widget, but the visual comes
-        // from the custom texture you made rather than the vanilla button style.
-        graphics.blit(
-                COMBINE_BUTTON,
-                leftPos + 47,
-                topPos + 67,
-                0,
-                0,
-                s(81),
-                s(13),
-                81,
-                13
-        );
-
-        // Draw the Remove label ourselves so it does not use the vanilla button skin.
-        graphics.drawCenteredString(
-                font,
-                "Remove",
-                leftPos + s(151),
-                topPos + s(69),
-                0xFF2B241D
-        );
-
-        // Draw the plus controls ourselves so they match the pixel-art book
-        // instead of using the vanilla grey button skin.
-        for (int i = 0; i < 5; i++) {
-            graphics.drawCenteredString(
-                    font,
-                    "+",
-                    leftPos + s(153),
-                    topPos + s(17 + i * 10),
-                    0xFF2B241D
-            );
-        }
 
         renderTooltip(graphics, mouseX, mouseY);
     }
