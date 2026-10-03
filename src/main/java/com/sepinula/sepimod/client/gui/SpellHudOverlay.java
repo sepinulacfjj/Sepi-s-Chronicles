@@ -44,6 +44,16 @@ public class SpellHudOverlay {
                 Math.max(0, SpellbookHelper.getCapacity(mc.player))
         );
 
+        // A spellbook held without ever being equipped has no client attachment yet.
+        // Read its tier directly so the HUD can still appear.
+        if (capacity == 0) {
+            if (spellbookInMainHand && mc.player.getMainHandItem().getItem() instanceof com.sepinula.sepimod.spellbook.SpellbookItem book) {
+                capacity = book.getSpellSlots();
+            } else if (spellbookInOffHand && mc.player.getOffhandItem().getItem() instanceof com.sepinula.sepimod.spellbook.SpellbookItem book) {
+                capacity = book.getSpellSlots();
+            }
+        }
+
         if (capacity == 0) {
             return;
         }
