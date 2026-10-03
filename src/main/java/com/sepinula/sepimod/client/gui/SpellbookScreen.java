@@ -47,12 +47,16 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
             Component title
     ) {
         super(menu, inventory, title);
-        this.imageWidth = 176;
-        this.imageHeight = 166;
+        this.imageWidth = 220;
+        this.imageHeight = 208;
         this.titleLabelX = 72;
         this.titleLabelY = 7;
         this.inventoryLabelX = 8;
         this.inventoryLabelY = 74;
+    }
+
+    private static int s(int value) {
+        return Math.round(value * 1.25f);
     }
 
     @Override
@@ -65,20 +69,21 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
         for (int i = 0; i < 5; i++) {
             final int knownIndex = i;
 
-            addRenderableWidget(
-                    Button.builder(
-                                    Component.literal("+"),
-                                    b -> Messages.sendToServer(
-                                            new PacketSpellbookAction(
-                                                    PacketSpellbookAction.ADD_KNOWN,
-                                                    knownIndex,
-                                                    0
-                                            )
+            Button addButton = Button.builder(
+                            Component.empty(),
+                            b -> Messages.sendToServer(
+                                    new PacketSpellbookAction(
+                                            PacketSpellbookAction.ADD_KNOWN,
+                                            knownIndex,
+                                            0
                                     )
                             )
-                            .bounds(x + 146, y + 16 + i * 10, 14, 10)
-                            .build()
-            );
+                    )
+                    .bounds(x + s(146), y + s(16 + i * 10), s(14), s(10))
+                    .build();
+
+            addButton.setAlpha(0.0F);
+            addRenderableWidget(addButton);
         }
 
         addRenderableWidget(
@@ -93,7 +98,7 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                         );
                         combineFirst = -1;
                     }
-                }).bounds(x + 130, y + 67, 42, 13).build()
+                }).bounds(x + s(130), y + s(67), s(42), s(13)).build()
         );
 
         addRenderableWidget(
@@ -113,20 +118,20 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                         combineFirst = -1;
                         combineSecond = -1;
                     }
-                }).bounds(x + 47, y + 67, 81, 13).build()
+                }).bounds(x + s(47), y + s(67), s(81), s(13)).build()
         );
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
         for (int i = 0; i < 9; i++) {
-            int sx = leftPos + 62 + i * 21;
-            int sy = topPos + 93;
+            int sx = leftPos + s(62 + i * 21);
+            int sy = topPos + s(93);
 
             if (mouseX >= sx
-                    && mouseX < sx + 18
+                    && mouseX < sx + s(18)
                     && mouseY >= sy
-                    && mouseY < sy + 18) {
+                    && mouseY < sy + s(18)) {
 
                 if (combineFirst < 0) {
                     combineFirst = i;
@@ -171,8 +176,8 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                     0,
                     imageWidth,
                     imageHeight,
-                    imageWidth,
-                    imageHeight
+                    176,
+                    166
             );
         } else {
             graphics.fill(x + 4, y + 4, x + imageWidth - 4, y + 70, 0xFF241D29);
@@ -194,32 +199,32 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
         graphics.drawString(
                 font,
                 "ACTIVE SPELLS",
-                x + 62,
-                y + 82,
+                x + s(62),
+                y + s(82),
                 0xFFD8C8A8
         );
 
         for (int i = 0; i < capacity; i++) {
-            int slotX = x + 62 + i * 21;
-            int slotY = y + 93;
+            int slotX = x + s(62 + i * 21);
+            int slotY = y + s(93);
             int border =
                     i == data.getSelectedSpellIndex()
                             ? 0xFFE7C46A
                             : 0xFF111016;
 
             graphics.fill(
-                    slotX - 1,
-                    slotY - 1,
-                    slotX + 19,
-                    slotY + 19,
+                    slotX - s(1),
+                    slotY - s(1),
+                    slotX + s(19),
+                    slotY + s(19),
                     border
             );
 
             graphics.fill(
                     slotX,
                     slotY,
-                    slotX + 18,
-                    slotY + 18,
+                    slotX + s(18),
+                    slotY + s(18),
                     0xFF3B2E3B
             );
 
@@ -229,17 +234,17 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                 );
 
                 if (spell != null) {
-                    drawSpellIcon(graphics, spell, slotX + 1, slotY + 1, 16, 16);
+                    drawSpellIcon(graphics, spell, slotX + s(1), slotY + s(1), s(16), s(16));
                 }
             } else {
                 graphics.blit(
                         EMPTY_ICON,
-                        slotX + 1,
-                        slotY + 1,
+                        slotX + s(1),
+                        slotY + s(1),
                         0,
                         0,
-                        16,
-                        16,
+                        s(16),
+                        s(16),
                         16,
                         16
                 );
@@ -254,13 +259,13 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
             );
 
             if (spell != null) {
-                drawSpellIcon(graphics, spell, x + 62, y + 27 + row * 10, 10, 10);
+                drawSpellIcon(graphics, spell, x + s(62), y + s(27 + row * 10), s(10), s(10));
 
                 graphics.drawString(
                         font,
                         spell.displayName(),
-                        x + 74,
-                        y + 28 + row * 10,
+                        x + s(74),
+                        y + s(28 + row * 10),
                         0xFFE8DCC7
                 );
             }
@@ -298,6 +303,15 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
     }
 
     @Override
+    protected void renderLabels(
+            GuiGraphics graphics,
+            int mouseX,
+            int mouseY
+    ) {
+        // The background artwork owns the title and page labels.
+    }
+
+    @Override
     public void render(
             GuiGraphics graphics,
             int mouseX,
@@ -315,11 +329,23 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                 topPos + 67,
                 0,
                 0,
-                81,
-                13,
+                s(81),
+                s(13),
                 81,
                 13
         );
+
+        // Draw the plus controls ourselves so they match the pixel-art book
+        // instead of using the vanilla grey button skin.
+        for (int i = 0; i < 5; i++) {
+            graphics.drawCenteredString(
+                    font,
+                    "+",
+                    leftPos + s(153),
+                    topPos + s(17 + i * 10),
+                    0xFF2B241D
+            );
+        }
 
         renderTooltip(graphics, mouseX, mouseY);
     }
