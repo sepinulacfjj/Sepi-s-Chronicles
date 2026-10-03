@@ -25,22 +25,42 @@ public class PlayerSpellbookContainer extends SimpleContainer {
         ItemStack equipped = player.getData(ModDataAttachments.PLAYER_SPELLBOOK_DATA).getSpellbook();
         super.setItem(0, equipped.copy());
 
-        addListener(container -> {
-            if (player.level().isClientSide()) {
-                return;
-            }
+        addListener(container -> syncSpellbookData());
+    }
 
-            var data = player.getData(ModDataAttachments.PLAYER_SPELLBOOK_DATA);
-            data.setSpellbook(container.getItem(0));
-            SpellbookHelper.enforceCapacity(player);
+    @Override
+    public void setItem(int index, ItemStack stack) {
+        super.setItem(index, stack);
+        syncSpellbookData();
+    }
 
-            if (player instanceof ServerPlayer serverPlayer) {
-                PacketDistributor.sendToPlayer(
-                        serverPlayer,
-                        PacketSyncSpellbookData.from(data)
-                );
-            }
-        });
+    @Override
+    public ItemStack removeItem(int index, int count) {
+        ItemStack result = super.removeItem(index, count);
+        syncSpellbookData();
+        return result;
+    }
+
+    @Override
+    public ItemStack removeItemNoUpdate(int index) {
+        ItemStack result = super.removeItemNoUpdate(index);
+        syncSpellbookData();
+        return result;
+    }
+
+    private void syncSpellbookData() {
+        if (player.level().isClientSide()) {
+            return;
+        }
+
+        var data = player.getData(ModDataAttachments.PLAYER_SPELLBOOK_DATA);
+        ItemStack current = getItem(0);
+        data.setSpellbook(current);
+        SpellbookHelper.enforceCapacity(player);
+
+        if (player instanceof ServerPlayer serverPlayer) {
+            PacketDistributor.sendToPlayer(serverPlayer, PacketSyncSpellbookData.from(data));
+        }
     }
 
     @Override
