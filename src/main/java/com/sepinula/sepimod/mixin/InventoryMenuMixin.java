@@ -23,7 +23,7 @@ public abstract class InventoryMenuMixin {
     @Inject(method = "<init>", at = @At("TAIL"))
     private void sepimod$addSpellbookSlot(Inventory playerInventory, boolean active, Player owner, CallbackInfo ci) {
         ((AbstractContainerMenuAccessor) this).sepimod$addSlot(
-                new SpellbookSlot(new PlayerSpellbookContainer(owner), 0, 151, 18)
+                new SpellbookSlot(new PlayerSpellbookContainer(owner), 0, 151, 84)
         );
     }
 
