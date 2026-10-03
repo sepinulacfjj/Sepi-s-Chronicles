@@ -3,12 +3,13 @@ package com.sepinula.sepimod.util;
 import com.mojang.serialization.Codec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.world.item.ItemStack;
+import com.sepinula.sepimod.spellbook.SpellbookItem;
 
 /**
  * Stores the physical spellbook equipped in the player's dedicated spellbook slot.
  *
- * The book itself contains no learned-spell configuration. It only supplies
- * the tier and therefore the number of spell slots available to the player.
+ * The server keeps the actual ItemStack. The client only needs the equipped
+ * state and capacity for rendering the spell UI.
  */
 public class PlayerSpellbookData {
 
@@ -20,6 +21,8 @@ public class PlayerSpellbookData {
     );
 
     private ItemStack spellbook;
+    private boolean clientEquipped;
+    private int clientCapacity;
 
     public PlayerSpellbookData() {
         this(ItemStack.EMPTY);
@@ -27,6 +30,18 @@ public class PlayerSpellbookData {
 
     public PlayerSpellbookData(ItemStack spellbook) {
         this.spellbook = spellbook.copy();
+        this.clientEquipped = hasSpellbook();
+        this.clientCapacity = getSpellSlotCapacity();
+    }
+
+    private PlayerSpellbookData(boolean equipped, int capacity) {
+        this.spellbook = ItemStack.EMPTY;
+        this.clientEquipped = equipped;
+        this.clientCapacity = Math.max(0, capacity);
+    }
+
+    public static PlayerSpellbookData clientState(boolean equipped, int capacity) {
+        return new PlayerSpellbookData(equipped, capacity);
     }
 
     public ItemStack getSpellbook() {
@@ -35,17 +50,21 @@ public class PlayerSpellbookData {
 
     public void setSpellbook(ItemStack spellbook) {
         this.spellbook = spellbook.copy();
+        this.clientEquipped = hasSpellbook();
+        this.clientCapacity = getSpellSlotCapacity();
     }
 
     public boolean hasSpellbook() {
-        return !spellbook.isEmpty() && spellbook.getItem() instanceof com.sepinula.sepimod.spellbook.SpellbookItem;
+        if (!spellbook.isEmpty()) {
+            return spellbook.getItem() instanceof SpellbookItem;
+        }
+        return clientEquipped;
     }
 
     public int getSpellSlotCapacity() {
-        if (!hasSpellbook()) {
-            return 0;
+        if (!spellbook.isEmpty() && spellbook.getItem() instanceof SpellbookItem spellbookItem) {
+            return spellbookItem.getSpellSlots();
         }
-
-        return ((com.sepinula.sepimod.spellbook.SpellbookItem) spellbook.getItem()).getSpellSlots();
+        return clientCapacity;
     }
 }
