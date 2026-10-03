@@ -8,6 +8,7 @@ import com.sepinula.sepimod.init.ModItems;
 import com.sepinula.sepimod.util.ModDataAttachments;
 import com.sepinula.sepimod.util.PlayerStats;
 import com.sepinula.sepimod.network.PacketSyncSpellData;
+import com.sepinula.sepimod.network.PacketSyncSpellbookData;
 import com.sepinula.sepimod.spells.SpellRegistry;
 import com.sepinula.sepimod.util.StatLogicHandler;
 import net.minecraft.core.component.DataComponents;
@@ -55,6 +56,7 @@ public class ModEvents {
             spells.learnSpell(SpellRegistry.GUST.id().toString());
             spells.learnSpell(SpellRegistry.ICE_SHARD.id().toString());
             net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, PacketSyncSpellData.from(spells));
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, PacketSyncSpellbookData.from(player.getData(ModDataAttachments.PLAYER_SPELLBOOK_DATA).getSpellbook()));
         }
     }
 
@@ -191,6 +193,8 @@ public class ModEvents {
                 }
 
                 ModDataAttachments.sync(player);
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, PacketSyncSpellData.from(stats == null ? player.getData(ModDataAttachments.PLAYER_SPELL_DATA) : player.getData(ModDataAttachments.PLAYER_SPELL_DATA)));
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, PacketSyncSpellbookData.from(player.getData(ModDataAttachments.PLAYER_SPELLBOOK_DATA).getSpellbook()));
             } else if (needsSync) {
                 ModDataAttachments.sync(player);
             }
