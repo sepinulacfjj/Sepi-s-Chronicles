@@ -35,6 +35,7 @@ import net.neoforged.neoforge.common.NeoForge;
 import org.lwjgl.glfw.GLFW;
 
 public class ClientEvents {
+    private static boolean vanillaCreativeHotbarKeysCleared = false;
     public static final KeyMapping classKey = new KeyMapping("key.sepimod.open_class", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "key.categories.sepimod");
     public static final KeyMapping statsKey = new KeyMapping("key.sepimod.open_stats", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_J, "key.categories.sepimod");
     public static final KeyMapping spellbookKey = new KeyMapping("key.sepimod.open_spellbook", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_C, "key.categories.sepimod");
@@ -56,10 +57,6 @@ public class ClientEvents {
     }
 
     private static void onKeyRegister(RegisterKeyMappingsEvent event) {
-        // C and X are reserved for Sepi's Chronicles spell controls.
-        // Vanilla Creative hotbar bindings are intentionally left unbound.
-        Minecraft.getInstance().options.keySaveHotbarActivator.setKey(InputConstants.UNKNOWN);
-        Minecraft.getInstance().options.keyLoadHotbarActivator.setKey(InputConstants.UNKNOWN);
         event.register(classKey);
         event.register(statsKey);
         event.register(spellbookKey);
@@ -83,6 +80,12 @@ public class ClientEvents {
 
     private static void onClientTick(ClientTickEvent.Post event) {
         Minecraft mc = Minecraft.getInstance();
+        if (!vanillaCreativeHotbarKeysCleared) {
+            mc.options.keySaveHotbarActivator.setKey(InputConstants.UNKNOWN);
+            mc.options.keyLoadHotbarActivator.setKey(InputConstants.UNKNOWN);
+            mc.options.save();
+            vanillaCreativeHotbarKeysCleared = true;
+        }
         if (mc.player == null || mc.level == null) return;
 
         if (mc.screen == null) {
@@ -93,7 +96,11 @@ public class ClientEvents {
             }
 
             while (spellbookKey.consumeClick()) {
-                Messages.sendToServer(new PacketSpellbookAction(PacketSpellbookAction.OPEN, 0, 0));
+                if (SpellbookHelper.hasSpellbook(mc.player)) {
+                    Messages.sendToServer(new PacketSpellbookAction(PacketSpellbookAction.OPEN, 0, 0));
+                } else {
+                    mc.player.displayClientMessage(Component.literal("§cEquip a spellbook first."), true);
+                }
             }
 
             while (statsKey.consumeClick()) {
