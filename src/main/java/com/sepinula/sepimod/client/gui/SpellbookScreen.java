@@ -23,7 +23,9 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
             ResourceLocation.fromNamespaceAndPath("sepimod", "textures/gui/spellbook.png");
 
     public SpellbookScreen(com.sepinula.sepimod.spellbook.SpellbookMenu menu, Inventory inventory, Component title) {
-        super(menu, inventory, title, 176, 166);
+        super(menu, inventory, title);
+        this.imageWidth = 176;
+        this.imageHeight = 166;
         this.titleLabelX = 72;
         this.inventoryLabelX = 8;
         this.titleLabelY = 7;
@@ -137,7 +139,7 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
-        renderBackground(graphics);
+        renderBackground(graphics, mouseX, mouseY, partialTick);
         super.render(graphics, mouseX, mouseY, partialTick);
         renderTooltip(graphics, mouseX, mouseY);
     }
