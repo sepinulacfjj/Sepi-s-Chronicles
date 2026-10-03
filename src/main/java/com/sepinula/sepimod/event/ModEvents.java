@@ -56,7 +56,7 @@ public class ModEvents {
             spells.learnSpell(SpellRegistry.GUST.id().toString());
             spells.learnSpell(SpellRegistry.ICE_SHARD.id().toString());
             net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, PacketSyncSpellData.from(spells));
-            net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, PacketSyncSpellbookData.from(player.getData(ModDataAttachments.PLAYER_SPELLBOOK_DATA).getSpellbook()));
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, PacketSyncSpellbookData.from(player.getData(ModDataAttachments.PLAYER_SPELLBOOK_DATA)));
         }
     }
 
@@ -75,7 +75,7 @@ public class ModEvents {
             ModDataAttachments.sync(player);
             var spells = player.getData(ModDataAttachments.PLAYER_SPELL_DATA);
             net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, PacketSyncSpellData.from(spells));
-            net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, PacketSyncSpellbookData.from(player.getData(ModDataAttachments.PLAYER_SPELLBOOK_DATA).getSpellbook()));
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, PacketSyncSpellbookData.from(player.getData(ModDataAttachments.PLAYER_SPELLBOOK_DATA)));
         }
     }
 
@@ -195,7 +195,7 @@ public class ModEvents {
 
                 ModDataAttachments.sync(player);
                 net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, PacketSyncSpellData.from(player.getData(ModDataAttachments.PLAYER_SPELL_DATA)));
-                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, PacketSyncSpellbookData.from(player.getData(ModDataAttachments.PLAYER_SPELLBOOK_DATA).getSpellbook()));
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, PacketSyncSpellbookData.from(player.getData(ModDataAttachments.PLAYER_SPELLBOOK_DATA)));
             } else if (needsSync) {
                 ModDataAttachments.sync(player);
             }
