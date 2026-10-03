@@ -38,9 +38,8 @@ public class ClientEvents {
     public static final KeyMapping classKey = new KeyMapping("key.sepimod.open_class", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_O, "key.categories.sepimod");
     public static final KeyMapping statsKey = new KeyMapping("key.sepimod.open_stats", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_J, "key.categories.sepimod");
     public static final KeyMapping lockOnKey = new KeyMapping("key.sepimod.lock_on", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_Z, "key.categories.sepimod");
-    public static final KeyMapping spellbookKey = new KeyMapping("key.sepimod.open_spellbook", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_C, "key.categories.sepimod");
-    public static final KeyMapping spellPreviousKey = new KeyMapping("key.sepimod.spell_previous", InputConstants.Type.KEYSYM, GLFW.GLFW_MOUSE_BUTTON_4, "key.categories.sepimod");
-    public static final KeyMapping spellNextKey = new KeyMapping("key.sepimod.spell_next", InputConstants.Type.KEYSYM, GLFW.GLFW_MOUSE_BUTTON_5, "key.categories.sepimod");
+    public static final KeyMapping spellPreviousKey = new KeyMapping("key.sepimod.spell_previous", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_Z, "key.categories.sepimod");
+    public static final KeyMapping spellNextKey = new KeyMapping("key.sepimod.spell_next", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_X, "key.categories.sepimod");
     public static final KeyMapping spellCastKey = new KeyMapping("key.sepimod.spell_cast", InputConstants.Type.KEYSYM, GLFW.GLFW_KEY_R, "key.categories.sepimod");
 
     private static boolean isLockedOn = false;
@@ -59,7 +58,6 @@ public class ClientEvents {
         event.register(classKey);
         event.register(statsKey);
         event.register(lockOnKey);
-        event.register(spellbookKey);
         event.register(spellPreviousKey);
         event.register(spellNextKey);
         event.register(spellCastKey);
@@ -92,10 +90,6 @@ public class ClientEvents {
                 PlayerStats stats = mc.player.getData(ModDataAttachments.PLAYER_STATS);
                 if (stats.getArchetype() == RpgArchetype.NONE) mc.player.displayClientMessage(Component.literal("§6You must pick a class (Press O) before upgrading stats!"), true);
                 else mc.setScreen(new StatUpgradeScreen());
-            }
-
-            while (spellbookKey.consumeClick()) {
-                Messages.sendToServer(new PacketSpellbookAction(PacketSpellbookAction.OPEN, 0, 0));
             }
 
             while (spellPreviousKey.consumeClick()) {
