@@ -18,7 +18,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 public abstract class InventoryMenuMixin {
 
 
-    public static final int SEPI_SPELLBOOK_SLOT = 46;
+    private static final int SEPI_SPELLBOOK_SLOT = 46;
 
     @Inject(method = "<init>", at = @At("TAIL"))
     private void sepimod$addSpellbookSlot(Inventory playerInventory, boolean active, Player owner, CallbackInfo ci) {
