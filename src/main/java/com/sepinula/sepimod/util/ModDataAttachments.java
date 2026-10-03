@@ -30,6 +30,16 @@ public class ModDataAttachments {
                     .copyOnDeath()
                     .build());
 
+    /**
+     * The physical spellbook currently equipped in the player's dedicated
+     * spellbook slot. This is separate from PlayerSpellData.
+     */
+    public static final Supplier<AttachmentType<PlayerSpellbookData>> PLAYER_SPELLBOOK_DATA = ATTACHMENT_TYPES.register(
+            "player_spellbook_data", () -> AttachmentType.builder(PlayerSpellbookData::new)
+                    .serialize(PlayerSpellbookData.CODEC)
+                    .copyOnDeath()
+                    .build());
+
     public static void sync(ServerPlayer player) {
         PacketDistributor.sendToPlayer(player, new PacketSyncStats(player.getData(PLAYER_STATS)));
     }
