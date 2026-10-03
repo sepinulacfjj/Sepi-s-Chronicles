@@ -78,19 +78,5 @@ public class SpellHudOverlay {
             }
         }
 
-        if (!data.getSelectedSpellId().isEmpty()) {
-            Spell selectedSpell = SpellRegistry.get(
-                    ResourceLocation.parse(data.getSelectedSpellId())
-            );
-
-            if (selectedSpell != null) {
-                graphics.drawString(
-                        mc.font,
-                        selectedSpell.displayName(),
-                        12,
-                        y - 12,
-                        0xFFFFE6A5
-                );            }
-        }
     }
 }
