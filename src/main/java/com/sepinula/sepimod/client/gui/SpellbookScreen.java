@@ -21,7 +21,25 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
     private int combineSecond = -1;
 
     private static final ResourceLocation BACKGROUND =
-            ResourceLocation.fromNamespaceAndPath("sepimod", "textures/gui/spellbook.png");
+            ResourceLocation.fromNamespaceAndPath("sepimod", "textures/gui/spellbook_background.png");
+
+    private static final ResourceLocation COMBINE_BUTTON =
+            ResourceLocation.fromNamespaceAndPath("sepimod", "textures/button/combine.png");
+
+    private static final ResourceLocation EMPTY_ICON =
+            ResourceLocation.fromNamespaceAndPath("sepimod", "textures/icon/empty_box_icon.png");
+
+    private static final ResourceLocation FIREBALL_ICON =
+            ResourceLocation.fromNamespaceAndPath("sepimod", "textures/icon/fireball_icon.png");
+
+    private static final ResourceLocation GUST_ICON =
+            ResourceLocation.fromNamespaceAndPath("sepimod", "textures/icon/gust_icon.png");
+
+    private static final ResourceLocation ICE_SHARD_ICON =
+            ResourceLocation.fromNamespaceAndPath("sepimod", "textures/icon/ice_shard_icon.png");
+
+    private static final ResourceLocation FIRE_WIND_ICON =
+            ResourceLocation.fromNamespaceAndPath("sepimod", "textures/icon/fire_wind_icon.png");
 
     public SpellbookScreen(
             com.sepinula.sepimod.spellbook.SpellbookMenu menu,
@@ -210,14 +228,20 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                 );
 
                 if (spell != null) {
-                    graphics.drawCenteredString(
-                            font,
-                            spell.displayName(),
-                            slotX + 9,
-                            y + 49,
-                            0xFFE8DCC7
-                    );
+                    drawSpellIcon(graphics, spell, slotX + 1, y + 29, 16, 16);
                 }
+            } else {
+                graphics.blit(
+                        EMPTY_ICON,
+                        slotX + 1,
+                        y + 29,
+                        0,
+                        0,
+                        16,
+                        16,
+                        16,
+                        16
+                );
             }
         }
 
@@ -231,10 +255,12 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
             );
 
             if (spell != null) {
+                drawSpellIcon(graphics, spell, x + 62, y + 27 + row * 10, 10, 10);
+
                 graphics.drawString(
                         font,
                         spell.displayName(),
-                        x + 62,
+                        x + 74,
                         y + 28 + row * 10,
                         0xFFE8DCC7
                 );
@@ -290,6 +316,35 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
         );
     }
 
+    private void drawSpellIcon(
+            GuiGraphics graphics,
+            Spell spell,
+            int x,
+            int y,
+            int width,
+            int height
+    ) {
+        ResourceLocation icon = switch (spell.id().getPath()) {
+            case "fireball" -> FIREBALL_ICON;
+            case "gust" -> GUST_ICON;
+            case "ice_shard" -> ICE_SHARD_ICON;
+            case "fire_wind" -> FIRE_WIND_ICON;
+            default -> EMPTY_ICON;
+        };
+
+        graphics.blit(
+                icon,
+                x,
+                y,
+                0,
+                0,
+                width,
+                height,
+                16,
+                16
+        );
+    }
+
     @Override
     public void render(
             GuiGraphics graphics,
@@ -299,6 +354,21 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
     ) {
         renderBackground(graphics, mouseX, mouseY, partialTick);
         super.render(graphics, mouseX, mouseY, partialTick);
+
+        // The actual button is still a clickable widget, but the visual comes
+        // from the custom texture you made rather than the vanilla button style.
+        graphics.blit(
+                COMBINE_BUTTON,
+                leftPos + 47,
+                topPos + 67,
+                0,
+                0,
+                81,
+                13,
+                81,
+                13
+        );
+
         renderTooltip(graphics, mouseX, mouseY);
     }
 }
