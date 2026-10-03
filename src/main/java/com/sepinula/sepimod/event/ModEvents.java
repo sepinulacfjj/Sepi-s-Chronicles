@@ -75,6 +75,7 @@ public class ModEvents {
             ModDataAttachments.sync(player);
             var spells = player.getData(ModDataAttachments.PLAYER_SPELL_DATA);
             net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, PacketSyncSpellData.from(spells));
+            net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, PacketSyncSpellbookData.from(player.getData(ModDataAttachments.PLAYER_SPELLBOOK_DATA).getSpellbook()));
         }
     }
 
@@ -193,7 +194,7 @@ public class ModEvents {
                 }
 
                 ModDataAttachments.sync(player);
-                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, PacketSyncSpellData.from(stats == null ? player.getData(ModDataAttachments.PLAYER_SPELL_DATA) : player.getData(ModDataAttachments.PLAYER_SPELL_DATA)));
+                net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, PacketSyncSpellData.from(player.getData(ModDataAttachments.PLAYER_SPELL_DATA)));
                 net.neoforged.neoforge.network.PacketDistributor.sendToPlayer(player, PacketSyncSpellbookData.from(player.getData(ModDataAttachments.PLAYER_SPELLBOOK_DATA).getSpellbook()));
             } else if (needsSync) {
                 ModDataAttachments.sync(player);
