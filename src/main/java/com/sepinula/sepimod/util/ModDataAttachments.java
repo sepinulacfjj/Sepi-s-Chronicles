@@ -35,7 +35,7 @@ public class ModDataAttachments {
      * spellbook slot. This is separate from PlayerSpellData.
      */
     public static final Supplier<AttachmentType<PlayerSpellbookData>> PLAYER_SPELLBOOK_DATA = ATTACHMENT_TYPES.register(
-            "player_spellbook_data", () -> AttachmentType.builder(PlayerSpellbookData::new)
+            "player_spellbook_data", () -> AttachmentType.builder((java.util.function.Supplier<PlayerSpellbookData>) PlayerSpellbookData::new)
                     .serialize(PlayerSpellbookData.CODEC)
                     .copyOnDeath()
                     .build());
