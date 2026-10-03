@@ -23,9 +23,6 @@ public class SpellbookMenu extends AbstractContainerMenu {
         super(ModMenus.SPELLBOOK.get(), containerId);
         this.player = playerInventory.player;
 
-        PlayerSpellbookContainer bookContainer = new PlayerSpellbookContainer(player);
-        this.addSlot(new SpellbookSlot(bookContainer, 0, 20, 30));
-
     }
 
     @Override
