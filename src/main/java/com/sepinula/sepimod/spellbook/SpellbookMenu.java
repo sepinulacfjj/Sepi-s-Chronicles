@@ -29,6 +29,14 @@ public class SpellbookMenu extends AbstractContainerMenu {
     }
 
     @Override
+    public ItemStack quickMoveStack(Player player, int index) {
+        // The standalone spellbook GUI has no player-inventory slots to
+        // transfer items into or out of. The dedicated Book slot is managed
+        // directly through PlayerSpellbookContainer.
+        return ItemStack.EMPTY;
+    }
+
+    @Override
     public boolean stillValid(Player player) {
         return player.isAlive();
     }
