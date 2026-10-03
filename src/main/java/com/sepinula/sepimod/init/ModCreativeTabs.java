@@ -13,15 +13,17 @@ public class ModCreativeTabs {
     public static final DeferredRegister<CreativeModeTab> CREATIVE_MODE_TABS =
             DeferredRegister.create(Registries.CREATIVE_MODE_TAB, SepiMod.MODID);
 
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> SEPI_TAB = CREATIVE_MODE_TABS.register("sepi_tab",
-            () -> CreativeModeTab.builder()
-                    .icon(() -> new ItemStack(ModItems.BASIC_STAFF.get()))
-                    .title(Component.translatable("creativetab.sepimod"))
-                    .displayItems((parameters, output) -> {
-                        output.accept(ModItems.BASIC_STAFF.get());
-                        output.accept(ModItems.GOBLIN_SPAWN_EGG.get());
-                    })
-                    .build());
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> SEPI_TAB =
+            CREATIVE_MODE_TABS.register("sepi_tab",
+                    () -> CreativeModeTab.builder()
+                            .icon(() -> new ItemStack(ModItems.BASIC_STAFF.get()))
+                            .title(Component.translatable("creativetab.sepimod"))
+                            .displayItems((parameters, output) -> {
+                                output.accept(ModItems.BASIC_STAFF.get());
+                                output.accept(ModItems.IRON_SPELLBOOK.get());
+                                output.accept(ModItems.GOBLIN_SPAWN_EGG.get());
+                            })
+                            .build());
 
     public static void register(IEventBus eventBus) {
         CREATIVE_MODE_TABS.register(eventBus);
