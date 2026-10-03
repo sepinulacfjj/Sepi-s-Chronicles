@@ -84,8 +84,13 @@ public class SpellHudOverlay {
             );
 
             if (selectedSpell != null) {
-                graphics.drawString(\n                        mc.font,\n                        selectedSpell.displayName(),\n                        screenWidth - 12 - mc.font.width(selectedSpell.displayName()),\n                        y - 12,\n                        0xFFFFE6A5\n                );
-            }
+                graphics.drawString(
+                        mc.font,
+                        selectedSpell.displayName(),
+                        screenWidth - 12 - mc.font.width(selectedSpell.displayName()),
+                        y - 12,
+                        0xFFFFE6A5
+                );            }
         }
     }
 }
