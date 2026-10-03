@@ -29,7 +29,7 @@ public abstract class InventoryScreenMixin {
 
         graphics.blit(INVENTORY_TEXTURE,
                 containerScreen.getGuiLeft() + 151,
-                containerScreen.getGuiTop() + 18,
+                containerScreen.getGuiTop() + 84,
                 7, 83,
                 18, 18,
                 256, 256);
@@ -49,7 +49,7 @@ public abstract class InventoryScreenMixin {
                 Minecraft.getInstance().font,
                 "Book",
                 containerScreen.getGuiLeft() + 151,
-                containerScreen.getGuiTop() + 7,
+                containerScreen.getGuiTop() + 73,
                 0x404040,
                 false
         );
