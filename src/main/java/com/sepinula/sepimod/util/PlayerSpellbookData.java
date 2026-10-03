@@ -40,8 +40,16 @@ public class PlayerSpellbookData {
         this.clientCapacity = Math.max(0, capacity);
     }
 
+    public static PlayerSpellbookData clientState(boolean equipped, int capacity, ItemStack spellbook) {
+        PlayerSpellbookData data = new PlayerSpellbookData(equipped, capacity);
+        data.spellbook = spellbook.copy();
+        data.clientEquipped = equipped && !data.spellbook.isEmpty();
+        data.clientCapacity = Math.max(0, capacity);
+        return data;
+    }
+
     public static PlayerSpellbookData clientState(boolean equipped, int capacity) {
-        return new PlayerSpellbookData(equipped, capacity);
+        return clientState(equipped, capacity, ItemStack.EMPTY);
     }
 
     public ItemStack getSpellbook() {
