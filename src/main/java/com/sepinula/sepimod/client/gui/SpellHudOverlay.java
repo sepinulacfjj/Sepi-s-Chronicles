@@ -33,6 +33,7 @@ public class SpellHudOverlay {
         boolean spellbookInMainHand = mc.player.getMainHandItem().getItem() instanceof com.sepinula.sepimod.spellbook.SpellbookItem;
         boolean spellbookInOffHand = mc.player.getOffhandItem().getItem() instanceof com.sepinula.sepimod.spellbook.SpellbookItem;
 
+        // The HUD is available when a spellbook is equipped OR currently held.
         if (!spellbookEquipped && !spellbookInMainHand && !spellbookInOffHand) {
             return;
         }
