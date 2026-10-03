@@ -86,8 +86,7 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
             addRenderableWidget(addButton);
         }
 
-        addRenderableWidget(
-                Button.builder(Component.literal("Remove"), b -> {
+        Button removeButton = Button.builder(Component.empty(), b -> {
                     if (combineFirst >= 0) {
                         Messages.sendToServer(
                                 new PacketSpellbookAction(
@@ -98,8 +97,10 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                         );
                         combineFirst = -1;
                     }
-                }).bounds(x + s(130), y + s(67), s(42), s(13)).build()
-        );
+                }).bounds(x + s(130), y + s(67), s(42), s(13)).build();
+
+        removeButton.setAlpha(0.0F);
+        addRenderableWidget(removeButton);
 
         addRenderableWidget(
                 Button.builder(Component.empty(), b -> {
@@ -333,6 +334,15 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                 s(13),
                 81,
                 13
+        );
+
+        // Draw the Remove label ourselves so it does not use the vanilla button skin.
+        graphics.drawCenteredString(
+                font,
+                "Remove",
+                leftPos + s(151),
+                topPos + s(69),
+                0xFF2B241D
         );
 
         // Draw the plus controls ourselves so they match the pixel-art book
