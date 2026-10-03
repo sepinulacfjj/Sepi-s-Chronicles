@@ -19,7 +19,7 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
 
     private int combineFirst = -1;
     private int combineSecond = -1;
-    private int selectedKnownSpell = -1;
+    private boolean showSelectedSpellName = false;
 
     private static final float GUI_SCALE = 1.5f;
 
@@ -132,19 +132,6 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        List<String> known = minecraft.player.getData(ModDataAttachments.PLAYER_SPELL_DATA).getKnownSpells();
-
-        for (int i = 0; i < Math.min(5, known.size()); i++) {
-            int knownX = leftPos + s(78);
-            int knownY = topPos + s(20 + i * 10);
-
-            if (mouseX >= knownX && mouseX < knownX + s(70)
-                    && mouseY >= knownY && mouseY < knownY + s(10)) {
-                selectedKnownSpell = i;
-                return true;
-            }
-        }
-
         for (int i = 0; i < 9; i++) {
             int sx = leftPos + s(62 + i * 21);
             int sy = topPos + s(93);
@@ -153,6 +140,12 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                     && mouseX < sx + s(18)
                     && mouseY >= sy
                     && mouseY < sy + s(18)) {
+
+                if (i < data.getActiveSpells().size()) {
+                    showSelectedSpellName = true;
+                } else {
+                    showSelectedSpellName = false;
+                }
 
                 if (combineFirst < 0) {
                     combineFirst = i;
@@ -205,22 +198,7 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                     166
             );
 
-            List<String> known = data.getKnownSpells();
-
-        if (selectedKnownSpell >= 0 && selectedKnownSpell < known.size()) {
-            Spell selected = SpellRegistry.get(ResourceLocation.parse(known.get(selectedKnownSpell)));
-            if (selected != null) {
-                graphics.drawString(
-                        font,
-                        selected.displayName(),
-                        s(62),
-                        s(55),
-                        0xFF2B241D
-                );
-            }
-        }
-
-        graphics.pose().popPose();
+            graphics.pose().popPose();
         } else {
             graphics.fill(x + 4, y + 4, x + imageWidth - 4, y + 70, 0xFF241D29);
             graphics.fill(x + 7, y + 7, x + imageWidth - 7, y + 69, 0xFF302533);
@@ -272,6 +250,22 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
 
                 if (spell != null) {
                     drawSpellIcon(graphics, spell, slotX + s(1), slotY + s(1), s(16), s(16));
+                }
+            }
+        }
+
+        if (showSelectedSpellName) {
+            String selectedId = data.getSelectedSpellId();
+            if (!selectedId.isEmpty()) {
+                Spell selectedSpell = SpellRegistry.get(ResourceLocation.parse(selectedId));
+                if (selectedSpell != null) {
+                    graphics.drawCenteredString(
+                            font,
+                            selectedSpell.displayName(),
+                            s(62 + data.getSelectedSpellIndex() * 21 + 8),
+                            s(116),
+                            0xFF2B241D
+                    );
                 }
             }
         }
