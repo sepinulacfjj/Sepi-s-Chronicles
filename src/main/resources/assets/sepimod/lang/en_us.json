@@ -10,5 +10,10 @@
   "key.sepimod.open_spellbook": "Open Spellbook",
   "key.sepimod.spell_cast": "Cast Spell",
   "key.sepimod.spell_next": "Next Spell",
-  "key.sepimod.spell_previous": "Previous Spell"
+  "key.sepimod.spell_previous": "Previous Spell",
+  "item.sepimod.spellbook": "Original Spellbook",
+  "item.sepimod.copper_spellbook": "Copper Spellbook",
+  "item.sepimod.gold_spellbook": "Gold Spellbook",
+  "item.sepimod.diamond_spellbook": "Diamond Spellbook",
+  "item.sepimod.netherite_spellbook": "Netherite Spellbook"
 }
