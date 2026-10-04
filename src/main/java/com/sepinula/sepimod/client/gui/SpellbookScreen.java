@@ -11,6 +11,7 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
+import net.minecraft.client.renderer.RenderType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,6 +45,7 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
     private static final int START_X = 10;
     private static final int START_Y = 45;
     private static final int MAX_COLUMNS = 4;
+    private int selectedSpellInfo = -1;
 
     public SpellbookScreen(
             com.sepinula.sepimod.spellbook.SpellbookMenu menu,
@@ -90,7 +92,10 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
             Spell spell = spells.get(i);
             String spellId = spell.id().toString();
 
-            // Locked spells cannot be selected or added.
+            // Clicking any spell opens its information page, even if locked.
+            selectedSpellInfo = i;
+
+            // Locked spells are informational only.
             if (!data.knowsSpell(spellId)) {
                 return true;
             }
@@ -193,7 +198,16 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
             );
 
             if (active) {
-                // Active spells get a gold pixel-art-style outline.
+                // Fill the whole 32x32 tile with a subtle gold highlight,
+                // then redraw the pixel-art border so the selection is obvious.
+                graphics.fill(
+                        tileX,
+                        tileY,
+                        tileX + TILE_SIZE,
+                        tileY + TILE_SIZE,
+                        0x66E7C46A
+                );
+
                 int highlight = 0xFFE7C46A;
                 graphics.fill(tileX, tileY, tileX + TILE_SIZE, tileY + 2, highlight);
                 graphics.fill(tileX, tileY + TILE_SIZE - 2, tileX + TILE_SIZE, tileY + TILE_SIZE, highlight);
@@ -223,6 +237,65 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                 );
 
                 graphics.setColor(1.0F, 1.0F, 1.0F, 1.0F);
+            }
+        }
+
+        // Right page: information for whichever spell was clicked.
+        if (selectedSpellInfo >= 0 && selectedSpellInfo < spells.size()) {
+            Spell selected = spells.get(selectedSpellInfo);
+            boolean learned = data.knowsSpell(selected.id().toString());
+
+            int infoX = x + 190;
+            int infoY = y + 38;
+
+            graphics.blit(
+                    getSpellIcon(selected),
+                    infoX,
+                    infoY,
+                    0,
+                    0,
+                    ICON_SIZE,
+                    ICON_SIZE,
+                    ICON_SIZE,
+                    ICON_SIZE
+            );
+
+            graphics.drawString(
+                    font,
+                    selected.displayName(),
+                    infoX + 34,
+                    infoY + 5,
+                    0xFF2B241D
+            );
+
+            graphics.drawString(
+                    font,
+                    learned ? "Learned" : "Locked",
+                    infoX + 34,
+                    infoY + 18,
+                    learned ? 0xFF3F6B35 : 0xFF8B3333
+            );
+
+            graphics.drawString(
+                    font,
+                    "Mana: " + selected.manaCost(),
+                    infoX,
+                    infoY + 32,
+                    0xFF2B241D
+            );
+
+            int descriptionY = infoY + 47;
+            List<net.minecraft.client.gui.Font.DisplayEntry> wrapped =
+                    font.split(Component.literal(selected.description()), 135);
+
+            for (int line = 0; line < wrapped.size(); line++) {
+                graphics.drawString(
+                        font,
+                        wrapped.get(line),
+                        infoX,
+                        descriptionY + line * 10,
+                        0xFF2B241D
+                );
             }
         }
     }
