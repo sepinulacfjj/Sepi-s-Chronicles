@@ -1,0 +1,6 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["ACA", "CBC", "ACA"],
+  "key": {"A": {"item": "minecraft:iron_block"}, "B": {"item": "sepimod:copper_spellbook"}, "C": {"item": "minecraft:iron_ingot"}},
+  "result": {"id": "sepimod:iron_spellbook"}
+}
