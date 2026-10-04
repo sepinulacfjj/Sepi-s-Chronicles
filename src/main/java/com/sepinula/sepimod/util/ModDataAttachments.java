@@ -31,6 +31,13 @@ public class ModDataAttachments {
                     .build());
 
     /**
+     * Runtime spell cooldowns. These are not persistent player progression.
+     */
+    public static final Supplier<AttachmentType<PlayerSpellCooldownData>> PLAYER_SPELL_COOLDOWNS = ATTACHMENT_TYPES.register(
+            "player_spell_cooldowns", () -> AttachmentType.builder(PlayerSpellCooldownData::new)
+                    .build());
+
+    /**
      * The physical spellbook currently equipped in the player's dedicated
      * spellbook slot. This is separate from PlayerSpellData.
      */
