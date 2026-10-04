@@ -81,45 +81,49 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
             int tileX = leftPos + START_X + column * (TILE_SIZE + TILE_SPACING);
             int tileY = topPos + START_Y + row * (TILE_SIZE + TILE_SPACING);
 
-            if (mouseX < tileX
-                    || mouseX >= tileX + TILE_SIZE
-                    || mouseY < tileY
-                    || mouseY >= tileY + TILE_SIZE) {
+            if (mouseX < tileX || mouseX >= tileX + TILE_SIZE
+                    || mouseY < tileY || mouseY >= tileY + TILE_SIZE) {
                 continue;
             }
 
             Spell spell = spells.get(i);
             String spellId = spell.id().toString();
 
-            // Clicking any spell opens its information page, even if locked.
-            selectedSpellInfo = i;
-
-            // Locked spells are informational only.
-            if (!data.knowsSpell(spellId)) {
+            if (button == 1) {
+                selectedSpellInfo = i;
                 return true;
             }
 
-            int activeIndex = data.getActiveSpells().indexOf(spellId);
+            if (button == 0) {
+                if (!data.knowsSpell(spellId)) {
+                    return true;
+                }
 
-            if (activeIndex >= 0) {
-                Messages.sendToServer(
-                        new PacketSpellbookAction(
-                                PacketSpellbookAction.REMOVE_ACTIVE,
-                                activeIndex,
-                                0
-                        )
-                );
-            } else {
-                Messages.sendToServer(
-                        new PacketSpellbookAction(
-                                PacketSpellbookAction.ADD_KNOWN,
-                                data.getKnownSpells().indexOf(spellId),
-                                0
-                        )
-                );
+                int activeIndex = data.getActiveSpells().indexOf(spellId);
+
+                if (activeIndex >= 0) {
+                    Messages.sendToServer(
+                            new PacketSpellbookAction(
+                                    PacketSpellbookAction.REMOVE_ACTIVE,
+                                    activeIndex,
+                                    0
+                            )
+                    );
+                } else {
+                    int knownIndex = data.getKnownSpells().indexOf(spellId);
+                    if (knownIndex >= 0) {
+                        Messages.sendToServer(
+                                new PacketSpellbookAction(
+                                        PacketSpellbookAction.ADD_KNOWN,
+                                        knownIndex,
+                                        0
+                                )
+                        );
+                    }
+                }
+
+                return true;
             }
-
-            return true;
         }
 
         return super.mouseClicked(mouseX, mouseY, button);
@@ -239,62 +243,45 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
             }
         }
 
-        // Right page: information for whichever spell was clicked.
-        if (selectedSpellInfo >= 0 && selectedSpellInfo < spells.size()) {
+        // Right page: instructions until a spell is inspected.
+        int infoX = x + 190;
+        int infoY = y + 38;
+
+        if (selectedSpellInfo < 0 || selectedSpellInfo >= spells.size()) {
+            graphics.drawString(font, "SPELL INFORMATION", infoX, infoY, 0xFF2B241D);
+            graphics.drawString(font, "Left-click", infoX, infoY + 24, 0xFF3F6B35);
+            graphics.drawString(font, "Equip / unequip a learned spell", infoX, infoY + 35, 0xFF2B241D);
+            graphics.drawString(font, "Right-click", infoX, infoY + 54, 0xFF3F6B35);
+            graphics.drawString(font, "View spell information", infoX, infoY + 65, 0xFF2B241D);
+            graphics.drawString(font, "V / X", infoX, infoY + 84, 0xFF3F6B35);
+            graphics.drawString(font, "Change combat spell", infoX, infoY + 95, 0xFF2B241D);
+            graphics.drawString(font, "R", infoX, infoY + 114, 0xFF3F6B35);
+            graphics.drawString(font, "Cast combat spell", infoX, infoY + 125, 0xFF2B241D);
+        } else {
             Spell selected = spells.get(selectedSpellInfo);
             boolean learned = data.knowsSpell(selected.id().toString());
 
-            int infoX = x + 190;
-            int infoY = y + 38;
+            graphics.blit(getSpellIcon(selected), infoX, infoY, 0, 0,
+                    ICON_SIZE, ICON_SIZE, ICON_SIZE, ICON_SIZE);
 
-            graphics.blit(
-                    getSpellIcon(selected),
-                    infoX,
-                    infoY,
-                    0,
-                    0,
-                    ICON_SIZE,
-                    ICON_SIZE,
-                    ICON_SIZE,
-                    ICON_SIZE
-            );
-
-            graphics.drawString(
-                    font,
-                    selected.displayName(),
-                    infoX + 34,
-                    infoY + 5,
-                    0xFF2B241D
-            );
-
-            graphics.drawString(
-                    font,
-                    learned ? "Learned" : "Locked",
-                    infoX + 34,
-                    infoY + 18,
-                    learned ? 0xFF3F6B35 : 0xFF8B3333
-            );
-
-            graphics.drawString(
-                    font,
-                    "Mana: " + selected.manaCost(),
-                    infoX,
-                    infoY + 32,
-                    0xFF2B241D
-            );
+            graphics.drawString(font, selected.displayName(), infoX + 34, infoY + 5, 0xFF2B241D);
+            graphics.drawString(font, learned ? "Learned" : "Locked",
+                    infoX + 34, infoY + 18, learned ? 0xFF3F6B35 : 0xFF8B3333);
+            graphics.drawString(font, "Mana: " + selected.manaCost(),
+                    infoX, infoY + 32, 0xFF2B241D);
 
             int descriptionY = infoY + 47;
             List<net.minecraft.util.FormattedCharSequence> wrapped =
                     font.split(Component.literal(selected.description()), 135);
 
             for (int line = 0; line < wrapped.size(); line++) {
-                graphics.drawString(
-                        font,
-                        wrapped.get(line),
-                        infoX,
-                        descriptionY + line * 10,
-                        0xFF2B241D
-                );
+                graphics.drawString(font, wrapped.get(line),
+                        infoX, descriptionY + line * 10, 0xFF2B241D);
+            }
+
+            if (!learned) {
+                graphics.drawString(font, "Locked - learn this spell to equip it.",
+                        infoX, descriptionY + wrapped.size() * 10 + 12, 0xFF8B3333);
             }
         }
     }
