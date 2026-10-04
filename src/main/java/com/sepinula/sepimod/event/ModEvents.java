@@ -7,6 +7,7 @@ import com.sepinula.sepimod.init.ModEntities;
 import com.sepinula.sepimod.init.ModItems;
 import com.sepinula.sepimod.util.ModDataAttachments;
 import com.sepinula.sepimod.util.PlayerStats;
+import com.sepinula.sepimod.util.PlayerSpellCooldownData;
 import com.sepinula.sepimod.network.PacketSyncSpellData;
 import com.sepinula.sepimod.network.PacketSyncSpellbookData;
 import com.sepinula.sepimod.spells.SpellRegistry;
@@ -125,6 +126,9 @@ public class ModEvents {
     @SubscribeEvent
     public static void onPlayerTick(PlayerTickEvent.Post event) {
         if (event.getEntity() instanceof ServerPlayer player && !player.level().isClientSide) {
+            PlayerSpellCooldownData cooldowns = player.getData(ModDataAttachments.PLAYER_SPELL_COOLDOWNS);
+            cooldowns.tick();
+
             PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
             int con = stats.getConstitution();
             int agi = stats.getAgility();
