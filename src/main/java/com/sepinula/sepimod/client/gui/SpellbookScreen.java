@@ -322,11 +322,6 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                         infoX, descriptionY + line * 10, 0xFF2B241D, false);
             }
 
-            if (!learned) {
-                graphics.drawString(font, "Locked - learn this spell to equip it.",
-                        infoX, descriptionY + wrapped.size() * 10 + 12,
-                        0xFF8B3333, false);
-            }
         }
     }
 
