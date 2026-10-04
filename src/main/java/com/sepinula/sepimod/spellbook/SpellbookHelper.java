@@ -17,6 +17,14 @@ public final class SpellbookHelper {
         return player.getData(ModDataAttachments.PLAYER_SPELLBOOK_DATA).hasSpellbook();
     }
 
+    public static PlayerSpellbookData getData(Player player) {
+        return player.getData(ModDataAttachments.PLAYER_SPELLBOOK_DATA);
+    }
+
+    public static net.minecraft.world.item.ItemStack getSpellbook(Player player) {
+        return getData(player).getSpellbook();
+    }
+
     public static int getCapacity(Player player) {
         return player.getData(ModDataAttachments.PLAYER_SPELLBOOK_DATA).getSpellSlotCapacity();
     }
