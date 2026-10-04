@@ -6,6 +6,7 @@ import com.sepinula.sepimod.spells.Spell;
 import com.sepinula.sepimod.spells.SpellRegistry;
 import com.sepinula.sepimod.util.ModDataAttachments;
 import com.sepinula.sepimod.util.PlayerSpellData;
+import com.sepinula.sepimod.util.PlayerSpellCooldownData;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.resources.ResourceLocation;
@@ -144,6 +145,43 @@ public class SpellHudOverlay {
                             24,
                             24
                     );
+
+                    if (selected) {
+                        PlayerSpellCooldownData cooldowns =
+                                mc.player.getData(ModDataAttachments.PLAYER_SPELL_COOLDOWNS);
+                        int remainingTicks = cooldowns.getRemainingTicks(spell.id().toString());
+
+                        if (remainingTicks > 0 && spell.cooldownTicks() > 0) {
+                            float progress = Math.min(
+                                    1.0F,
+                                    remainingTicks / (float) spell.cooldownTicks()
+                            );
+
+                            // The dark mask clears from top to bottom as the cooldown expires.
+                            int clearHeight = Math.round(32.0F * (1.0F - progress));
+                            graphics.fill(
+                                    x,
+                                    y + clearHeight,
+                                    x + 32,
+                                    y + 32,
+                                    0xB8000000
+                            );
+
+                            String timer = String.format(
+                                    java.util.Locale.ROOT,
+                                    "%.1f",
+                                    remainingTicks / 20.0F
+                            );
+
+                            graphics.drawCenteredString(
+                                    mc.font,
+                                    timer,
+                                    x + 16,
+                                    y + 12,
+                                    0xFFFFFFFF
+                            );
+                        }
+                    }
 
                 } else {
 
