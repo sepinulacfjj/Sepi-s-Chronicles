@@ -314,11 +314,19 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
             graphics.drawString(font, "Mana: " + selected.manaCost(),
                     infoX, infoY + 32, 0xFF2B241D, false);
 
+            int baseCooldownTicks = selected.cooldownTicks();
             int cooldownTicks = SpellCooldownHelper.getEffectiveCooldownTicks(minecraft.player, selected);
+            float cooldownReduction = SpellCooldownHelper.getCooldownReduction(minecraft.player);
+
             graphics.drawString(font, "Cooldown: " + formatCooldown(cooldownTicks),
                     infoX, infoY + 43, 0xFF2B241D, false);
 
-            int descriptionY = infoY + 58;
+            if (cooldownReduction > 0.0F) {
+                graphics.drawString(font, "Reduction: " + SpellCooldownHelper.formatReduction(cooldownReduction),
+                        infoX, infoY + 54, 0xFF3F6B35, false);
+            }
+
+            int descriptionY = infoY + (cooldownReduction > 0.0F ? 69 : 58);
             List<net.minecraft.util.FormattedCharSequence> wrapped =
                     font.split(Component.literal(selected.description()), 135);
 
