@@ -1,6 +1,0 @@
-{
-  "type": "minecraft:crafting_shaped",
-  "pattern": ["ACA", "CBC", "ACA"],
-  "key": {"A": {"item": "minecraft:diamond_block"}, "B": {"item": "sepimod:gold_spellbook"}, "C": {"item": "minecraft:diamond"}},
-  "result": {"id": "sepimod:diamond_spellbook"}
-}
