@@ -15,6 +15,7 @@ import com.sepinula.sepimod.network.PacketSpellbookAction;
 import com.sepinula.sepimod.spellbook.SpellbookHelper;
 import com.sepinula.sepimod.util.ModDataAttachments;
 import com.sepinula.sepimod.util.PlayerStats;
+import com.sepinula.sepimod.util.PlayerSpellCooldownData;
 import com.sepinula.sepimod.util.RpgArchetype;
 import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
@@ -87,6 +88,9 @@ public class ClientEvents {
             vanillaCreativeHotbarKeysCleared = true;
         }
         if (mc.player == null || mc.level == null) return;
+
+        PlayerSpellCooldownData cooldowns = mc.player.getData(ModDataAttachments.PLAYER_SPELL_COOLDOWNS);
+        cooldowns.tick();
 
         if (mc.screen == null) {
             while (classKey.consumeClick()) {
