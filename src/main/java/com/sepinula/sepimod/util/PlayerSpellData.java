@@ -133,20 +133,45 @@ public class PlayerSpellData {
     }
 
     public void selectNextSpell() {
-        if (activeSpells.isEmpty()) {
+        selectNextSpell(MAX_SPELL_SLOTS);
+    }
+
+    public void selectNextSpell(int capacity) {
+        int usable = Math.min(Math.max(capacity, 0), activeSpells.size());
+        if (usable == 0) {
             return;
         }
 
-        selectedSpellIndex = (selectedSpellIndex + 1) % activeSpells.size();
+        selectedSpellIndex = (selectedSpellIndex + 1) % usable;
     }
 
     public void selectPreviousSpell() {
-        if (activeSpells.isEmpty()) {
+        selectPreviousSpell(MAX_SPELL_SLOTS);
+    }
+
+    public void selectPreviousSpell(int capacity) {
+        int usable = Math.min(Math.max(capacity, 0), activeSpells.size());
+        if (usable == 0) {
             return;
         }
 
         selectedSpellIndex =
-                (selectedSpellIndex - 1 + activeSpells.size()) % activeSpells.size();
+                (selectedSpellIndex - 1 + usable) % usable;
+    }
+
+    /**
+     * Keeps the current selection inside the number of slots provided by the
+     * currently equipped spellbook without deleting any active spell data.
+     */
+    public void clampSelectionToCapacity(int capacity) {
+        int usable = Math.min(Math.max(capacity, 0), activeSpells.size());
+
+        if (usable == 0) {
+            selectedSpellIndex = 0;
+            return;
+        }
+
+        selectedSpellIndex = Mth.clamp(selectedSpellIndex, 0, usable - 1);
     }
 
     
