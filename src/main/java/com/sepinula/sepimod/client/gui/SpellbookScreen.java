@@ -178,31 +178,6 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                     TILE_SIZE
             );
 
-            if (active) {
-                // Active spells are the spells selected for the spell bar.
-                graphics.fill(
-                        tileX - 1,
-                        tileY - 1,
-                        tileX + TILE_SIZE + 1,
-                        tileY + TILE_SIZE + 1,
-                        0xFFE7C46A
-                );
-
-                // Redraw the box over the highlight so the pixel-art border
-                // stays visible.
-                graphics.blit(
-                        EMPTY_ICON,
-                        tileX,
-                        tileY,
-                        0,
-                        0,
-                        TILE_SIZE,
-                        TILE_SIZE,
-                        TILE_SIZE,
-                        TILE_SIZE
-                );
-            }
-
             ResourceLocation icon = getSpellIcon(spell);
 
             graphics.blit(
@@ -216,6 +191,15 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
                     ICON_SIZE,
                     ICON_SIZE
             );
+
+            if (active) {
+                // Active spells get a gold pixel-art-style outline.
+                int highlight = 0xFFE7C46A;
+                graphics.fill(tileX, tileY, tileX + TILE_SIZE, tileY + 2, highlight);
+                graphics.fill(tileX, tileY + TILE_SIZE - 2, tileX + TILE_SIZE, tileY + TILE_SIZE, highlight);
+                graphics.fill(tileX, tileY, tileX + 2, tileY + TILE_SIZE, highlight);
+                graphics.fill(tileX + TILE_SIZE - 2, tileY, tileX + TILE_SIZE, tileY + TILE_SIZE, highlight);
+            }
 
             if (!learned) {
                 boolean hovered =
