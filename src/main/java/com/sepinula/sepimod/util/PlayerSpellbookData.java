@@ -23,6 +23,7 @@ public class PlayerSpellbookData {
     private ItemStack spellbook;
     private boolean clientEquipped;
     private int clientCapacity;
+    private float clientCooldownReduction;
 
     public PlayerSpellbookData() {
         this(ItemStack.EMPTY);
@@ -32,16 +33,18 @@ public class PlayerSpellbookData {
         this.spellbook = spellbook.copy();
         this.clientEquipped = hasSpellbook();
         this.clientCapacity = getSpellSlotCapacity();
+        this.clientCooldownReduction = 0.0F;
     }
 
-    private PlayerSpellbookData(boolean equipped, int capacity) {
+    private PlayerSpellbookData(boolean equipped, int capacity, float cooldownReduction) {
         this.spellbook = ItemStack.EMPTY;
         this.clientEquipped = equipped;
         this.clientCapacity = Math.max(0, capacity);
+        this.clientCooldownReduction = Math.max(0.0F, cooldownReduction);
     }
 
-    public static PlayerSpellbookData clientState(boolean equipped, int capacity, ItemStack spellbook) {
-        PlayerSpellbookData data = new PlayerSpellbookData(equipped, capacity);
+    public static PlayerSpellbookData clientState(boolean equipped, int capacity, ItemStack spellbook, float cooldownReduction) {
+        PlayerSpellbookData data = new PlayerSpellbookData(equipped, capacity, cooldownReduction);
         data.spellbook = spellbook.copy();
         data.clientEquipped = equipped && !data.spellbook.isEmpty();
         data.clientCapacity = Math.max(0, capacity);
@@ -49,7 +52,11 @@ public class PlayerSpellbookData {
     }
 
     public static PlayerSpellbookData clientState(boolean equipped, int capacity) {
-        return clientState(equipped, capacity, ItemStack.EMPTY);
+        return clientState(equipped, capacity, ItemStack.EMPTY, 0.0F);
+    }
+
+    public float getClientCooldownReduction() {
+        return clientCooldownReduction;
     }
 
     public ItemStack getSpellbook() {
