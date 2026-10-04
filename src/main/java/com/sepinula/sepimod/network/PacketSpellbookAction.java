@@ -84,11 +84,11 @@ public record PacketSpellbookAction(int action, int firstIndex, int secondIndex)
                     }
                 }
                 case NEXT -> {
-                    data.selectNextSpell();
+                    data.selectNextSpell(SpellbookHelper.getCapacity(player));
                     changed = true;
                 }
                 case PREVIOUS -> {
-                    data.selectPreviousSpell();
+                    data.selectPreviousSpell(SpellbookHelper.getCapacity(player));
                     changed = true;
                 }
                 case CAST -> {
