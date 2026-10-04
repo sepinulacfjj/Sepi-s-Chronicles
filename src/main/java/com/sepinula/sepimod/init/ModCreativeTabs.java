@@ -20,7 +20,12 @@ public class ModCreativeTabs {
                             .title(Component.translatable("creativetab.sepimod"))
                             .displayItems((parameters, output) -> {
                                 output.accept(ModItems.BASIC_STAFF.get());
+                                output.accept(ModItems.SPELLBOOK.get());
+                                output.accept(ModItems.COPPER_SPELLBOOK.get());
                                 output.accept(ModItems.IRON_SPELLBOOK.get());
+                                output.accept(ModItems.GOLD_SPELLBOOK.get());
+                                output.accept(ModItems.DIAMOND_SPELLBOOK.get());
+                                output.accept(ModItems.NETHERITE_SPELLBOOK.get());
                                 output.accept(ModItems.GOBLIN_SPAWN_EGG.get());
                             })
                             .build());
