@@ -29,4 +29,8 @@ public enum SpellbookTier {
     public float getCooldownReduction() {
         return cooldownReduction;
     }
+
+    public float getCooldownReduction() {
+        return cooldownReduction;
+    }
 }
