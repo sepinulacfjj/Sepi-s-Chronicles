@@ -4,6 +4,7 @@ import com.sepinula.sepimod.network.Messages;
 import com.sepinula.sepimod.network.PacketSpellbookAction;
 import com.sepinula.sepimod.spells.Spell;
 import com.sepinula.sepimod.spells.SpellRegistry;
+import com.sepinula.sepimod.spells.SpellCooldownHelper;
 import com.sepinula.sepimod.util.ModDataAttachments;
 import com.sepinula.sepimod.util.PlayerSpellData;
 import net.minecraft.client.gui.GuiGraphics;
@@ -313,7 +314,11 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
             graphics.drawString(font, "Mana: " + selected.manaCost(),
                     infoX, infoY + 32, 0xFF2B241D, false);
 
-            int descriptionY = infoY + 47;
+            int cooldownTicks = SpellCooldownHelper.getEffectiveCooldownTicks(minecraft.player, selected);
+            graphics.drawString(font, "Cooldown: " + formatCooldown(cooldownTicks),
+                    infoX, infoY + 43, 0xFF2B241D, false);
+
+            int descriptionY = infoY + 58;
             List<net.minecraft.util.FormattedCharSequence> wrapped =
                     font.split(Component.literal(selected.description()), 135);
 
@@ -323,6 +328,18 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
             }
 
         }
+    }
+
+    private String formatCooldown(int ticks) {
+        if (ticks <= 0) {
+            return "None";
+        }
+
+        if (ticks % 20 == 0) {
+            return String.format(java.util.Locale.ROOT, "%.0fs", ticks / 20.0F);
+        }
+
+        return String.format(java.util.Locale.ROOT, "%.1fs", ticks / 20.0F);
     }
 
     private ResourceLocation getSpellIcon(Spell spell) {
