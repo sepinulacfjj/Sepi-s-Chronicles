@@ -275,7 +275,7 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
 
             graphics.drawString(
                     font,
-                    "Right-click: View spell information",
+                    "Right-click: Spell information",
                     infoX,
                     infoY + 47,
                     0xFF2B241D,
