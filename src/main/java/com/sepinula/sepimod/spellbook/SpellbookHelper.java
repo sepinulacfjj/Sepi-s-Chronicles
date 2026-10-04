@@ -36,11 +36,8 @@ public final class SpellbookHelper {
             return;
         }
 
-        // The physical book supplies only the current capacity. Learned and
-        // active spell data remains attached to the player.
-        spells.setActiveSpells(
-                spells.getActiveSpells(),
-                book.getSpellSlotCapacity()
-        );
+        // The physical book supplies only the current usable capacity.
+        // Never delete the player's saved active-spell configuration.
+        spells.clampSelectionToCapacity(book.getSpellSlotCapacity());
     }
 }
