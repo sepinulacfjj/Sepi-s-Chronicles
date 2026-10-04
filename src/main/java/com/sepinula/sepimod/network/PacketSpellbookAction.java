@@ -2,7 +2,6 @@ package com.sepinula.sepimod.network;
 
 import com.sepinula.sepimod.SepiMod;
 import com.sepinula.sepimod.spellbook.SpellbookHelper;
-import com.sepinula.sepimod.spells.SpellCombinationRegistry;
 import com.sepinula.sepimod.spells.SpellRegistry;
 import com.sepinula.sepimod.util.ModDataAttachments;
 import com.sepinula.sepimod.util.PlayerSpellData;
@@ -23,7 +22,6 @@ public record PacketSpellbookAction(int action, int firstIndex, int secondIndex)
     public static final int OPEN = 0;
     public static final int ADD_KNOWN = 1;
     public static final int REMOVE_ACTIVE = 2;
-    public static final int COMBINE = 3;
     public static final int NEXT = 4;
     public static final int PREVIOUS = 5;
     public static final int CAST = 6;
@@ -83,21 +81,6 @@ public record PacketSpellbookAction(int action, int firstIndex, int secondIndex)
                     var active = data.getActiveSpells();
                     if (payload.firstIndex() >= 0 && payload.firstIndex() < active.size()) {
                         changed = data.removeActiveSpell(active.get(payload.firstIndex()));
-                    }
-                }
-                case COMBINE -> {
-                    var active = data.getActiveSpells();
-                    int a = payload.firstIndex();
-                    int b = payload.secondIndex();
-
-                    if (a >= 0 && b >= 0 && a < active.size() && b < active.size() && a != b) {
-                        ResourceLocation first = ResourceLocation.parse(active.get(a));
-                        ResourceLocation second = ResourceLocation.parse(active.get(b));
-                        var result = SpellCombinationRegistry.getResult(first, second);
-
-                        if (result != null) {
-                            changed = data.combineActiveSpells(a, b, result);
-                        }
                     }
                 }
                 case NEXT -> {
