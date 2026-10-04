@@ -11,6 +11,7 @@ public record Spell(
         ResourceLocation id,
         String displayName,
         String description,
-        int manaCost
+        int manaCost,
+        int cooldownTicks
 ) {
 }
