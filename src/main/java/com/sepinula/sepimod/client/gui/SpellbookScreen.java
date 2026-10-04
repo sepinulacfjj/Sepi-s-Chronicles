@@ -255,15 +255,50 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
         int infoY = y + 38;
 
         if (selectedSpellInfo < 0 || selectedSpellInfo >= spells.size()) {
-            graphics.drawString(font, "SPELL INFORMATION", infoX, infoY, 0xFF2B241D);
-            graphics.drawString(font, "Left-click", infoX, infoY + 24, 0xFF3F6B35);
-            graphics.drawString(font, "Equip / unequip", infoX, infoY + 35, 0xFF2B241D);
-            graphics.drawString(font, "a learned spell", infoX, infoY + 46, 0xFF2B241D);
-            graphics.drawString(font, "Right-click", infoX, infoY + 65, 0xFF3F6B35);
-            graphics.drawString(font, "View spell information", infoX, infoY + 76, 0xFF2B241D);
-            graphics.drawString(font, "V / X", infoX, infoY + 95, 0xFF3F6B35);
-            graphics.drawString(font, "Change combat spell", infoX, infoY + 106, 0xFF2B241D);
-            graphics.drawString(font, "R", infoX, infoY + 125, 0xFF3F6B35);
+            graphics.drawString(
+                    font,
+                    "SPELL INFORMATION",
+                    infoX,
+                    infoY,
+                    0xFF2B241D,
+                    false
+            );
+
+            graphics.drawString(
+                    font,
+                    "Left-click: Equip / unequip",
+                    infoX,
+                    infoY + 24,
+                    0xFF2B241D,
+                    false
+            );
+
+            graphics.drawString(
+                    font,
+                    "Right-click: View spell information",
+                    infoX,
+                    infoY + 47,
+                    0xFF2B241D,
+                    false
+            );
+
+            graphics.drawString(
+                    font,
+                    "V / X: Change combat spell",
+                    infoX,
+                    infoY + 70,
+                    0xFF2B241D,
+                    false
+            );
+
+            graphics.drawString(
+                    font,
+                    "R: Cast selected spell",
+                    infoX,
+                    infoY + 93,
+                    0xFF2B241D,
+                    false
+            );
         } else {
             Spell selected = spells.get(selectedSpellInfo);
             boolean learned = data.knowsSpell(selected.id().toString());
@@ -271,11 +306,12 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
             graphics.blit(getSpellIcon(selected), infoX, infoY, 0, 0,
                     ICON_SIZE, ICON_SIZE, ICON_SIZE, ICON_SIZE);
 
-            graphics.drawString(font, selected.displayName(), infoX + 34, infoY + 5, 0xFF2B241D);
+            graphics.drawString(font, selected.displayName(), infoX + 34, infoY + 5, 0xFF2B241D, false);
             graphics.drawString(font, learned ? "Learned" : "Locked",
-                    infoX + 34, infoY + 18, learned ? 0xFF3F6B35 : 0xFF8B3333);
+                    infoX + 34, infoY + 18,
+                    learned ? 0xFF3F6B35 : 0xFF8B3333, false);
             graphics.drawString(font, "Mana: " + selected.manaCost(),
-                    infoX, infoY + 32, 0xFF2B241D);
+                    infoX, infoY + 32, 0xFF2B241D, false);
 
             int descriptionY = infoY + 47;
             List<net.minecraft.util.FormattedCharSequence> wrapped =
@@ -283,12 +319,13 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
 
             for (int line = 0; line < wrapped.size(); line++) {
                 graphics.drawString(font, wrapped.get(line),
-                        infoX, descriptionY + line * 10, 0xFF2B241D);
+                        infoX, descriptionY + line * 10, 0xFF2B241D, false);
             }
 
             if (!learned) {
                 graphics.drawString(font, "Locked - learn this spell to equip it.",
-                        infoX, descriptionY + wrapped.size() * 10 + 12, 0xFF8B3333);
+                        infoX, descriptionY + wrapped.size() * 10 + 12,
+                        0xFF8B3333, false);
             }
         }
     }
