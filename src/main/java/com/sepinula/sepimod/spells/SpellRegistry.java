@@ -14,28 +14,32 @@ public final class SpellRegistry {
             "fireball",
             "Fireball",
             "Launches a powerful ball of fire at your target.",
-            15
+            15,
+            40
     );
 
     public static final Spell GUST = register(
             "gust",
             "Gust",
             "Unleashes a burst of wind that pushes nearby creatures away.",
-            10
+            10,
+            30
     );
 
     public static final Spell ICE_SHARD = register(
             "ice_shard",
             "Ice Shard",
             "Fires a freezing shard that damages a nearby target.",
-            12
+            12,
+            20
     );
 
     public static final Spell FIRE_WIND = register(
             "fire_wind",
             "Fire Wind",
             "Combines flame and wind into a devastating magical attack.",
-            25
+            25,
+            60
     );
 
     private SpellRegistry() {
@@ -45,10 +49,11 @@ public final class SpellRegistry {
             String path,
             String displayName,
             String description,
-            int manaCost
+            int manaCost,
+            int cooldownTicks
     ) {
         ResourceLocation id = ResourceLocation.fromNamespaceAndPath(SepiMod.MODID, path);
-        Spell spell = new Spell(id, displayName, description, manaCost);
+        Spell spell = new Spell(id, displayName, description, manaCost, cooldownTicks);
         SPELLS.put(id, spell);
         return spell;
     }
