@@ -85,11 +85,39 @@ public class SpellHudOverlay {
             int x = startX + i * 34;
             boolean selected = i == data.getSelectedSpellIndex();
 
-            graphics.fill(
-                    x, y, x + 32, y + 32,
-                    selected ? 0xFFD8B85A : 0xAA111016
+            graphics.blit(
+                    EMPTY_ICON,
+                    x,
+                    y,
+                    0,
+                    0,
+                    32,
+                    32,
+                    32,
+                    32
             );
-            graphics.fill(x + 2, y + 2, x + 30, y + 30, 0xFF2A2230);
+
+            if (selected) {
+                graphics.fill(
+                        x - 1,
+                        y - 1,
+                        x + 33,
+                        y + 33,
+                        0xFFE7C46A
+                );
+
+                graphics.blit(
+                        EMPTY_ICON,
+                        x,
+                        y,
+                        0,
+                        0,
+                        32,
+                        32,
+                        32,
+                        32
+                );
+            }
 
             if (i < data.getActiveSpells().size()) {
                 Spell spell = SpellRegistry.get(
@@ -107,28 +135,18 @@ public class SpellHudOverlay {
 
                     graphics.blit(
                             icon,
-                            x + 8,
-                            y + 8,
+                            x + 4,
+                            y + 4,
                             0,
                             0,
-                            16,
-                            16,
-                            16,
-                            16
+                            24,
+                            24,
+                            24,
+                            24
                     );
 
                 } else {
-                    graphics.blit(
-                            EMPTY_ICON,
-                            x + 8,
-                            y + 8,
-                            0,
-                            0,
-                            16,
-                            16,
-                            16,
-                            16
-                    );
+
                 }
             }
         }
