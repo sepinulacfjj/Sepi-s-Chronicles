@@ -7,5 +7,10 @@ import net.minecraft.resources.ResourceLocation;
  *
  * The spell itself is not stored on the physical spellbook item.
  */
-public record Spell(ResourceLocation id, String displayName) {
+public record Spell(
+        ResourceLocation id,
+        String displayName,
+        String description,
+        int manaCost
+) {
 }
