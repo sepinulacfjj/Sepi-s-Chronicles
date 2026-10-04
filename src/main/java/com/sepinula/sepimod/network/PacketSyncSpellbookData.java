@@ -3,6 +3,7 @@ package com.sepinula.sepimod.network;
 import com.sepinula.sepimod.SepiMod;
 import com.sepinula.sepimod.util.ModDataAttachments;
 import com.sepinula.sepimod.util.PlayerSpellbookData;
+import com.sepinula.sepimod.spells.SpellCooldownHelper;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.network.codec.ByteBufCodecs;
 import net.minecraft.network.codec.StreamCodec;
@@ -12,7 +13,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
-public record PacketSyncSpellbookData(boolean equipped, int capacity, java.util.Optional<ResourceLocation> itemId) implements CustomPacketPayload {
+public record PacketSyncSpellbookData(boolean equipped, int capacity, float cooldownReduction, java.util.Optional<ResourceLocation> itemId) implements CustomPacketPayload {
     public static final Type<PacketSyncSpellbookData> TYPE =
             new Type<>(ResourceLocation.fromNamespaceAndPath(SepiMod.MODID, "sync_spellbook_data"));
 
@@ -20,13 +21,17 @@ public record PacketSyncSpellbookData(boolean equipped, int capacity, java.util.
             StreamCodec.composite(
                     ByteBufCodecs.BOOL, PacketSyncSpellbookData::equipped,
                     ByteBufCodecs.VAR_INT, PacketSyncSpellbookData::capacity,
+                    ByteBufCodecs.FLOAT, PacketSyncSpellbookData::cooldownReduction,
                     ByteBufCodecs.optional(ResourceLocation.STREAM_CODEC), PacketSyncSpellbookData::itemId,
                     PacketSyncSpellbookData::new
             );
 
     public static PacketSyncSpellbookData from(PlayerSpellbookData data) {
         ResourceLocation itemId = data.hasSpellbook() ? BuiltInRegistries.ITEM.getKey(data.getSpellbook().getItem()) : null;
-        return new PacketSyncSpellbookData(data.hasSpellbook(), data.getSpellSlotCapacity(), java.util.Optional.ofNullable(itemId));
+        float cooldownReduction = data.hasSpellbook()
+                ? SpellCooldownHelper.getCooldownReductionFromSpellbook(data.getSpellbook())
+                : 0.0F;
+        return new PacketSyncSpellbookData(data.hasSpellbook(), data.getSpellSlotCapacity(), cooldownReduction, java.util.Optional.ofNullable(itemId));
     }
 
     @Override
@@ -38,7 +43,7 @@ public record PacketSyncSpellbookData(boolean equipped, int capacity, java.util.
         context.enqueueWork(() ->
                 context.player().setData(
                         ModDataAttachments.PLAYER_SPELLBOOK_DATA,
-                        PlayerSpellbookData.clientState(payload.equipped(), payload.capacity(), payload.itemId().map(id -> new ItemStack(BuiltInRegistries.ITEM.get(id))).orElse(ItemStack.EMPTY))
+                        PlayerSpellbookData.clientState(payload.equipped(), payload.capacity(), payload.itemId().map(id -> new ItemStack(BuiltInRegistries.ITEM.get(id))).orElse(ItemStack.EMPTY), payload.cooldownReduction())
                 )
         );
     }
