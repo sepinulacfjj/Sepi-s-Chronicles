@@ -7,12 +7,12 @@ package com.sepinula.sepimod.spellbook;
  * spells belong to PlayerSpellData.
  */
 public enum SpellbookTier {
-    WOOD(3, 0.00F),
+    ORIGINAL(3, 0.00F),
     COPPER(4, 0.02F),
     IRON(5, 0.05F),
-    GOLD(6, 0.08F),
-    DIAMOND(7, 0.12F),
-    NETHERITE(9, 0.16F);
+    GOLD(6, 0.10F),
+    DIAMOND(7, 0.15F),
+    NETHERITE(9, 0.20F);
 
     private final int spellSlots;
     private final float cooldownReduction;
@@ -29,5 +29,4 @@ public enum SpellbookTier {
     public float getCooldownReduction() {
         return cooldownReduction;
     }
-
 }
