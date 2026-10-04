@@ -1,9 +1,12 @@
 package com.sepinula.sepimod.spells;
 
+import com.sepinula.sepimod.network.PacketSyncSpellCooldown;
+import com.sepinula.sepimod.spellbook.SpellbookHelper;
 import com.sepinula.sepimod.util.ModDataAttachments;
+import com.sepinula.sepimod.util.PlayerSpellCooldownData;
 import com.sepinula.sepimod.util.PlayerSpellData;
 import com.sepinula.sepimod.util.PlayerStats;
-import com.sepinula.sepimod.spellbook.SpellbookHelper;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -11,6 +14,7 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.LargeFireball;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.neoforge.network.PacketDistributor;
 
 public final class SpellCaster {
     private SpellCaster() {}
@@ -28,19 +32,25 @@ public final class SpellCaster {
         }
 
         String spellId = spellData.getSelectedSpellId();
-
         if (spellId.isBlank()) {
             return false;
         }
 
-        float cost = manaCost(spellId);
-        if (player.getCooldowns().isOnCooldown(com.sepinula.sepimod.init.ModItems.IRON_SPELLBOOK.get())) {
+        Spell spell = SpellRegistry.get(net.minecraft.resources.ResourceLocation.parse(spellId));
+        if (spell == null) {
             return false;
         }
+
+        PlayerSpellCooldownData cooldowns = player.getData(ModDataAttachments.PLAYER_SPELL_COOLDOWNS);
+        if (cooldowns.isOnCooldown(spellId)) {
+            return false;
+        }
+
         PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
+        float cost = spell.manaCost();
 
         if (stats.getCurrentMana() < cost) {
-            player.displayClientMessage(net.minecraft.network.chat.Component.literal("§cNot enough Mana!"), true);
+            player.displayClientMessage(Component.literal("§cNot enough Mana!"), true);
             return false;
         }
 
@@ -54,24 +64,13 @@ public final class SpellCaster {
 
         if (cast) {
             stats.subMana(cost);
-            player.getCooldowns().addCooldown(
-                    com.sepinula.sepimod.init.ModItems.IRON_SPELLBOOK.get(),
-                    10
-            );
+            cooldowns.start(spellId, spell.cooldownTicks());
+            PacketDistributor.sendToPlayer(player,
+                    new PacketSyncSpellCooldown(spellId, spell.cooldownTicks()));
             ModDataAttachments.sync(player);
         }
 
         return cast;
-    }
-
-    private static float manaCost(String id) {
-        return switch (id) {
-            case "sepimod:fireball" -> 15.0f;
-            case "sepimod:gust" -> 10.0f;
-            case "sepimod:ice_shard" -> 12.0f;
-            case "sepimod:fire_wind" -> 25.0f;
-            default -> 10.0f;
-        };
     }
 
     private static boolean castFireball(ServerPlayer player) {
