@@ -314,7 +314,6 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
             graphics.drawString(font, "Mana: " + selected.manaCost(),
                     infoX, infoY + 32, 0xFF2B241D, false);
 
-            int baseCooldownTicks = selected.cooldownTicks();
             int cooldownTicks = SpellCooldownHelper.getEffectiveCooldownTicks(minecraft.player, selected);
             float cooldownReduction = SpellCooldownHelper.getCooldownReduction(minecraft.player);
 
