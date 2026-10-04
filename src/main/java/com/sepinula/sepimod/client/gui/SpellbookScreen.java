@@ -90,10 +90,12 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
             String spellId = spell.id().toString();
 
             if (button == 1) {
-                // Inspecting a spell is independent from equipping it.
-                // Right-clicking the same spell again simply keeps its
-                // information page open.
-                if (selectedSpellInfo != i) {
+                // Right-click toggles the information page for this spell.
+                // Right-clicking the same spell again returns to the
+                // main spellbook instructions.
+                if (selectedSpellInfo == i) {
+                    selectedSpellInfo = -1;
+                } else {
                     selectedSpellInfo = i;
                 }
                 return true;
