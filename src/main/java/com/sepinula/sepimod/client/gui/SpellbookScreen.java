@@ -11,7 +11,6 @@ import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.entity.player.Inventory;
-import net.minecraft.client.renderer.RenderType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,7 +41,7 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
     private static final int TILE_SIZE = 32;
     private static final int ICON_SIZE = 24;
     private static final int TILE_SPACING = 4;
-    private static final int START_X = 10;
+    private static final int START_X = 18;
     private static final int START_Y = 45;
     private static final int MAX_COLUMNS = 4;
     private int selectedSpellInfo = -1;
@@ -285,7 +284,7 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
             );
 
             int descriptionY = infoY + 47;
-            List<net.minecraft.client.gui.Font.DisplayEntry> wrapped =
+            List<net.minecraft.util.FormattedCharSequence> wrapped =
                     font.split(Component.literal(selected.description()), 135);
 
             for (int line = 0; line < wrapped.size(); line++) {
