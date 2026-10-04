@@ -19,6 +19,7 @@ public class Messages {
         registrar.playToClient(PacketSyncStats.TYPE, PacketSyncStats.STREAM_CODEC, PacketSyncStats::handle);
         registrar.playToClient(PacketSyncSpellData.TYPE, PacketSyncSpellData.STREAM_CODEC, PacketSyncSpellData::handle);
         registrar.playToClient(PacketSyncSpellbookData.TYPE, PacketSyncSpellbookData.STREAM_CODEC, PacketSyncSpellbookData::handle);
+        registrar.playToClient(PacketSyncSpellCooldown.TYPE, PacketSyncSpellCooldown.STREAM_CODEC, PacketSyncSpellCooldown::handle);
         registrar.playToClient(PacketOpenClassScreen.TYPE, PacketOpenClassScreen.STREAM_CODEC, PacketOpenClassScreen::handle);
     }
 
