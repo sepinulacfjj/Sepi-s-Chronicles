@@ -22,6 +22,13 @@ public final class SpellCooldownHelper {
         return Math.max(1, Math.round(baseCooldown * (1.0F - reduction)));
     }
 
+    public static float getCooldownReductionFromSpellbook(ItemStack spellbook) {
+        if (!spellbook.isEmpty() && spellbook.getItem() instanceof SpellCooldownModifier modifier) {
+            return Math.min(0.75F, Math.max(0.0F, modifier.getSpellCooldownReduction(null, spellbook)));
+        }
+        return 0.0F;
+    }
+
     public static float getCooldownReduction(Player player) {
         float reduction = 0.0F;
 
