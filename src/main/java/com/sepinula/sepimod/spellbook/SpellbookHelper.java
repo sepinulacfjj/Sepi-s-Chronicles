@@ -29,6 +29,18 @@ public final class SpellbookHelper {
         PlayerSpellData spells = player.getData(ModDataAttachments.PLAYER_SPELL_DATA);
         PlayerSpellbookData book = player.getData(ModDataAttachments.PLAYER_SPELLBOOK_DATA);
 
-        spells.setActiveSpells(spells.getActiveSpells(), book.getSpellSlotCapacity());
+        // The player's spell configuration must survive removing a physical
+        // spellbook. A missing book means the spells are temporarily unusable,
+        // not forgotten.
+        if (!book.hasSpellbook()) {
+            return;
+        }
+
+        // The physical book supplies only the current capacity. Learned and
+        // active spell data remains attached to the player.
+        spells.setActiveSpells(
+                spells.getActiveSpells(),
+                book.getSpellSlotCapacity()
+        );
     }
 }
