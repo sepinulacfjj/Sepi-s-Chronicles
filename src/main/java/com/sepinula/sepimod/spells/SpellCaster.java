@@ -54,6 +54,8 @@ public final class SpellCaster {
             return false;
         }
 
+        int cooldownTicks = SpellCooldownHelper.getEffectiveCooldownTicks(player, spell);
+
         boolean cast = switch (spellId) {
             case "sepimod:fireball" -> castFireball(player);
             case "sepimod:gust" -> castGust(player);
@@ -64,9 +66,9 @@ public final class SpellCaster {
 
         if (cast) {
             stats.subMana(cost);
-            cooldowns.start(spellId, spell.cooldownTicks());
+            cooldowns.start(spellId, cooldownTicks);
             PacketDistributor.sendToPlayer(player,
-                    new PacketSyncSpellCooldown(spellId, spell.cooldownTicks()));
+                    new PacketSyncSpellCooldown(spellId, cooldownTicks));
             ModDataAttachments.sync(player);
         }
 
