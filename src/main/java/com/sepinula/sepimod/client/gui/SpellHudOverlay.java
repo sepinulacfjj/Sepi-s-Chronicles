@@ -4,6 +4,7 @@ import com.sepinula.sepimod.SepiMod;
 import com.sepinula.sepimod.spellbook.SpellbookHelper;
 import com.sepinula.sepimod.spells.Spell;
 import com.sepinula.sepimod.spells.SpellRegistry;
+import com.sepinula.sepimod.spells.SpellCooldownHelper;
 import com.sepinula.sepimod.util.ModDataAttachments;
 import com.sepinula.sepimod.util.PlayerSpellData;
 import com.sepinula.sepimod.util.PlayerSpellCooldownData;
@@ -151,11 +152,11 @@ public class SpellHudOverlay {
                                 mc.player.getData(ModDataAttachments.PLAYER_SPELL_COOLDOWNS);
                         int remainingTicks = cooldowns.getRemainingTicks(spell.id().toString());
 
-                        if (remainingTicks > 0 && spell.cooldownTicks() > 0) {
-                            float progress = Math.min(
-                                    1.0F,
-                                    remainingTicks / (float) spell.cooldownTicks()
-                            );
+                        if (remainingTicks > 0) {
+                            int totalCooldownTicks = SpellCooldownHelper.getEffectiveCooldownTicks(mc.player, spell);
+                            float progress = totalCooldownTicks > 0
+                                    ? Math.min(1.0F, remainingTicks / (float) totalCooldownTicks)
+                                    : 0.0F;
 
                             // The dark mask clears from top to bottom as the cooldown expires.
                             int clearHeight = Math.round(32.0F * (1.0F - progress));
