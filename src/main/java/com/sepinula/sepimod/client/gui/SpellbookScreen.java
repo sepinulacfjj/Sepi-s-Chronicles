@@ -90,7 +90,12 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
             String spellId = spell.id().toString();
 
             if (button == 1) {
-                selectedSpellInfo = i;
+                // Inspecting a spell is independent from equipping it.
+                // Right-clicking the same spell again simply keeps its
+                // information page open.
+                if (selectedSpellInfo != i) {
+                    selectedSpellInfo = i;
+                }
                 return true;
             }
 
@@ -250,13 +255,13 @@ public class SpellbookScreen extends AbstractContainerScreen<com.sepinula.sepimo
         if (selectedSpellInfo < 0 || selectedSpellInfo >= spells.size()) {
             graphics.drawString(font, "SPELL INFORMATION", infoX, infoY, 0xFF2B241D);
             graphics.drawString(font, "Left-click", infoX, infoY + 24, 0xFF3F6B35);
-            graphics.drawString(font, "Equip / unequip a learned spell", infoX, infoY + 35, 0xFF2B241D);
-            graphics.drawString(font, "Right-click", infoX, infoY + 54, 0xFF3F6B35);
-            graphics.drawString(font, "View spell information", infoX, infoY + 65, 0xFF2B241D);
-            graphics.drawString(font, "V / X", infoX, infoY + 84, 0xFF3F6B35);
-            graphics.drawString(font, "Change combat spell", infoX, infoY + 95, 0xFF2B241D);
-            graphics.drawString(font, "R", infoX, infoY + 114, 0xFF3F6B35);
-            graphics.drawString(font, "Cast combat spell", infoX, infoY + 125, 0xFF2B241D);
+            graphics.drawString(font, "Equip / unequip", infoX, infoY + 35, 0xFF2B241D);
+            graphics.drawString(font, "a learned spell", infoX, infoY + 46, 0xFF2B241D);
+            graphics.drawString(font, "Right-click", infoX, infoY + 65, 0xFF3F6B35);
+            graphics.drawString(font, "View spell information", infoX, infoY + 76, 0xFF2B241D);
+            graphics.drawString(font, "V / X", infoX, infoY + 95, 0xFF3F6B35);
+            graphics.drawString(font, "Change combat spell", infoX, infoY + 106, 0xFF2B241D);
+            graphics.drawString(font, "R", infoX, infoY + 125, 0xFF3F6B35);
         } else {
             Spell selected = spells.get(selectedSpellInfo);
             boolean learned = data.knowsSpell(selected.id().toString());
