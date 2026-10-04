@@ -24,7 +24,7 @@ public final class SpellCooldownHelper {
 
     public static float getCooldownReductionFromSpellbook(ItemStack spellbook) {
         if (!spellbook.isEmpty() && spellbook.getItem() instanceof SpellCooldownModifier modifier) {
-            return Math.min(0.75F, Math.max(0.0F, modifier.getSpellCooldownReduction(null, spellbook)));
+            return Math.min(0.80F, Math.max(0.0F, modifier.getSpellCooldownReduction(null, spellbook)));
         }
         return 0.0F;
     }
