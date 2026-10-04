@@ -34,7 +34,7 @@ public class ModDataAttachments {
      * Runtime spell cooldowns. These are not persistent player progression.
      */
     public static final Supplier<AttachmentType<PlayerSpellCooldownData>> PLAYER_SPELL_COOLDOWNS = ATTACHMENT_TYPES.register(
-            "player_spell_cooldowns", () -> AttachmentType.builder(PlayerSpellCooldownData::new)
+            "player_spell_cooldowns", () -> AttachmentType.builder((java.util.function.Supplier<PlayerSpellCooldownData>) PlayerSpellCooldownData::new)
                     .build());
 
     /**
