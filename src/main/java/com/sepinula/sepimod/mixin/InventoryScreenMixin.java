@@ -1,6 +1,5 @@
 package com.sepinula.sepimod.mixin;
 
-import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen;
 import net.minecraft.client.gui.screens.inventory.InventoryScreen;
@@ -35,23 +34,4 @@ public abstract class InventoryScreenMixin {
                 256, 256);
     }
 
-    @Inject(method = "renderLabels", at = @At("TAIL"))
-    private void sepimod$renderSpellbookLabel(
-            GuiGraphics graphics,
-            int mouseX,
-            int mouseY,
-            CallbackInfo ci
-    ) {
-        InventoryScreen screen = (InventoryScreen) (Object) this;
-        AbstractContainerScreen<?> containerScreen = (AbstractContainerScreen<?>) screen;
-
-        graphics.drawString(
-                Minecraft.getInstance().font,
-                "Book",
-                containerScreen.getGuiLeft() + 151,
-                containerScreen.getGuiTop() + 49,
-                0x404040,
-                false
-        );
-    }
 }
