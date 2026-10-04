@@ -3,6 +3,7 @@ package com.sepinula.sepimod.spells;
 import com.sepinula.sepimod.util.ModDataAttachments;
 import com.sepinula.sepimod.util.PlayerSpellData;
 import com.sepinula.sepimod.util.PlayerStats;
+import com.sepinula.sepimod.spellbook.SpellbookHelper;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -16,6 +17,16 @@ public final class SpellCaster {
 
     public static boolean castSelected(ServerPlayer player) {
         PlayerSpellData spellData = player.getData(ModDataAttachments.PLAYER_SPELL_DATA);
+        int capacity = Math.min(
+                PlayerSpellData.MAX_SPELL_SLOTS,
+                Math.max(0, SpellbookHelper.getCapacity(player))
+        );
+
+        if (capacity <= 0 || spellData.getSelectedSpellIndex() >= spellData.getActiveSpells().size()
+                || spellData.getSelectedSpellIndex() >= capacity) {
+            return false;
+        }
+
         String spellId = spellData.getSelectedSpellId();
 
         if (spellId.isBlank()) {
