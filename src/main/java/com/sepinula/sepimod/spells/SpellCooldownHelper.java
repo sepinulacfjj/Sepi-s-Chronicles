@@ -43,7 +43,7 @@ public final class SpellCooldownHelper {
             }
         }
 
-        return Math.min(0.75F, Math.max(0.0F, reduction));
+        return Math.min(0.80F, Math.max(0.0F, reduction));
     }
 
     public static int getEffectiveCooldownTicks(Player player, int baseCooldownTicks) {
