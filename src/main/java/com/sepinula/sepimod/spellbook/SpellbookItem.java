@@ -8,8 +8,9 @@ import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
+import com.sepinula.sepimod.spells.SpellCooldownModifier;
 
-public class SpellbookItem extends Item {
+public class SpellbookItem extends Item implements SpellCooldownModifier {
     private final SpellbookTier tier;
 
     public SpellbookItem(SpellbookTier tier, Properties properties) {
@@ -23,6 +24,11 @@ public class SpellbookItem extends Item {
 
     public int getSpellSlots() {
         return tier.getSpellSlots();
+    }
+
+    @Override
+    public float getSpellCooldownReduction(Player player, ItemStack stack) {
+        return tier.getCooldownReduction();
     }
 
     @Override
