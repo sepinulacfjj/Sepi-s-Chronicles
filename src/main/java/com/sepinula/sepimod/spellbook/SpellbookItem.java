@@ -1,11 +1,10 @@
 package com.sepinula.sepimod.spellbook;
 
 import com.sepinula.sepimod.spells.SpellCooldownModifier;
-import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
-import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -57,16 +56,16 @@ public class SpellbookItem extends Item implements SpellCooldownModifier, GeoIte
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
-        if (!level.isClientSide()) {
-            long instanceId = GeoItem.getOrAssignId(stack, (ServerLevel) level);
-            this.triggerAnim(player, instanceId, "controller", "open");
 
-            player.openMenu(new SimpleMenuProvider(
-                    (containerId, inventory, ignoredPlayer) ->
-                            new SpellbookMenu(containerId, inventory),
-                    Component.literal("Spellbook")
-            ));
+        if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
+            long instanceId = GeoItem.getOrAssignId(stack, (ServerLevel) level);
+
+            // Play the opening animation first. The server scheduler opens the
+            // GUI after the animation's 2.0417-second timeline has completed.
+            this.triggerAnim(player, instanceId, "controller", "open");
+            SpellbookOpenScheduler.schedule(serverPlayer, hand, this);
         }
+
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
     }
 }
