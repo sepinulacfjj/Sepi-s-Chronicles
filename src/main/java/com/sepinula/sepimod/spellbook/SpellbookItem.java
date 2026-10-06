@@ -10,6 +10,7 @@ import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import software.bernie.geckolib.animatable.GeoItem;
+import software.bernie.geckolib.animatable.SingletonGeoAnimatable;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
 import software.bernie.geckolib.animation.AnimationController;
@@ -27,6 +28,10 @@ public class SpellbookItem extends Item implements SpellCooldownModifier, GeoIte
     public SpellbookItem(SpellbookTier tier, Properties properties) {
         super(properties.stacksTo(1));
         this.tier = tier;
+
+        // Required for GeckoLib to synchronise triggered item animations
+        // from the logical server to the client rendering the held item.
+        SingletonGeoAnimatable.registerSyncedAnimatable(this);
     }
 
     public SpellbookTier getTier() {
@@ -60,8 +65,8 @@ public class SpellbookItem extends Item implements SpellCooldownModifier, GeoIte
         if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
             long instanceId = GeoItem.getOrAssignId(stack, (ServerLevel) level);
 
-            // Play the opening animation first. The server scheduler opens the
-            // GUI after the animation's 2.0417-second timeline has completed.
+            // Trigger the animation on the server; GeckoLib synchronises it to
+            // the client. The scheduler opens the GUI after the animation ends.
             this.triggerAnim(player, instanceId, "controller", "open");
             SpellbookOpenScheduler.schedule(serverPlayer, hand, this);
         }
