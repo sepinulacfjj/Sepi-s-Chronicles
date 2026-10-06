@@ -19,7 +19,7 @@ import software.bernie.geckolib.util.GeckoLibUtil;
 
 public class SpellbookItem extends Item implements SpellCooldownModifier, GeoItem {
     private static final RawAnimation OPEN_ANIMATION =
-            RawAnimation.begin().thenPlay("spellbook.animation.open");
+            RawAnimation.begin().thenPlayAndHold("spellbook.animation.open");
 
     private final SpellbookTier tier;
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
