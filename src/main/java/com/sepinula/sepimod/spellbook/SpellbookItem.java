@@ -43,8 +43,8 @@ public class SpellbookItem extends Item implements SpellCooldownModifier, GeoIte
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "controller", 0,
-                state -> state.setAndContinue(OPEN_ANIMATION)));
+        controllers.add(new AnimationController<>(this, "controller", 0, state -> software.bernie.geckolib.animation.PlayState.STOP)
+                .triggerableAnim("open", OPEN_ANIMATION));
     }
 
     @Override
@@ -54,13 +54,15 @@ public class SpellbookItem extends Item implements SpellCooldownModifier, GeoIte
 
     @Override
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
+        ItemStack stack = player.getItemInHand(hand);
         if (!level.isClientSide()) {
             player.openMenu(new SimpleMenuProvider(
-                    (containerId, inventory, ignoredPlayer) ->
-                            new SpellbookMenu(containerId, inventory),
+                    (containerId, inventory, ignoredPlayer) -> new SpellbookMenu(containerId, inventory),
                     Component.literal("Spellbook")
             ));
+        } else {
+            triggerAnim(player, GeoItem.getOrAssignId(stack, level), "controller", "open");
         }
-        return InteractionResultHolder.sidedSuccess(player.getItemInHand(hand), level.isClientSide());
+        return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
     }
 }
