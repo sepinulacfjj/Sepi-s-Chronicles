@@ -3,6 +3,7 @@ package com.sepinula.sepimod;
 import com.sepinula.sepimod.client.event.ClientEvents;
 import com.sepinula.sepimod.init.*;
 import com.sepinula.sepimod.item.BasicStaffClientExtensions;
+import com.sepinula.sepimod.spellbook.SpellbookClientExtensions;
 import com.sepinula.sepimod.util.ModCommands;
 import com.sepinula.sepimod.util.ModDataAttachments;
 import net.neoforged.api.distmarker.Dist;
@@ -39,6 +40,13 @@ public class SepiMod {
 
     private void registerClientExtensions(RegisterClientExtensionsEvent event) {
         event.registerItem(new BasicStaffClientExtensions(), ModItems.BASIC_STAFF);
+        event.registerItem(new SpellbookClientExtensions(),
+                ModItems.SPELLBOOK,
+                ModItems.COPPER_SPELLBOOK,
+                ModItems.IRON_SPELLBOOK,
+                ModItems.GOLD_SPELLBOOK,
+                ModItems.DIAMOND_SPELLBOOK,
+                ModItems.NETHERITE_SPELLBOOK);
     }
 
     private void registerCommands(RegisterCommandsEvent event) {
