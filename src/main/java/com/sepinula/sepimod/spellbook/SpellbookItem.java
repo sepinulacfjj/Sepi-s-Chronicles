@@ -13,6 +13,7 @@ import software.bernie.geckolib.animatable.GeoItem;
 import software.bernie.geckolib.animatable.instance.AnimatableInstanceCache;
 import software.bernie.geckolib.animation.AnimatableManager;
 import software.bernie.geckolib.animation.AnimationController;
+import software.bernie.geckolib.animation.PlayState;
 import software.bernie.geckolib.animation.RawAnimation;
 import software.bernie.geckolib.util.GeckoLibUtil;
 
@@ -43,7 +44,7 @@ public class SpellbookItem extends Item implements SpellCooldownModifier, GeoIte
 
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "controller", 0, state -> software.bernie.geckolib.animation.PlayState.STOP)
+        controllers.add(new AnimationController<>(this, "controller", 0, state -> PlayState.STOP)
                 .triggerableAnim("open", OPEN_ANIMATION));
     }
 
@@ -57,11 +58,13 @@ public class SpellbookItem extends Item implements SpellCooldownModifier, GeoIte
         ItemStack stack = player.getItemInHand(hand);
         if (!level.isClientSide()) {
             player.openMenu(new SimpleMenuProvider(
-                    (containerId, inventory, ignoredPlayer) -> new SpellbookMenu(containerId, inventory),
+                    (containerId, inventory, ignoredPlayer) ->
+                            new SpellbookMenu(containerId, inventory),
                     Component.literal("Spellbook")
             ));
         } else {
-            triggerAnim(player, GeoItem.getOrAssignId(stack, level), "controller", "open");
+            long instanceId = GeoItem.getOrAssignId(stack, level);
+            GeoItem.triggerAnim(player, instanceId, "controller", "open");
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
     }
