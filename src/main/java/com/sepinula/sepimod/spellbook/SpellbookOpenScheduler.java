@@ -1,7 +1,9 @@
 package com.sepinula.sepimod.spellbook;
 
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.item.Item;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
@@ -15,6 +17,7 @@ import java.util.UUID;
  * opening animation to finish on the client.
  */
 public final class SpellbookOpenScheduler {
+    // The animation is 2.0417 seconds long; Minecraft runs at 20 ticks/second.
     private static final int OPEN_ANIMATION_TICKS = 41;
     private static final List<PendingOpen> PENDING = new ArrayList<>();
 
@@ -41,16 +44,19 @@ public final class SpellbookOpenScheduler {
 
             // Don't open a screen if the player disconnected, died, or switched
             // away from the spellbook while the animation was playing.
-            if (player == null || !player.isAlive() || player.getItemInHand(pending.hand).is(pending.item)) {
-                if (player != null && player.isAlive()
-                        && player.getItemInHand(pending.hand).is(pending.item)) {
-                    player.openMenu(new net.minecraft.world.SimpleMenuProvider(
-                            (containerId, inventory, ignoredPlayer) ->
-                                    new SpellbookMenu(containerId, inventory),
-                            net.minecraft.network.chat.Component.literal("Spellbook")
-                    ));
-                }
+            if (player == null || !player.isAlive()) {
+                continue;
             }
+
+            if (!player.getItemInHand(pending.hand).is(pending.item)) {
+                continue;
+            }
+
+            player.openMenu(new SimpleMenuProvider(
+                    (containerId, inventory, ignoredPlayer) ->
+                            new SpellbookMenu(containerId, inventory),
+                    Component.literal("Spellbook")
+            ));
         }
     }
 
