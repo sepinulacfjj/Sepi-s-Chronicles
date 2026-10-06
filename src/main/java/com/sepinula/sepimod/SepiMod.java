@@ -4,6 +4,7 @@ import com.sepinula.sepimod.client.event.ClientEvents;
 import com.sepinula.sepimod.init.*;
 import com.sepinula.sepimod.item.BasicStaffClientExtensions;
 import com.sepinula.sepimod.spellbook.SpellbookClientExtensions;
+import com.sepinula.sepimod.spellbook.SpellbookOpenScheduler;
 import com.sepinula.sepimod.util.ModCommands;
 import com.sepinula.sepimod.util.ModDataAttachments;
 import net.neoforged.api.distmarker.Dist;
@@ -34,8 +35,9 @@ public class SepiMod {
         // Client Setup (Connects the 3D Model)
         modEventBus.addListener(this::registerClientExtensions);
 
-        // Server Setup (Commands)
+        // Server Setup (Commands and delayed spellbook opening)
         NeoForge.EVENT_BUS.addListener(this::registerCommands);
+        NeoForge.EVENT_BUS.addListener(SpellbookOpenScheduler::onServerTick);
     }
 
     private void registerClientExtensions(RegisterClientExtensionsEvent event) {
