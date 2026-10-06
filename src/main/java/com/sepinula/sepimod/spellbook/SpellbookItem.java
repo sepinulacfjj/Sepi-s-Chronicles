@@ -2,6 +2,7 @@ package com.sepinula.sepimod.spellbook;
 
 import com.sepinula.sepimod.spells.SpellCooldownModifier;
 import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.SimpleMenuProvider;
@@ -57,14 +58,14 @@ public class SpellbookItem extends Item implements SpellCooldownModifier, GeoIte
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
         if (!level.isClientSide()) {
+            long instanceId = GeoItem.getOrAssignId(stack, (ServerLevel) level);
+            this.triggerAnim(player, instanceId, "controller", "open");
+
             player.openMenu(new SimpleMenuProvider(
                     (containerId, inventory, ignoredPlayer) ->
                             new SpellbookMenu(containerId, inventory),
                     Component.literal("Spellbook")
             ));
-        } else {
-            long instanceId = GeoItem.getOrAssignId(stack, level);
-            GeoItem.triggerAnim(player, instanceId, "controller", "open");
         }
         return InteractionResultHolder.sidedSuccess(stack, level.isClientSide());
     }
