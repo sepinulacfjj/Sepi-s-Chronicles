@@ -1,7 +1,6 @@
 package com.sepinula.sepimod.spellbook;
 
 import com.sepinula.sepimod.spells.SpellCooldownModifier;
-import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResultHolder;
@@ -28,9 +27,6 @@ public class SpellbookItem extends Item implements SpellCooldownModifier, GeoIte
     public SpellbookItem(SpellbookTier tier, Properties properties) {
         super(properties.stacksTo(1));
         this.tier = tier;
-
-        // Required for GeckoLib to synchronise triggered item animations
-        // from the logical server to the client rendering the held item.
         SingletonGeoAnimatable.registerSyncedAnimatable(this);
     }
 
@@ -62,12 +58,12 @@ public class SpellbookItem extends Item implements SpellCooldownModifier, GeoIte
     public InteractionResultHolder<ItemStack> use(Level level, Player player, InteractionHand hand) {
         ItemStack stack = player.getItemInHand(hand);
 
-        if (!level.isClientSide() && player instanceof ServerPlayer serverPlayer) {
-            long instanceId = GeoItem.getOrAssignId(stack, (ServerLevel) level);
-
-            // Trigger the animation on the server; GeckoLib synchronises it to
-            // the client. The scheduler opens the GUI after the animation ends.
-            this.triggerAnim(player, instanceId, "controller", "open");
+        if (level.isClientSide()) {
+            // Start immediately on the rendering client so the animation is
+            // visible in first person without waiting for a server sync packet.
+            this.triggerAnim(player, GeoItem.getId(stack), "controller", "open");
+        } else if (player instanceof ServerPlayer serverPlayer) {
+            // Keep the server authoritative for opening the actual menu.
             SpellbookOpenScheduler.schedule(serverPlayer, hand, this);
         }
 
