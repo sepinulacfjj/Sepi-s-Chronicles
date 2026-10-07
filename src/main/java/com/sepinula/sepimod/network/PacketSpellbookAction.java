@@ -2,7 +2,6 @@ package com.sepinula.sepimod.network;
 
 import com.sepinula.sepimod.SepiMod;
 import com.sepinula.sepimod.spellbook.SpellbookHelper;
-import com.sepinula.sepimod.spellbook.SpellbookOpenScheduler;
 import com.sepinula.sepimod.spells.SpellRegistry;
 import com.sepinula.sepimod.util.ModDataAttachments;
 import com.sepinula.sepimod.util.PlayerSpellData;
@@ -56,7 +55,11 @@ public record PacketSpellbookAction(int action, int firstIndex, int secondIndex)
                     return;
                 }
 
-                SpellbookOpenScheduler.schedule(player, SpellbookHelper.getSpellbook(player).getItem());
+                player.openMenu(new SimpleMenuProvider(
+                        (containerId, inventory, ignoredPlayer) ->
+                                new com.sepinula.sepimod.spellbook.SpellbookMenu(containerId, inventory),
+                        Component.literal("Spellbook")
+                ));
                 return;
             }
 
