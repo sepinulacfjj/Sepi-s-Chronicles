@@ -23,6 +23,8 @@ import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.phys.AABB;
@@ -32,9 +34,11 @@ import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
+import net.neoforged.neoforge.client.event.RenderPlayerEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.client.event.ViewportEvent;
 import net.neoforged.neoforge.common.NeoForge;
+import software.bernie.geckolib.animatable.GeoItem;
 import org.lwjgl.glfw.GLFW;
 
 public class ClientEvents {
@@ -49,6 +53,17 @@ public class ClientEvents {
 
     private static boolean isLockedOn = false;
     private static LivingEntity target = null;
+    private static boolean keybindSpellbookAnimation = false;
+
+    public static void startKeybindSpellbookClose() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null || !keybindSpellbookAnimation) return;
+        ItemStack spellbook = SpellbookHelper.getSpellbook(mc.player);
+        if (spellbook.getItem() instanceof SpellbookItem item) {
+            item.triggerAnim(mc.player, GeoItem.getId(spellbook), "controller", "close");
+        }
+        keybindSpellbookAnimation = false;
+    }
 
     public static void init(IEventBus modBus) {
         modBus.addListener(ClientEvents::onKeyRegister);
@@ -57,6 +72,7 @@ public class ClientEvents {
         modBus.addListener(ClientEvents::registerScreens);
         NeoForge.EVENT_BUS.addListener(ClientEvents::onClientTick);
         NeoForge.EVENT_BUS.addListener(ClientEvents::onComputeCameraAngles);
+        NeoForge.EVENT_BUS.addListener(ClientEvents::onRenderPlayer);
 
     }
 
@@ -104,6 +120,11 @@ public class ClientEvents {
 
             while (spellbookKey.consumeClick()) {
                 if (SpellbookHelper.hasSpellbook(mc.player)) {
+                    ItemStack spellbook = SpellbookHelper.getSpellbook(mc.player);
+                    if (spellbook.getItem() instanceof SpellbookItem item) {
+                        keybindSpellbookAnimation = true;
+                        item.triggerAnim(mc.player, GeoItem.getId(spellbook), "controller", "open");
+                    }
                     Messages.sendToServer(new PacketSpellbookAction(PacketSpellbookAction.OPEN, 0, 0));
                 } else {
                     mc.player.displayClientMessage(Component.literal("§cEquip a spellbook first."), true);
@@ -152,6 +173,42 @@ public class ClientEvents {
         }
     }
 
+
+    private static void onRenderPlayer(RenderPlayerEvent.Post event) {
+        Minecraft mc = Minecraft.getInstance();
+
+        if (!keybindSpellbookAnimation
+                || mc.player == null
+                || event.getEntity() != mc.player
+                || mc.options.getCameraType().isFirstPerson()) {
+            return;
+        }
+
+        ItemStack spellbook = SpellbookHelper.getSpellbook(mc.player);
+        if (!(spellbook.getItem() instanceof SpellbookItem)) {
+            return;
+        }
+
+        event.getPoseStack().pushPose();
+
+        // A simple, fixed visual position directly in front of the player.
+        event.getPoseStack().translate(0.0F, 1.15F, -0.55F);
+
+        mc.getItemRenderer().renderStatic(
+                mc.player,
+                spellbook,
+                ItemDisplayContext.THIRD_PERSON_RIGHT_HAND,
+                false,
+                event.getPoseStack(),
+                event.getMultiBufferSource(),
+                mc.level,
+                event.getPackedLight(),
+                OverlayTexture.NO_OVERLAY,
+                0
+        );
+
+        event.getPoseStack().popPose();
+    }
 
     private static void onComputeCameraAngles(ViewportEvent.ComputeCameraAngles event) {
         Minecraft mc = Minecraft.getInstance();
