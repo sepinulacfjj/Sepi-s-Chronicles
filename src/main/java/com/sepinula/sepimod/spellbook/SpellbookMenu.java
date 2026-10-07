@@ -31,8 +31,6 @@ public class SpellbookMenu extends AbstractContainerMenu {
         super.removed(player);
 
         if (player.level().isClientSide()) {
-            com.sepinula.sepimod.client.event.ClientEvents.startKeybindSpellbookClose();
-
             for (InteractionHand hand : InteractionHand.values()) {
                 ItemStack stack = player.getItemInHand(hand);
                 if (stack.getItem() instanceof SpellbookItem spellbook) {
