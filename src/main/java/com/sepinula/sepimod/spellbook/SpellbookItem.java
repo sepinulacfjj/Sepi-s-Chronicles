@@ -7,6 +7,8 @@ import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemDisplayContext;
+import software.bernie.geckolib.constant.DataTickets;
 import net.minecraft.world.level.Level;
 import software.bernie.geckolib.animatable.GeoItem;
 import software.bernie.geckolib.animatable.SingletonGeoAnimatable;
@@ -44,8 +46,23 @@ public class SpellbookItem extends Item implements SpellCooldownModifier, GeoIte
     }
 
     @Override
+    public boolean isPerspectiveAware() {
+        return true;
+    }
+
+    @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "controller", 0, state -> PlayState.STOP)
+        controllers.add(new AnimationController<>(this, "controller", 0, state -> {
+                    ItemDisplayContext context = state.getData(DataTickets.ITEM_RENDER_PERSPECTIVE);
+
+                    return switch (context) {
+                        case FIRST_PERSON_RIGHT_HAND,
+                             FIRST_PERSON_LEFT_HAND,
+                             THIRD_PERSON_RIGHT_HAND,
+                             THIRD_PERSON_LEFT_HAND -> PlayState.CONTINUE;
+                        default -> PlayState.STOP;
+                    };
+                })
                 .triggerableAnim("open", OPEN_ANIMATION)
                 .triggerableAnim("close", RawAnimation.begin().thenPlay("spellbook.animation.close")));
     }
