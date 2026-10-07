@@ -9,13 +9,13 @@ import com.sepinula.sepimod.client.model.Baby_GoblinModel;
 import com.sepinula.sepimod.client.renderer.Baby_GoblinRenderer;
 import com.sepinula.sepimod.init.ModEntities;
 import com.sepinula.sepimod.init.ModMenus;
+import com.sepinula.sepimod.init.ModItems;
 import com.sepinula.sepimod.init.ModModelLayers;
 import com.sepinula.sepimod.network.Messages;
 import com.sepinula.sepimod.network.PacketSpellbookAction;
 import com.sepinula.sepimod.spellbook.SpellbookHelper;
 import com.sepinula.sepimod.spellbook.SpellbookItem;
 import com.sepinula.sepimod.spellbook.SpellbookTier;
-import com.sepinula.sepimod.client.SpellbookPreviewItem;
 import software.bernie.geckolib.animatable.GeoItem;
 import com.sepinula.sepimod.util.ModDataAttachments;
 import com.sepinula.sepimod.util.PlayerStats;
@@ -65,7 +65,7 @@ public class ClientEvents {
     private static boolean previewGuiOpened = false;
     private static int previewRestoreTicks = -1;
     private static ItemStack previewStack = ItemStack.EMPTY;
-    private static SpellbookPreviewItem previewItem;
+    private static SpellbookItem previewItem;
 
     public static void init(IEventBus modBus) {
         modBus.addListener(ClientEvents::onKeyRegister);
@@ -207,13 +207,24 @@ public class ClientEvents {
         previewGuiOpened = false;
         previewRestoreTicks = -1;
 
-        // This is a separate client-only animatable. It never enters the
-        // player's inventory, hotbar, or spellbook slot.
-        previewItem = new SpellbookPreviewItem(spellbook.getTier());
+        // This is a separately registered visual item. It is never placed
+        // into the player's inventory, hotbar, or dedicated spellbook slot.
+        previewItem = getPreviewItem(spellbook.getTier());
         previewStack = new ItemStack(previewItem);
 
         previewItem.triggerAnim(mc.player, GeoItem.getId(previewStack), "controller", "open");
         return true;
+    }
+
+    private static SpellbookItem getPreviewItem(SpellbookTier tier) {
+        return switch (tier) {
+            case ORIGINAL -> ModItems.SPELLBOOK_PREVIEW.get();
+            case COPPER -> ModItems.COPPER_SPELLBOOK_PREVIEW.get();
+            case IRON -> ModItems.IRON_SPELLBOOK_PREVIEW.get();
+            case GOLD -> ModItems.GOLD_SPELLBOOK_PREVIEW.get();
+            case DIAMOND -> ModItems.DIAMOND_SPELLBOOK_PREVIEW.get();
+            case NETHERITE -> ModItems.NETHERITE_SPELLBOOK_PREVIEW.get();
+        };
     }
 
     private static void restoreSpellbookKeybindPreview(Minecraft mc) {
