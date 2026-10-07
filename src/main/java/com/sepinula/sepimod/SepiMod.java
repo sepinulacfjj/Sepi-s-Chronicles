@@ -48,13 +48,7 @@ public class SepiMod {
                 ModItems.IRON_SPELLBOOK,
                 ModItems.GOLD_SPELLBOOK,
                 ModItems.DIAMOND_SPELLBOOK,
-                ModItems.NETHERITE_SPELLBOOK,
-                ModItems.SPELLBOOK_PREVIEW,
-                ModItems.COPPER_SPELLBOOK_PREVIEW,
-                ModItems.IRON_SPELLBOOK_PREVIEW,
-                ModItems.GOLD_SPELLBOOK_PREVIEW,
-                ModItems.DIAMOND_SPELLBOOK_PREVIEW,
-                ModItems.NETHERITE_SPELLBOOK_PREVIEW);
+                ModItems.NETHERITE_SPELLBOOK);
     }
 
     private void registerCommands(RegisterCommandsEvent event) {
