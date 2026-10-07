@@ -2,6 +2,7 @@ package com.sepinula.sepimod.network;
 
 import com.sepinula.sepimod.SepiMod;
 import com.sepinula.sepimod.spellbook.SpellbookHelper;
+import com.sepinula.sepimod.spellbook.SpellbookOpenScheduler;
 import com.sepinula.sepimod.spells.SpellRegistry;
 import com.sepinula.sepimod.util.ModDataAttachments;
 import com.sepinula.sepimod.util.PlayerSpellData;
