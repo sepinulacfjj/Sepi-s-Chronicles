@@ -32,26 +32,6 @@ public class ModItems {
     public static final DeferredItem<SpellbookItem> NETHERITE_SPELLBOOK = ITEMS.register("netherite_spellbook",
             () -> new SpellbookItem(SpellbookTier.NETHERITE, new Item.Properties().rarity(Rarity.EPIC)));
 
-    // Client-only visual spellbooks used for hand animations. These are registered
-    // items but are intentionally not added to any creative tab or inventory.
-    public static final DeferredItem<SpellbookItem> SPELLBOOK_PREVIEW = ITEMS.register("spellbook_preview",
-            () -> new SpellbookItem(SpellbookTier.ORIGINAL, new Item.Properties()));
-
-    public static final DeferredItem<SpellbookItem> COPPER_SPELLBOOK_PREVIEW = ITEMS.register("copper_spellbook_preview",
-            () -> new SpellbookItem(SpellbookTier.COPPER, new Item.Properties()));
-
-    public static final DeferredItem<SpellbookItem> IRON_SPELLBOOK_PREVIEW = ITEMS.register("iron_spellbook_preview",
-            () -> new SpellbookItem(SpellbookTier.IRON, new Item.Properties()));
-
-    public static final DeferredItem<SpellbookItem> GOLD_SPELLBOOK_PREVIEW = ITEMS.register("gold_spellbook_preview",
-            () -> new SpellbookItem(SpellbookTier.GOLD, new Item.Properties()));
-
-    public static final DeferredItem<SpellbookItem> DIAMOND_SPELLBOOK_PREVIEW = ITEMS.register("diamond_spellbook_preview",
-            () -> new SpellbookItem(SpellbookTier.DIAMOND, new Item.Properties()));
-
-    public static final DeferredItem<SpellbookItem> NETHERITE_SPELLBOOK_PREVIEW = ITEMS.register("netherite_spellbook_preview",
-            () -> new SpellbookItem(SpellbookTier.NETHERITE, new Item.Properties()));
-
     public static final DeferredItem<BasicStaffItem> BASIC_STAFF = ITEMS.register("basic_staff",
             () -> new BasicStaffItem(new Item.Properties()
                     .stacksTo(1)
