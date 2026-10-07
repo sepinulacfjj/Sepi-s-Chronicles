@@ -187,17 +187,10 @@ public class ClientEvents {
             return false;
         }
 
-        InteractionHand hand = mc.player.getMainHandItem().isEmpty()
-                ? InteractionHand.MAIN_HAND
-                : (mc.player.getOffhandItem().isEmpty() ? InteractionHand.OFF_HAND : null);
-
-        if (hand == null) {
-            mc.player.displayClientMessage(
-                    Component.literal("§cEmpty a hand to display the spellbook."),
-                    true
-            );
-            return false;
-        }
+        // Use the main hand for the visual preview even if the player is
+        // holding something. This is client-only and is restored when the
+        // spellbook screen closes, so the real server inventory is untouched.
+        InteractionHand hand = InteractionHand.MAIN_HAND;
 
         ItemStack equippedBook = SpellbookHelper.getSpellbook(mc.player);
         if (!(equippedBook.getItem() instanceof SpellbookItem spellbook)) {
