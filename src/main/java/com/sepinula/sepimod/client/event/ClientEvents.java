@@ -7,7 +7,6 @@ import com.sepinula.sepimod.client.gui.SpellbookScreen;
 import com.sepinula.sepimod.client.gui.StatUpgradeScreen;
 import com.sepinula.sepimod.client.model.Baby_GoblinModel;
 import com.sepinula.sepimod.client.renderer.Baby_GoblinRenderer;
-import com.sepinula.sepimod.client.renderer.SpellbookPreviewLayer;
 import com.sepinula.sepimod.init.ModEntities;
 import com.sepinula.sepimod.init.ModMenus;
 import com.sepinula.sepimod.init.ModModelLayers;
@@ -37,6 +36,7 @@ import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.IEventBus;
 import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
+import net.neoforged.neoforge.client.event.RenderPlayerEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 import net.neoforged.neoforge.client.event.ViewportEvent;
@@ -69,10 +69,10 @@ public class ClientEvents {
         modBus.addListener(ClientEvents::onKeyRegister);
         modBus.addListener(ClientEvents::registerRenderers);
         modBus.addListener(ClientEvents::registerLayers);
-        modBus.addListener(ClientEvents::addPlayerLayers);
         modBus.addListener(ClientEvents::registerScreens);
         NeoForge.EVENT_BUS.addListener(ClientEvents::onClientTick);
         NeoForge.EVENT_BUS.addListener(ClientEvents::onComputeCameraAngles);
+        NeoForge.EVENT_BUS.addListener(ClientEvents::onRenderPlayer);
 
     }
 
@@ -244,18 +244,37 @@ public class ClientEvents {
         }
     }
 
-    private static void addPlayerLayers(EntityRenderersEvent.AddLayers event) {
-        for (var skin : event.getSkins()) {
-            var renderer = event.getSkin(skin);
-            if (renderer instanceof net.minecraft.client.renderer.entity.player.PlayerRenderer playerRenderer) {
-                playerRenderer.addLayer(
-                        new SpellbookPreviewLayer(
-                                playerRenderer,
-                                event.getContext().getItemInHandRenderer()
-                        )
-                );
-            }
+    private static void onRenderPlayer(RenderPlayerEvent.Post event) {
+        Minecraft mc = Minecraft.getInstance();
+
+        if (previewStack.isEmpty()
+                || mc.player == null
+                || event.getEntity() != mc.player
+                || mc.options.getCameraType().isFirstPerson()) {
+            return;
         }
+
+        event.getPoseStack().pushPose();
+
+        // Position exactly at the player's right hand. The item renderer then
+        // applies the spellbook.json THIRD_PERSON_RIGHT_HAND transform.
+        event.getRenderer().getModel().rightArm.translateAndRotate(event.getPoseStack());
+        event.getPoseStack().translate(0.0F, -0.1F, 0.0F);
+
+        mc.getItemRenderer().renderStatic(
+                mc.player,
+                previewStack,
+                ItemDisplayContext.THIRD_PERSON_RIGHT_HAND,
+                false,
+                event.getPoseStack(),
+                event.getMultiBufferSource(),
+                mc.level,
+                event.getPackedLight(),
+                OverlayTexture.NO_OVERLAY,
+                0
+        );
+
+        event.getPoseStack().popPose();
     }
 
     private static void onComputeCameraAngles(ViewportEvent.ComputeCameraAngles event) {
