@@ -28,6 +28,10 @@ public final class SpellbookOpenScheduler {
         PENDING.add(new PendingOpen(player.getUUID(), hand, item, OPEN_ANIMATION_TICKS));
     }
 
+    public static synchronized void schedule(ServerPlayer player, Item item) {
+        PENDING.add(new PendingOpen(player.getUUID(), null, item, OPEN_ANIMATION_TICKS));
+    }
+
     public static synchronized void onServerTick(ServerTickEvent.Post event) {
         Iterator<PendingOpen> iterator = PENDING.iterator();
 
@@ -48,7 +52,7 @@ public final class SpellbookOpenScheduler {
                 continue;
             }
 
-            if (!player.getItemInHand(pending.hand).is(pending.item)) {
+            if (pending.hand != null && !player.getItemInHand(pending.hand).is(pending.item)) {
                 continue;
             }
 
