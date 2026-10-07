@@ -29,6 +29,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.ItemDisplayContext;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.HumanoidArm;
+import com.mojang.blaze3d.vertex.Axis;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.EntityHitResult;
@@ -38,7 +40,7 @@ import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
-import net.neoforged.neoforge.client.event.RenderHandEvent;
+import net.neoforged.neoforge.client.event.RenderPlayerEvent;
 import net.neoforged.neoforge.client.event.ViewportEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import org.lwjgl.glfw.GLFW;
@@ -72,7 +74,7 @@ public class ClientEvents {
         modBus.addListener(ClientEvents::registerScreens);
         NeoForge.EVENT_BUS.addListener(ClientEvents::onClientTick);
         NeoForge.EVENT_BUS.addListener(ClientEvents::onComputeCameraAngles);
-        NeoForge.EVENT_BUS.addListener(ClientEvents::onRenderHand);
+        NeoForge.EVENT_BUS.addListener(ClientEvents::onRenderPlayer);
     }
 
     private static void onKeyRegister(RegisterKeyMappingsEvent event) {
@@ -205,7 +207,7 @@ public class ClientEvents {
         previewOriginalStack = ItemStack.EMPTY;
         previewGuiOpened = false;
         previewRestoreTicks = -1;
-        previewStack = equippedBook.copy();
+        previewStack = new ItemStack(equippedBook.getItem());
 
         long instanceId = GeoItem.getId(previewStack);
         spellbook.triggerAnim(mc.player, instanceId, "controller", "open");
@@ -232,27 +234,50 @@ public class ClientEvents {
         }
     }
 
-    private static void onRenderHand(RenderHandEvent event) {
-        if (previewStack.isEmpty() || event.getHand() != InteractionHand.MAIN_HAND) {
+    private static void onRenderPlayer(RenderPlayerEvent.Post event) {
+        Minecraft mc = Minecraft.getInstance();
+
+        if (previewStack.isEmpty() || mc.player == null || event.getEntity() != mc.player) {
             return;
         }
 
-        if (Minecraft.getInstance().screen != null) {
+        // This preview is deliberately third-person only. The actual held
+        // item is never replaced, so the hotbar and first-person hand stay
+        // completely untouched.
+        if (mc.options.getCameraType().isFirstPerson()) {
             return;
         }
 
-        if (previewRenderer == null) {
-            previewRenderer = new SpellbookRenderer();
-        }
+        if (previewStack.getItem() instanceof SpellbookItem) {
+            event.getPoseStack().pushPose();
 
-        previewRenderer.renderByItem(
-                previewStack,
-                ItemDisplayContext.FIRST_PERSON_RIGHT_HAND,
-                event.getPoseStack(),
-                event.getMultiBufferSource(),
-                event.getPackedLight(),
-                OverlayTexture.NO_OVERLAY
-        );
+            event.getRenderer().getModel().translateToHand(
+                    HumanoidArm.RIGHT,
+                    event.getPoseStack()
+            );
+
+            // Match vanilla ItemInHandLayer's third-person item transform.
+            event.getPoseStack().mulPose(Axis.XP.rotationDegrees(-90.0F));
+            event.getPoseStack().mulPose(Axis.YP.rotationDegrees(180.0F));
+            event.getPoseStack().translate(1.0F / 16.0F, 0.125F, -0.625F);
+
+            if (previewStack.getItem() instanceof SpellbookItem spellbook) {
+                if (previewRenderer == null) {
+                    previewRenderer = new SpellbookRenderer();
+                }
+
+                previewRenderer.renderByItem(
+                        previewStack,
+                        ItemDisplayContext.THIRD_PERSON_RIGHT_HAND,
+                        event.getPoseStack(),
+                        event.getMultiBufferSource(),
+                        event.getPackedLight(),
+                        OverlayTexture.NO_OVERLAY
+                );
+            }
+
+            event.getPoseStack().popPose();
+        }
     }
 
     private static void onComputeCameraAngles(ViewportEvent.ComputeCameraAngles event) {
