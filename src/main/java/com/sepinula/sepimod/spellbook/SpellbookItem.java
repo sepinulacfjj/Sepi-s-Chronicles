@@ -51,6 +51,13 @@ public class SpellbookItem extends Item implements SpellCooldownModifier, GeoIte
     }
 
     @Override
+    public boolean isPerspectiveAware() {
+        // Keep first/third-person hand animations separate from ground, GUI,
+        // and dropped-item rendering. A dropped spellbook must always be static.
+        return true;
+    }
+
+    @Override
     public AnimatableInstanceCache getAnimatableInstanceCache() {
         return cache;
     }
