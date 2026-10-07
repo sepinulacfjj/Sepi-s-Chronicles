@@ -55,13 +55,21 @@ public class SpellbookItem extends Item implements SpellCooldownModifier, GeoIte
         controllers.add(new AnimationController<>(this, "controller", 0, state -> {
                     ItemDisplayContext context = state.getData(DataTickets.ITEM_RENDER_PERSPECTIVE);
 
-                    return switch (context) {
+                    switch (context) {
                         case FIRST_PERSON_RIGHT_HAND,
                              FIRST_PERSON_LEFT_HAND,
                              THIRD_PERSON_RIGHT_HAND,
-                             THIRD_PERSON_LEFT_HAND -> PlayState.CONTINUE;
-                        default -> PlayState.STOP;
-                    };
+                             THIRD_PERSON_LEFT_HAND -> {
+                            return PlayState.CONTINUE;
+                        }
+                        default -> {
+                            // Inventory, GUI, ground and fixed renders must
+                            // always show the static closed model. Reset any
+                            // triggered hand animation before rendering here.
+                            state.getController().forceAnimationReset();
+                            return PlayState.STOP;
+                        }
+                    }
                 })
                 .triggerableAnim("open", OPEN_ANIMATION)
                 .triggerableAnim("close", RawAnimation.begin().thenPlay("spellbook.animation.close")));
