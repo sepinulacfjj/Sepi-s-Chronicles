@@ -13,6 +13,8 @@ import com.sepinula.sepimod.init.ModModelLayers;
 import com.sepinula.sepimod.network.Messages;
 import com.sepinula.sepimod.network.PacketSpellbookAction;
 import com.sepinula.sepimod.spellbook.SpellbookHelper;
+import com.sepinula.sepimod.spellbook.SpellbookItem;
+import software.bernie.geckolib.animatable.GeoItem;
 import com.sepinula.sepimod.util.ModDataAttachments;
 import com.sepinula.sepimod.util.PlayerStats;
 import com.sepinula.sepimod.util.PlayerSpellCooldownData;
@@ -21,6 +23,8 @@ import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.phys.AABB;
@@ -47,6 +51,13 @@ public class ClientEvents {
 
     private static boolean isLockedOn = false;
     private static LivingEntity target = null;
+
+    // Client-only preview of the equipped spellbook for keybind activation.
+    // The real spellbook remains in the dedicated attachment slot.
+    private static InteractionHand previewHand = null;
+    private static ItemStack previewOriginalStack = ItemStack.EMPTY;
+    private static boolean previewGuiOpened = false;
+    private static int previewRestoreTicks = -1;
 
     public static void init(IEventBus modBus) {
         modBus.addListener(ClientEvents::onKeyRegister);
@@ -101,6 +112,7 @@ public class ClientEvents {
 
             while (spellbookKey.consumeClick()) {
                 if (SpellbookHelper.hasSpellbook(mc.player)) {
+                    startSpellbookKeybindPreview(mc);
                     Messages.sendToServer(new PacketSpellbookAction(PacketSpellbookAction.OPEN, 0, 0));
                 } else {
                     mc.player.displayClientMessage(Component.literal("§cEquip a spellbook first."), true);
@@ -142,11 +154,81 @@ public class ClientEvents {
             }
         }
 
+        if (previewHand != null) {
+            if (mc.screen != null) {
+                previewGuiOpened = true;
+            } else if (previewGuiOpened && previewRestoreTicks < 0) {
+                // SpellbookMenu.removed triggers the close animation while the
+                // preview stack is still in the hand. Give that animation time
+                // to finish before restoring the real hand contents.
+                previewRestoreTicks = 11;
+            }
+
+            if (previewRestoreTicks >= 0) {
+                if (previewRestoreTicks == 0) {
+                    restoreSpellbookKeybindPreview(mc);
+                } else {
+                    previewRestoreTicks--;
+                }
+            }
+        }
+
         if (isLockedOn && target != null && (!target.isAlive() || mc.player.distanceTo(target) > 20.0f || !mc.player.hasLineOfSight(target))) {
             target = null;
             isLockedOn = false;
             mc.player.displayClientMessage(Component.literal("§7Lock-on lost"), true);
         }
+    }
+
+
+    private static void startSpellbookKeybindPreview(Minecraft mc) {
+        if (previewHand != null || mc.player == null || mc.level == null) {
+            return;
+        }
+
+        InteractionHand hand = mc.player.getMainHandItem().isEmpty()
+                ? InteractionHand.MAIN_HAND
+                : (mc.player.getOffhandItem().isEmpty() ? InteractionHand.OFF_HAND : null);
+
+        if (hand == null) {
+            mc.player.displayClientMessage(
+                    Component.literal("§cEmpty a hand to display the spellbook."),
+                    true
+            );
+            return;
+        }
+
+        ItemStack equippedBook = SpellbookHelper.getSpellbook(mc.player);
+        if (!(equippedBook.getItem() instanceof SpellbookItem spellbook)) {
+            return;
+        }
+
+        previewHand = hand;
+        previewOriginalStack = mc.player.getItemInHand(hand).copy();
+        previewGuiOpened = false;
+        previewRestoreTicks = -1;
+
+        ItemStack previewStack = equippedBook.copy();
+        mc.player.setItemInHand(hand, previewStack);
+
+        long instanceId = GeoItem.getOrAssignId(previewStack, mc.level);
+        spellbook.triggerAnim(mc.player, instanceId, "controller", "open");
+    }
+
+    private static void restoreSpellbookKeybindPreview(Minecraft mc) {
+        if (previewHand == null || mc.player == null) {
+            previewHand = null;
+            previewOriginalStack = ItemStack.EMPTY;
+            previewGuiOpened = false;
+            previewRestoreTicks = -1;
+            return;
+        }
+
+        mc.player.setItemInHand(previewHand, previewOriginalStack);
+        previewHand = null;
+        previewOriginalStack = ItemStack.EMPTY;
+        previewGuiOpened = false;
+        previewRestoreTicks = -1;
     }
 
     private static void onComputeCameraAngles(ViewportEvent.ComputeCameraAngles event) {
