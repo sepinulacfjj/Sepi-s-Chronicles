@@ -31,14 +31,7 @@ public class SpellbookMenu extends AbstractContainerMenu {
         super.removed(player);
 
         if (player.level().isClientSide()) {
-            for (InteractionHand hand : InteractionHand.values()) {
-                ItemStack stack = player.getItemInHand(hand);
-
-                if (stack.getItem() instanceof SpellbookItem spellbook) {
-                    spellbook.triggerAnim(player, GeoItem.getId(stack), "controller", "close");
-                    break;
-                }
-            }
+            com.sepinula.sepimod.client.event.ClientEvents.startSpellbookClosePreview();
         }
     }
 }
