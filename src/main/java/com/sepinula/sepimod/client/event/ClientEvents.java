@@ -207,12 +207,12 @@ public class ClientEvents {
         previewOriginalStack = ItemStack.EMPTY;
         previewGuiOpened = false;
         previewRestoreTicks = -1;
-        previewStack = new ItemStack(equippedBook.getItem());
+        // Preserve GeckoLib's stack animation ID so the renderer can address
+        // the same animatable instance. Perspective-aware rendering keeps this
+        // animation out of GUI/ground contexts.
+        previewStack = equippedBook.copy();
 
-        long instanceId = GeoItem.getId(previewStack);
-        spellbook.getAnimatableInstanceCache()
-                .getManagerForId(instanceId)
-                .tryTriggerAnimation("controller", "open");
+        spellbook.triggerAnim(mc.player, GeoItem.getId(previewStack), "controller", "open");
         return true;
     }
 
@@ -231,9 +231,12 @@ public class ClientEvents {
         }
 
         if (previewStack.getItem() instanceof SpellbookItem spellbook) {
-            spellbook.getAnimatableInstanceCache()
-                    .getManagerForId(GeoItem.getId(previewStack))
-                    .tryTriggerAnimation("controller", "close");
+            spellbook.triggerAnim(
+                    mc.player,
+                    GeoItem.getId(previewStack),
+                    "controller",
+                    "close"
+            );
             previewRestoreTicks = 11;
         }
     }
