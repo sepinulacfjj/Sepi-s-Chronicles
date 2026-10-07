@@ -266,7 +266,7 @@ public class ClientEvents {
             // Match vanilla ItemInHandLayer's third-person item transform.
             event.getPoseStack().mulPose(Axis.XP.rotationDegrees(-90.0F));
             event.getPoseStack().mulPose(Axis.YP.rotationDegrees(180.0F));
-            event.getPoseStack().translate(1.0F / 16.0F, 0.125F, -0.625F);
+            event.getPoseStack().translate(1.0F / 16.0F, 0.125F, 0.625F);
 
             if (previewStack.getItem() instanceof SpellbookItem spellbook) {
                 if (previewRenderer == null) {
