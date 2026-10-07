@@ -7,8 +7,6 @@ import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemDisplayContext;
-import software.bernie.geckolib.constant.DataTickets;
 import net.minecraft.world.level.Level;
 import software.bernie.geckolib.animatable.GeoItem;
 import software.bernie.geckolib.animatable.SingletonGeoAnimatable;
@@ -27,9 +25,15 @@ public class SpellbookItem extends Item implements SpellCooldownModifier, GeoIte
     private final AnimatableInstanceCache cache = GeckoLibUtil.createInstanceCache(this);
 
     public SpellbookItem(SpellbookTier tier, Properties properties) {
+        this(tier, properties, true);
+    }
+
+    protected SpellbookItem(SpellbookTier tier, Properties properties, boolean synced) {
         super(properties.stacksTo(1));
         this.tier = tier;
-        SingletonGeoAnimatable.registerSyncedAnimatable(this);
+        if (synced) {
+            SingletonGeoAnimatable.registerSyncedAnimatable(this);
+        }
     }
 
     public SpellbookTier getTier() {
@@ -46,31 +50,8 @@ public class SpellbookItem extends Item implements SpellCooldownModifier, GeoIte
     }
 
     @Override
-    public boolean isPerspectiveAware() {
-        return true;
-    }
-
-    @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
-        controllers.add(new AnimationController<>(this, "controller", 0, state -> {
-                    ItemDisplayContext context = state.getData(DataTickets.ITEM_RENDER_PERSPECTIVE);
-
-                    switch (context) {
-                        case FIRST_PERSON_RIGHT_HAND,
-                             FIRST_PERSON_LEFT_HAND,
-                             THIRD_PERSON_RIGHT_HAND,
-                             THIRD_PERSON_LEFT_HAND -> {
-                            return PlayState.CONTINUE;
-                        }
-                        default -> {
-                            // Inventory, GUI, ground and fixed renders must
-                            // always show the static closed model. Reset any
-                            // triggered hand animation before rendering here.
-                            state.getController().forceAnimationReset();
-                            return PlayState.STOP;
-                        }
-                    }
-                })
+        controllers.add(new AnimationController<>(this, "controller", 0, state -> PlayState.STOP)
                 .triggerableAnim("open", OPEN_ANIMATION)
                 .triggerableAnim("close", RawAnimation.begin().thenPlay("spellbook.animation.close")));
     }
