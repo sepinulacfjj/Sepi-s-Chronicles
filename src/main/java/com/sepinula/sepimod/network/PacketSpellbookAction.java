@@ -55,11 +55,7 @@ public record PacketSpellbookAction(int action, int firstIndex, int secondIndex)
                     return;
                 }
 
-                player.openMenu(new SimpleMenuProvider(
-                        (containerId, inventory, ignoredPlayer) ->
-                                new com.sepinula.sepimod.spellbook.SpellbookMenu(containerId, inventory),
-                        Component.literal("Spellbook")
-                ));
+                SpellbookOpenScheduler.schedule(player, SpellbookHelper.getSpellbook(player).getItem());
                 return;
             }
 
