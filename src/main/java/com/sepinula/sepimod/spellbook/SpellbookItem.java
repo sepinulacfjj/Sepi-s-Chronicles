@@ -61,23 +61,7 @@ public class SpellbookItem extends Item implements SpellCooldownModifier, GeoIte
         controllers.add(new AnimationController<>(this, "controller", 0, state -> {
                     ItemDisplayContext context = state.getData(DataTickets.ITEM_RENDER_PERSPECTIVE);
 
-                    if (context == null) {
-                        state.getController().stop();
-                        state.getController().forceAnimationReset();
-                        return PlayState.STOP;
-                    }
-
-                    return switch (context) {
-                        case FIRST_PERSON_RIGHT_HAND,
-                             FIRST_PERSON_LEFT_HAND,
-                             THIRD_PERSON_RIGHT_HAND,
-                             THIRD_PERSON_LEFT_HAND -> PlayState.CONTINUE;
-                        default -> {
-                            state.getController().stop();
-                            state.getController().forceAnimationReset();
-                            yield PlayState.STOP;
-                        }
-                    };
+                    return PlayState.CONTINUE;
                 })
                 .triggerableAnim("open", OPEN_ANIMATION)
                 .triggerableAnim("close", RawAnimation.begin().thenPlay("spellbook.animation.close")));
