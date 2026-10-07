@@ -205,7 +205,7 @@ public class ClientEvents {
         ItemStack previewStack = equippedBook.copy();
         mc.player.setItemInHand(hand, previewStack);
 
-        long instanceId = GeoItem.getOrAssignId(previewStack, mc.level);
+        long instanceId = GeoItem.getId(previewStack);
         spellbook.triggerAnim(mc.player, instanceId, "controller", "open");
         return true;
     }
