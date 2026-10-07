@@ -77,7 +77,7 @@ public class ClientEvents {
         event.registerEntityRenderer(ModEntities.BabyGOBLIN.get(), Baby_GoblinRenderer::new);
     }
 
-    private static void registerLayers(EntityRenderersEvent.RegisterLayerDefinitionsEvent event) {
+    private static void registerLayers(EntityRenderersEvent.RegisterLayerDefinitions event) {
         event.registerLayerDefinition(ModModelLayers.GOBLIN_LAYER, Baby_GoblinModel::createBodyLayer);
     }
 
