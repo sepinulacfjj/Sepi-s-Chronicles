@@ -210,7 +210,9 @@ public class ClientEvents {
         previewStack = new ItemStack(equippedBook.getItem());
 
         long instanceId = GeoItem.getId(previewStack);
-        spellbook.triggerAnim(mc.player, instanceId, "controller", "open");
+        spellbook.getAnimatableInstanceCache()
+                .getManagerForId(instanceId)
+                .tryTriggerAnimation("controller", "open");
         return true;
     }
 
@@ -229,7 +231,9 @@ public class ClientEvents {
         }
 
         if (previewStack.getItem() instanceof SpellbookItem spellbook) {
-            spellbook.triggerAnim(mc.player, GeoItem.getId(previewStack), "controller", "close");
+            spellbook.getAnimatableInstanceCache()
+                    .getManagerForId(GeoItem.getId(previewStack))
+                    .tryTriggerAnimation("controller", "close");
             previewRestoreTicks = 11;
         }
     }
