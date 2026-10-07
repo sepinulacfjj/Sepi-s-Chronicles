@@ -50,6 +50,126 @@ public class ClientEvents {
     private static boolean isLockedOn = false;
     private static LivingEntity target = null;
 
+    public static void init(IEventBus modBus) {
+        modBus.addListener(ClientEvents::onKeyRegister);
+        modBus.addListener(ClientEvents::registerRenderers);
+        modBus.addListener(ClientEvents::registerLayers);
+        modBus.addListener(ClientEvents::registerScreens);
+        NeoForge.EVENT_BUS.addListener(ClientEvents::onClientTick);
+        NeoForge.EVENT_BUS.addListener(ClientEvents::onComputeCameraAngles);
+    }
+
+    private static void onKeyRegister(RegisterKeyMappingsEvent event) {
+        event.register(classKey);
+        event.register(statsKey);
+        event.register(spellbookKey);
+        event.register(lockOnKey);
+        event.register(spellPreviousKey);
+        event.register(spellNextKey);
+        event.register(spellCastKey);
+    }
+
+    private static void registerScreens(RegisterMenuScreensEvent event) {
+        event.register(ModMenus.SPELLBOOK.get(), SpellbookScreen::new);
+    }
+
+    private static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(ModEntities.BabyGOBLIN.get(), Baby_GoblinRenderer::new);
+    }
+
+    private static void registerLayers(EntityRenderersEvent.RegisterLayerDefinitionsEvent event) {
+        event.registerLayerDefinition(ModModelLayers.GOBLIN_LAYER, Baby_GoblinModel::createBodyLayer);
+    }
+
+    private static void onClientTick(ClientTickEvent.Post event) {
+        Minecraft mc = Minecraft.getInstance();
+
+        if (!vanillaCreativeHotbarKeysCleared) {
+            mc.options.keySaveHotbarActivator.setKey(InputConstants.UNKNOWN);
+            mc.options.keyLoadHotbarActivator.setKey(InputConstants.UNKNOWN);
+            mc.options.save();
+            vanillaCreativeHotbarKeysCleared = true;
+        }
+
+        if (mc.player == null || mc.level == null) {
+            return;
+        }
+
+        PlayerSpellCooldownData cooldowns = mc.player.getData(ModDataAttachments.PLAYER_SPELL_COOLDOWNS);
+        cooldowns.tick();
+
+        if (mc.screen == null) {
+            while (classKey.consumeClick()) {
+                PlayerStats stats = mc.player.getData(ModDataAttachments.PLAYER_STATS);
+                if (stats.getArchetype() == RpgArchetype.NONE) {
+                    mc.setScreen(new ClassSelectionScreen());
+                } else {
+                    mc.player.displayClientMessage(Component.literal("§cYou already have a class selected!"), true);
+                }
+            }
+
+            while (spellbookKey.consumeClick()) {
+                if (SpellbookHelper.hasSpellbook(mc.player)) {
+                    Messages.sendToServer(new PacketSpellbookAction(PacketSpellbookAction.OPEN, 0, 0));
+                } else {
+                    mc.player.displayClientMessage(Component.literal("§cEquip a spellbook first."), true);
+                }
+            }
+
+            while (statsKey.consumeClick()) {
+                PlayerStats stats = mc.player.getData(ModDataAttachments.PLAYER_STATS);
+                if (stats.getArchetype() == RpgArchetype.NONE) {
+                    mc.player.displayClientMessage(Component.literal("§6You must pick a class (Press O) before upgrading stats!"), true);
+                } else {
+                    mc.setScreen(new StatUpgradeScreen());
+                }
+            }
+
+            while (spellPreviousKey.consumeClick()) {
+                if (SpellbookHelper.hasSpellbook(mc.player)) {
+                    Messages.sendToServer(new PacketSpellbookAction(PacketSpellbookAction.PREVIOUS, 0, 0));
+                }
+            }
+
+            while (spellNextKey.consumeClick()) {
+                if (SpellbookHelper.hasSpellbook(mc.player)) {
+                    Messages.sendToServer(new PacketSpellbookAction(PacketSpellbookAction.NEXT, 0, 0));
+                }
+            }
+
+            while (spellCastKey.consumeClick()) {
+                if (SpellbookHelper.hasSpellbook(mc.player)) {
+                    Messages.sendToServer(new PacketSpellbookAction(PacketSpellbookAction.CAST, 0, 0));
+                }
+            }
+
+            while (lockOnKey.consumeClick()) {
+                isLockedOn = !isLockedOn;
+                if (isLockedOn) {
+                    target = findTarget(mc);
+                    if (target == null) {
+                        isLockedOn = false;
+                        mc.player.displayClientMessage(Component.literal("§cNo target in crosshair!"), true);
+                    } else {
+                        mc.player.displayClientMessage(Component.literal("§aLocked on: " + target.getDisplayName().getString()), true);
+                    }
+                } else {
+                    target = null;
+                    mc.player.displayClientMessage(Component.literal("§7Lock-on: Disabled"), true);
+                }
+            }
+        }
+
+        if (isLockedOn && target != null
+                && (!target.isAlive()
+                || mc.player.distanceTo(target) > 20.0f
+                || !mc.player.hasLineOfSight(target))) {
+            target = null;
+            isLockedOn = false;
+            mc.player.displayClientMessage(Component.literal("§7Lock-on lost"), true);
+        }
+    }
+
     private static void onComputeCameraAngles(ViewportEvent.ComputeCameraAngles event) {
         Minecraft mc = Minecraft.getInstance();
         if (isLockedOn && target != null && mc.player != null) {
