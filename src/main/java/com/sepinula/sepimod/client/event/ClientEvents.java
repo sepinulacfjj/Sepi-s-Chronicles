@@ -112,8 +112,9 @@ public class ClientEvents {
 
             while (spellbookKey.consumeClick()) {
                 if (SpellbookHelper.hasSpellbook(mc.player)) {
-                    startSpellbookKeybindPreview(mc);
-                    Messages.sendToServer(new PacketSpellbookAction(PacketSpellbookAction.OPEN, 0, 0));
+                    if (startSpellbookKeybindPreview(mc)) {
+                        Messages.sendToServer(new PacketSpellbookAction(PacketSpellbookAction.OPEN, 0, 0));
+                    }
                 } else {
                     mc.player.displayClientMessage(Component.literal("§cEquip a spellbook first."), true);
                 }
@@ -181,9 +182,9 @@ public class ClientEvents {
     }
 
 
-    private static void startSpellbookKeybindPreview(Minecraft mc) {
+    private static boolean startSpellbookKeybindPreview(Minecraft mc) {
         if (previewHand != null || mc.player == null || mc.level == null) {
-            return;
+            return false;
         }
 
         InteractionHand hand = mc.player.getMainHandItem().isEmpty()
@@ -195,12 +196,12 @@ public class ClientEvents {
                     Component.literal("§cEmpty a hand to display the spellbook."),
                     true
             );
-            return;
+            return false;
         }
 
         ItemStack equippedBook = SpellbookHelper.getSpellbook(mc.player);
         if (!(equippedBook.getItem() instanceof SpellbookItem spellbook)) {
-            return;
+            return false;
         }
 
         previewHand = hand;
@@ -213,6 +214,7 @@ public class ClientEvents {
 
         long instanceId = GeoItem.getOrAssignId(previewStack, mc.level);
         spellbook.triggerAnim(mc.player, instanceId, "controller", "open");
+        return true;
     }
 
     private static void restoreSpellbookKeybindPreview(Minecraft mc) {
