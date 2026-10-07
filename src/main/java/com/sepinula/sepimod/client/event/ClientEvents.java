@@ -29,7 +29,6 @@ import net.minecraft.world.entity.Entity;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.client.player.AbstractClientPlayer;
-import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.phys.AABB;
@@ -224,6 +223,10 @@ public class ClientEvents {
         previewRestoreTicks = -1;
     }
 
+    public static ItemStack getSpellbookPreviewStack() {
+        return previewStack;
+    }
+
     public static void startSpellbookClosePreview() {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || previewStack.isEmpty()) {
@@ -243,9 +246,14 @@ public class ClientEvents {
 
     private static void addPlayerLayers(EntityRenderersEvent.AddLayers event) {
         for (var skin : event.getSkins()) {
-            PlayerRenderer renderer = event.getSkin(skin);
-            if (renderer != null) {
-                renderer.addLayer(new SpellbookPreviewLayer(renderer));
+            var renderer = event.getSkin(skin);
+            if (renderer instanceof net.minecraft.client.renderer.entity.player.PlayerRenderer playerRenderer) {
+                playerRenderer.addLayer(
+                        new SpellbookPreviewLayer(
+                                playerRenderer,
+                                event.getContext().getItemInHandRenderer()
+                        )
+                );
             }
         }
     }
