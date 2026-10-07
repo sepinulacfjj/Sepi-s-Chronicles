@@ -7,6 +7,7 @@ import com.sepinula.sepimod.client.gui.SpellbookScreen;
 import com.sepinula.sepimod.client.gui.StatUpgradeScreen;
 import com.sepinula.sepimod.client.model.Baby_GoblinModel;
 import com.sepinula.sepimod.client.renderer.Baby_GoblinRenderer;
+import com.sepinula.sepimod.client.renderer.SpellbookRenderer;
 import com.sepinula.sepimod.init.ModEntities;
 import com.sepinula.sepimod.init.ModMenus;
 import com.sepinula.sepimod.init.ModModelLayers;
@@ -25,6 +26,8 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.phys.AABB;
@@ -35,6 +38,7 @@ import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
+import net.neoforged.neoforge.client.event.RenderHandEvent;
 import net.neoforged.neoforge.client.event.ViewportEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import org.lwjgl.glfw.GLFW;
@@ -58,6 +62,8 @@ public class ClientEvents {
     private static ItemStack previewOriginalStack = ItemStack.EMPTY;
     private static boolean previewGuiOpened = false;
     private static int previewRestoreTicks = -1;
+    private static ItemStack previewStack = ItemStack.EMPTY;
+    private static SpellbookRenderer previewRenderer;
 
     public static void init(IEventBus modBus) {
         modBus.addListener(ClientEvents::onKeyRegister);
@@ -66,6 +72,7 @@ public class ClientEvents {
         modBus.addListener(ClientEvents::registerScreens);
         NeoForge.EVENT_BUS.addListener(ClientEvents::onClientTick);
         NeoForge.EVENT_BUS.addListener(ClientEvents::onComputeCameraAngles);
+        NeoForge.EVENT_BUS.addListener(ClientEvents::onRenderHand);
     }
 
     private static void onKeyRegister(RegisterKeyMappingsEvent event) {
@@ -187,23 +194,18 @@ public class ClientEvents {
             return false;
         }
 
-        // Use the main hand for the visual preview even if the player is
-        // holding something. This is client-only and is restored when the
-        // spellbook screen closes, so the real server inventory is untouched.
-        InteractionHand hand = InteractionHand.MAIN_HAND;
-
+        // The preview is a completely separate ItemStack. It is never put
+        // into the player's inventory or either hand.
         ItemStack equippedBook = SpellbookHelper.getSpellbook(mc.player);
         if (!(equippedBook.getItem() instanceof SpellbookItem spellbook)) {
             return false;
         }
 
-        previewHand = hand;
-        previewOriginalStack = mc.player.getItemInHand(hand).copy();
+        previewHand = InteractionHand.MAIN_HAND;
+        previewOriginalStack = ItemStack.EMPTY;
         previewGuiOpened = false;
         previewRestoreTicks = -1;
-
-        ItemStack previewStack = equippedBook.copy();
-        mc.player.setItemInHand(hand, previewStack);
+        previewStack = equippedBook.copy();
 
         long instanceId = GeoItem.getId(previewStack);
         spellbook.triggerAnim(mc.player, instanceId, "controller", "open");
@@ -211,19 +213,46 @@ public class ClientEvents {
     }
 
     private static void restoreSpellbookKeybindPreview(Minecraft mc) {
-        if (previewHand == null || mc.player == null) {
-            previewHand = null;
-            previewOriginalStack = ItemStack.EMPTY;
-            previewGuiOpened = false;
-            previewRestoreTicks = -1;
+        previewHand = null;
+        previewOriginalStack = ItemStack.EMPTY;
+        previewStack = ItemStack.EMPTY;
+        previewGuiOpened = false;
+        previewRestoreTicks = -1;
+    }
+
+    public static void startSpellbookClosePreview() {
+        Minecraft mc = Minecraft.getInstance();
+        if (mc.player == null || previewStack.isEmpty()) {
             return;
         }
 
-        mc.player.setItemInHand(previewHand, previewOriginalStack);
-        previewHand = null;
-        previewOriginalStack = ItemStack.EMPTY;
-        previewGuiOpened = false;
-        previewRestoreTicks = -1;
+        if (previewStack.getItem() instanceof SpellbookItem spellbook) {
+            spellbook.triggerAnim(mc.player, GeoItem.getId(previewStack), "controller", "close");
+            previewRestoreTicks = 11;
+        }
+    }
+
+    private static void onRenderHand(RenderHandEvent event) {
+        if (previewStack.isEmpty() || event.getHand() != InteractionHand.MAIN_HAND) {
+            return;
+        }
+
+        if (Minecraft.getInstance().screen != null) {
+            return;
+        }
+
+        if (previewRenderer == null) {
+            previewRenderer = new SpellbookRenderer();
+        }
+
+        previewRenderer.renderByItem(
+                previewStack,
+                ItemDisplayContext.FIRST_PERSON_RIGHT_HAND,
+                event.getPoseStack(),
+                event.getMultiBufferSource(),
+                event.getPackedLight(),
+                OverlayTexture.NO_OVERLAY
+        );
     }
 
     private static void onComputeCameraAngles(ViewportEvent.ComputeCameraAngles event) {
