@@ -46,7 +46,7 @@ public class SpellbookItem extends Item implements SpellCooldownModifier, GeoIte
     @Override
     public void registerControllers(AnimatableManager.ControllerRegistrar controllers) {
         controllers.add(new AnimationController<>(this, "controller", 0, state -> PlayState.STOP)
-                .triggerableAnim("open", OPEN_ANIMATION));
+                .triggerableAnim("open", OPEN_ANIMATION)\n                .triggerableAnim("close", RawAnimation.begin().thenPlay("spellbook.animation.close")));
     }
 
     @Override
