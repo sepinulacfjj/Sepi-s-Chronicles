@@ -7,7 +7,7 @@ import com.sepinula.sepimod.client.gui.SpellbookScreen;
 import com.sepinula.sepimod.client.gui.StatUpgradeScreen;
 import com.sepinula.sepimod.client.model.Baby_GoblinModel;
 import com.sepinula.sepimod.client.renderer.Baby_GoblinRenderer;
-import com.sepinula.sepimod.client.renderer.SpellbookRenderer;
+import com.sepinula.sepimod.client.renderer.SpellbookPreviewLayer;
 import com.sepinula.sepimod.init.ModEntities;
 import com.sepinula.sepimod.init.ModMenus;
 import com.sepinula.sepimod.init.ModModelLayers;
@@ -15,6 +15,8 @@ import com.sepinula.sepimod.network.Messages;
 import com.sepinula.sepimod.network.PacketSpellbookAction;
 import com.sepinula.sepimod.spellbook.SpellbookHelper;
 import com.sepinula.sepimod.spellbook.SpellbookItem;
+import com.sepinula.sepimod.spellbook.SpellbookTier;
+import com.sepinula.sepimod.client.SpellbookPreviewItem;
 import software.bernie.geckolib.animatable.GeoItem;
 import com.sepinula.sepimod.util.ModDataAttachments;
 import com.sepinula.sepimod.util.PlayerStats;
@@ -26,11 +28,9 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.item.ItemDisplayContext;
-import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.player.AbstractClientPlayer;
+import net.minecraft.client.renderer.entity.player.PlayerRenderer;
 import net.minecraft.world.entity.LivingEntity;
-import net.minecraft.world.entity.HumanoidArm;
-import com.mojang.math.Axis;
 import net.minecraft.world.entity.projectile.ProjectileUtil;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.EntityHitResult;
@@ -40,7 +40,6 @@ import net.neoforged.neoforge.client.event.ClientTickEvent;
 import net.neoforged.neoforge.client.event.EntityRenderersEvent;
 import net.neoforged.neoforge.client.event.RegisterKeyMappingsEvent;
 import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
-import net.neoforged.neoforge.client.event.RenderPlayerEvent;
 import net.neoforged.neoforge.client.event.ViewportEvent;
 import net.neoforged.neoforge.common.NeoForge;
 import org.lwjgl.glfw.GLFW;
@@ -65,16 +64,17 @@ public class ClientEvents {
     private static boolean previewGuiOpened = false;
     private static int previewRestoreTicks = -1;
     private static ItemStack previewStack = ItemStack.EMPTY;
-    private static SpellbookRenderer previewRenderer;
+    private static SpellbookPreviewItem previewItem;
 
     public static void init(IEventBus modBus) {
         modBus.addListener(ClientEvents::onKeyRegister);
         modBus.addListener(ClientEvents::registerRenderers);
         modBus.addListener(ClientEvents::registerLayers);
+        modBus.addListener(ClientEvents::addPlayerLayers);
         modBus.addListener(ClientEvents::registerScreens);
         NeoForge.EVENT_BUS.addListener(ClientEvents::onClientTick);
         NeoForge.EVENT_BUS.addListener(ClientEvents::onComputeCameraAngles);
-        NeoForge.EVENT_BUS.addListener(ClientEvents::onRenderPlayer);
+
     }
 
     private static void onKeyRegister(RegisterKeyMappingsEvent event) {
@@ -196,8 +196,6 @@ public class ClientEvents {
             return false;
         }
 
-        // The preview is a completely separate ItemStack. It is never put
-        // into the player's inventory or either hand.
         ItemStack equippedBook = SpellbookHelper.getSpellbook(mc.player);
         if (!(equippedBook.getItem() instanceof SpellbookItem spellbook)) {
             return false;
@@ -207,12 +205,13 @@ public class ClientEvents {
         previewOriginalStack = ItemStack.EMPTY;
         previewGuiOpened = false;
         previewRestoreTicks = -1;
-        // Preserve GeckoLib's stack animation ID so the renderer can address
-        // the same animatable instance. Perspective-aware rendering keeps this
-        // animation out of GUI/ground contexts.
-        previewStack = equippedBook.copy();
 
-        spellbook.triggerAnim(mc.player, GeoItem.getId(previewStack), "controller", "open");
+        // This is a separate client-only animatable. It never enters the
+        // player's inventory, hotbar, or spellbook slot.
+        previewItem = new SpellbookPreviewItem(spellbook.getTier());
+        previewStack = new ItemStack(previewItem);
+
+        previewItem.triggerAnim(mc.player, GeoItem.getId(previewStack), "controller", "open");
         return true;
     }
 
@@ -220,6 +219,7 @@ public class ClientEvents {
         previewHand = null;
         previewOriginalStack = ItemStack.EMPTY;
         previewStack = ItemStack.EMPTY;
+        previewItem = null;
         previewGuiOpened = false;
         previewRestoreTicks = -1;
     }
@@ -230,8 +230,8 @@ public class ClientEvents {
             return;
         }
 
-        if (previewStack.getItem() instanceof SpellbookItem spellbook) {
-            spellbook.triggerAnim(
+        if (previewItem != null) {
+            previewItem.triggerAnim(
                     mc.player,
                     GeoItem.getId(previewStack),
                     "controller",
@@ -241,49 +241,12 @@ public class ClientEvents {
         }
     }
 
-    private static void onRenderPlayer(RenderPlayerEvent.Post event) {
-        Minecraft mc = Minecraft.getInstance();
-
-        if (previewStack.isEmpty() || mc.player == null || event.getEntity() != mc.player) {
-            return;
-        }
-
-        // This preview is deliberately third-person only. The actual held
-        // item is never replaced, so the hotbar and first-person hand stay
-        // completely untouched.
-        if (mc.options.getCameraType().isFirstPerson()) {
-            return;
-        }
-
-        if (previewStack.getItem() instanceof SpellbookItem) {
-            event.getPoseStack().pushPose();
-
-            event.getRenderer().getModel().translateToHand(
-                    HumanoidArm.RIGHT,
-                    event.getPoseStack()
-            );
-
-            // Match vanilla ItemInHandLayer's third-person item transform.
-            event.getPoseStack().mulPose(Axis.XP.rotationDegrees(-90.0F));
-            event.getPoseStack().mulPose(Axis.YP.rotationDegrees(180.0F));
-            event.getPoseStack().translate(1.0F / 16.0F, 0.125F, 0.625F);
-
-            if (previewStack.getItem() instanceof SpellbookItem spellbook) {
-                if (previewRenderer == null) {
-                    previewRenderer = new SpellbookRenderer();
-                }
-
-                previewRenderer.renderByItem(
-                        previewStack,
-                        ItemDisplayContext.THIRD_PERSON_RIGHT_HAND,
-                        event.getPoseStack(),
-                        event.getMultiBufferSource(),
-                        event.getPackedLight(),
-                        OverlayTexture.NO_OVERLAY
-                );
+    private static void addPlayerLayers(EntityRenderersEvent.AddLayers event) {
+        for (var skin : event.getSkins()) {
+            PlayerRenderer renderer = event.getSkin(skin);
+            if (renderer != null) {
+                renderer.addLayer(new SpellbookPreviewLayer(renderer));
             }
-
-            event.getPoseStack().popPose();
         }
     }
 
