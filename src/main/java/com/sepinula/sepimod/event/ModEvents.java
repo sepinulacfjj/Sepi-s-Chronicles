@@ -1,6 +1,5 @@
 package com.sepinula.sepimod.event;
 
-import com.mojang.blaze3d.shaders.Effect;
 import com.sepinula.sepimod.SepiMod;
 import com.sepinula.sepimod.entity.Baby_GoblinEntity;
 import com.sepinula.sepimod.init.ModEntities;
@@ -24,11 +23,9 @@ import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.ai.attributes.AttributeInstance;
 import net.minecraft.world.entity.ai.attributes.AttributeModifier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
-import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.projectile.LargeFireball;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.trading.MerchantOffer;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -36,6 +33,7 @@ import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.entity.living.LivingEntityUseItemEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.neoforge.event.entity.living.MobEffectEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerXpEvent;
@@ -69,9 +67,9 @@ public class ModEvents {
             player.setHealth(player.getMaxHealth());
             stats.setCurrentStamina(stats.getMaxStamina());
             stats.setCurrentMana(stats.getMaxMana());
-            int totalStats = stats.getStrengthRaw() + stats.getAgility() + stats.getConstitution() +
-                    stats.getWillpower() + stats.getDefenseRaw() + stats.getCharisma() +
-                    stats.getManaRaw() + stats.getMind() + stats.getAvailablePoints();
+            int totalStats = stats.getStrengthRaw() + stats.getAgilityRaw() + stats.getConstitutionRaw() +
+                    stats.getMagicResistanceRaw() + stats.getMagicPowerRaw() + stats.getManaRaw() +
+                    stats.getDefenseRaw() + stats.getMindRaw() + stats.getAvailablePoints();
             stats.setTrainingPoints(Math.min(800, totalStats));
             ModDataAttachments.sync(player);
             var spells = player.getData(ModDataAttachments.PLAYER_SPELL_DATA);
@@ -86,28 +84,57 @@ public class ModEvents {
     }
 
     @SubscribeEvent
+    public static void onMagicResistance(MobEffectEvent.Applicable event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+
+        // Magic Resistance protects against harmful Minecraft status effects.
+        if (event.getEffectInstance().getEffect().value().getCategory() != net.minecraft.world.effect.MobEffectCategory.HARMFUL) return;
+
+        PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
+        double resistChance = Math.min(0.75D, stats.getMagicResistance() * 0.0075D);
+
+        if (player.getRandom().nextDouble() < resistChance) {
+            event.setResult(MobEffectEvent.Applicable.Result.DO_NOT_APPLY);
+            player.displayClientMessage(Component.literal("§b✦ Resisted!"), true);
+        }
+    }
+
+    @SubscribeEvent
     public static void onPlayerTakeDamage(LivingIncomingDamageEvent event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
 
-            // New logic: Blocks dodging for environmental heat/magic damage
-            if (event.getSource().is(DamageTypes.FELL_OUT_OF_WORLD) || event.getSource().is(DamageTypes.GENERIC_KILL) ||
-                    event.getSource().is(DamageTypes.MAGIC) || event.getSource().is(DamageTypes.INDIRECT_MAGIC) ||
-                    event.getSource().is(DamageTypes.IN_FIRE) || event.getSource().is(DamageTypes.ON_FIRE) ||
-                    event.getSource().is(DamageTypes.LAVA) || event.getSource().is(DamageTypes.HOT_FLOOR) ||
-                    event.getSource().is(Tags.DamageTypes.IS_POISON) ||
-                    event.getSource().is(DamageTypes.WITHER)) return;
+            boolean magicDamage = event.getSource().is(DamageTypes.MAGIC)
+                    || event.getSource().is(DamageTypes.INDIRECT_MAGIC)
+                    || event.getSource().is(DamageTypes.FIREBALL)
+                    || event.getSource().is(DamageTypes.UNATTRIBUTED_FIREBALL)
+                    || event.getSource().is(DamageTypes.WITHER)
+                    || event.getSource().is(Tags.DamageTypes.IS_POISON);
 
-            if (!event.getSource().is(DamageTypes.FALL)) {
-                double dodgeChance = Math.min(0.25, stats.getAgility() * 0.0025);
+            if (magicDamage) {
+                event.setAmount(event.getAmount() * StatLogicHandler.getMagicDamageMultiplier(stats));
+                ModDataAttachments.sync(player);
+                return;
+            }
+
+            boolean unavoidable = event.getSource().is(DamageTypes.FELL_OUT_OF_WORLD)
+                    || event.getSource().is(DamageTypes.GENERIC_KILL)
+                    || event.getSource().is(DamageTypes.IN_FIRE)
+                    || event.getSource().is(DamageTypes.ON_FIRE)
+                    || event.getSource().is(DamageTypes.LAVA)
+                    || event.getSource().is(DamageTypes.HOT_FLOOR);
+
+            if (!unavoidable && !event.getSource().is(DamageTypes.FALL)) {
+                double dodgeChance = Math.min(0.25D, stats.getAgility() * 0.0025D);
                 if (player.getRandom().nextDouble() < dodgeChance) {
                     event.setCanceled(true);
                     player.displayClientMessage(Component.literal("§b* Dodged! *"), true);
                     return;
                 }
             }
-            float reduction = Math.min(0.8f, stats.getDefense() * 0.01f);
-            event.setAmount(event.getAmount() * (1.0f - reduction));
+
+            float reduction = Math.min(0.8F, stats.getDefense() * 0.01F);
+            event.setAmount(event.getAmount() * (1.0F - reduction));
             ModDataAttachments.sync(player);
         }
         if (event.getSource().getEntity() instanceof ServerPlayer attacker) {
@@ -222,23 +249,6 @@ public class ModEvents {
     }
 
     @SubscribeEvent
-    public static void onVillagerInteract(PlayerInteractEvent.EntityInteract event) {
-        if (!event.getLevel().isClientSide && event.getEntity() instanceof ServerPlayer player) {
-            if (event.getTarget() instanceof Villager villager) {
-                PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
-                int charisma = stats.getCharisma();
-                if (charisma > 0) {
-                    float discountFactor = Math.max(0.1F, 1.0F - (charisma * 0.01F));
-                    for (MerchantOffer offer : villager.getOffers()) {
-                        int baseCost = offer.getBaseCostA().getCount();
-                        offer.setSpecialPriceDiff(Math.max(1, Math.round(baseCost * discountFactor)) - baseCost);
-                    }
-                }
-            }
-        }
-    }
-
-    @SubscribeEvent
     public static void onFinishEating(LivingEntityUseItemEvent.Finish event) {
         if (event.getEntity() instanceof ServerPlayer player) {
             ItemStack item = event.getItem();
@@ -276,7 +286,8 @@ public class ModEvents {
                 if (stats.getCurrentMana() >= fireballCost) {
                     stats.subMana(fireballCost);
                     Vec3 look = player.getLookAngle();
-                    LargeFireball fireball = new LargeFireball(player.level(), player, look, 1);
+                    int explosionPower = 1 + (stats.getMagicPower() / 100);
+                    LargeFireball fireball = new LargeFireball(player.level(), player, look, explosionPower);
                     fireball.setPos(player.getX(), player.getEyeY(), player.getZ());
                     player.level().addFreshEntity(fireball);
                     player.level().playSound(null, player.getX(), player.getY(), player.getZ(),
