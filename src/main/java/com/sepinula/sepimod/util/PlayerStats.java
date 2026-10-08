@@ -16,7 +16,7 @@ public class PlayerStats {
                     Codec.INT.fieldOf("strength").forGetter(PlayerStats::getStrengthRaw),
                     Codec.INT.fieldOf("agility").forGetter(PlayerStats::getAgilityRaw),
                     Codec.INT.fieldOf("constitution").forGetter(PlayerStats::getConstitutionRaw),
-                    Codec.INT.fieldOf("magicResistance").forGetter(PlayerStats::getMagicResistanceRaw),
+                    Codec.INT.fieldOf("willpower").forGetter(PlayerStats::getMagicResistanceRaw),
                     Codec.INT.fieldOf("mind").forGetter(PlayerStats::getMindRaw),
                     Codec.INT.fieldOf("mana").forGetter(PlayerStats::getManaRaw),
                     Codec.INT.fieldOf("defense").forGetter(PlayerStats::getDefenseRaw),
