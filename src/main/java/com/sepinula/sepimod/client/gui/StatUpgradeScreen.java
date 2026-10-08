@@ -78,7 +78,7 @@ public class StatUpgradeScreen extends Screen {
         renderStat(graphics, mouseX, mouseY, left, top, 7, "mind", stats.getMind(), "Mind");
 
         String points = String.valueOf(stats.getAvailablePoints());
-        graphics.drawString(font, points, left + 145, top + 26, 0xFFFFFF, true);
+        graphics.drawString(font, points, left + 76, top + 26, 0xFFFFFF, true);
 
         if (isInside(mouseX, mouseY, left + POINTS_X, top + POINTS_Y, POINTS_WIDTH, POINTS_HEIGHT)) {
             renderTooltip(graphics, List.of(
