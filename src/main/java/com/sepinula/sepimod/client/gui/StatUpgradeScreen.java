@@ -81,7 +81,7 @@ public class StatUpgradeScreen extends Screen {
         graphics.drawString(font, points, left + 76, top + 26, 0xFFFFFF, true);
 
         if (isInside(mouseX, mouseY, left + POINTS_X, top + POINTS_Y, POINTS_WIDTH, POINTS_HEIGHT)) {
-            renderTooltip(graphics, List.of(
+            graphics.renderComponentTooltip(font, List.of(
                     Component.literal("§d§lTraining Points"),
                     Component.literal("§7Available: §f" + stats.getAvailablePoints()),
                     Component.literal("§7Spend points on any stat.")
@@ -89,7 +89,7 @@ public class StatUpgradeScreen extends Screen {
         }
 
         if (isInside(mouseX, mouseY, left + CONFIRM_X, top + CONFIRM_Y, CONFIRM_WIDTH, CONFIRM_HEIGHT)) {
-            renderTooltip(graphics, List.of(
+            graphics.renderComponentTooltip(font, List.of(
                     Component.literal("§e§lConfirm"),
                     Component.literal("§7Close the stat menu.")
             ), mouseX, mouseY);
@@ -130,7 +130,7 @@ public class StatUpgradeScreen extends Screen {
         graphics.drawString(font, valueText, valueX, top + y + TEXT_Y_OFFSET, value >= 100 ? 0xB048FF : 0xFFFFFF, true);
 
         if (hovered) {
-            renderTooltip(graphics, getStatTooltip(statsForTooltip(), statKey), mouseX, mouseY);
+            graphics.renderComponentTooltip(font, getStatTooltip(statsForTooltip(), statKey), mouseX, mouseY);
         }
     }
 
@@ -252,7 +252,7 @@ public class StatUpgradeScreen extends Screen {
                     + "§8" + "█".repeat(10 - percent / 10) + " §7(" + percent + "%)"));
         }
 
-        renderTooltip(graphics, tooltip, mouseX, mouseY);
+        graphics.renderComponentTooltip(font, tooltip, mouseX, mouseY);
     }
 
     private boolean isInside(double mouseX, double mouseY, int x, int y, int w, int h) {
