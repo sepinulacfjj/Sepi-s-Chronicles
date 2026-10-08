@@ -36,7 +36,7 @@ public record PacketUpdateStat(String statName) implements CustomPacketPayload {
                     case "strength" -> stats.setStrength(stats.getStrengthRaw() + 1);
                     case "agility" -> stats.setAgility(stats.getAgilityRaw() + 1);
                     case "constitution" -> stats.setConstitution(stats.getConstitution() + 1);
-                    case "willpower" -> stats.setWillpower(stats.getWillpowerRaw() + 1);
+                    case "magic_resistance" -> stats.setMagicResistance(stats.getMagicResistanceRaw() + 1);
                     case "mind" -> stats.setMind(stats.getMindRaw() + 1);
                     case "mana" -> stats.setMana(stats.getManaRaw() + 1);
                     case "defense" -> stats.setDefense(stats.getDefenseRaw() + 1);
