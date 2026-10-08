@@ -29,7 +29,7 @@ public class PlayerStats {
             ).apply(instance, (archName, str, agi, con, magicRes, min, man, def, cha, avail, train, curMan, curSta, xp) -> {
                 RpgArchetype arch = RpgArchetype.NONE;
                 try { arch = RpgArchetype.valueOf(archName); } catch (Exception e) {}
-                return new PlayerStats(arch, str, agi, con, wil, min, man, def, cha, avail, train, curMan, curSta, xp);
+                return new PlayerStats(arch, str, agi, con, magicRes, min, man, def, cha, avail, train, curMan, curSta, xp);
             }));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, PlayerStats> STREAM_CODEC = new StreamCodec<>() {
@@ -59,7 +59,7 @@ public class PlayerStats {
             buffer.writeInt(stats.getStrengthRaw());
             buffer.writeInt(stats.getAgilityRaw());
             buffer.writeInt(stats.getConstitutionRaw());
-            buffer.writeInt(stats.getWillpowerRaw());
+            buffer.writeInt(stats.getMagicResistanceRaw());
             buffer.writeInt(stats.getMindRaw());
             buffer.writeInt(stats.getManaRaw());
             buffer.writeInt(stats.getDefenseRaw());
@@ -73,7 +73,7 @@ public class PlayerStats {
     };
 
     private RpgArchetype archetype = RpgArchetype.NONE;
-    private int strength = 0, agility = 0, constitution = 0, willpower = 0, mind = 0, mana = 0, defense = 0, charisma = 0;
+    private int strength = 0, agility = 0, constitution = 0, magicResistance = 0, mind = 0, mana = 0, defense = 0, charisma = 0;
     private int availablePoints = 0;
     private int trainingPoints = 0;
     private float currentMana = 20.0f;
@@ -83,12 +83,12 @@ public class PlayerStats {
 
     public PlayerStats() {}
 
-    public PlayerStats(RpgArchetype archetype, int str, int agi, int con, int wil, int min, int man, int def, int cha, int avail, int train, float curMan, float curSta, float xp) {
+    public PlayerStats(RpgArchetype archetype, int str, int agi, int con, int magicRes, int min, int man, int def, int cha, int avail, int train, float curMan, float curSta, float xp) {
         this.archetype = archetype;
         this.strength = str;
         this.agility = agi;
         this.constitution = con;
-        this.willpower = wil;
+        this.magicResistance = magicRes;
         this.mind = min;
         this.mana = man;
         this.defense = def;
@@ -119,7 +119,7 @@ public class PlayerStats {
     public void resetAll() {
         this.archetype = RpgArchetype.NONE;
         this.strength = 0; this.agility = 0; this.constitution = 0;
-        this.willpower = 0; this.mind = 0; this.mana = 0;
+        this.magicResistance = 0; this.mind = 0; this.mana = 0;
         this.defense = 0; this.charisma = 0; this.availablePoints = 0;
         this.trainingPoints = 0; this.totalXpGained = 0;
         this.currentMana = 20.0f; this.currentStamina = 100.0f;
@@ -172,10 +172,10 @@ public class PlayerStats {
     public int getConstitutionRaw() { return constitution; }
     public void setConstitution(int val) { this.constitution = clampSpent(val); }
 
-    // Willpower
-    public int getMagicResistance() { return clampTotal(willpower + archetype.baseMagicResistance); }
-    public int getWillpowerRaw() { return willpower; }
-    public void setWillpower(int val) { this.willpower = clampSpent(val); }
+    // Magic Resistance
+    public int getMagicResistance() { return clampTotal(magicResistance + archetype.baseMagicResistance); }
+    public int getMagicResistanceRaw() { return magicResistance; }
+    public void setMagicResistance(int val) { this.magicResistance = clampSpent(val); }
 
     // Mind
     public int getMind() { return clampTotal(mind + archetype.baseMnd); }
