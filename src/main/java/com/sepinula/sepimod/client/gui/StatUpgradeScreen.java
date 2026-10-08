@@ -29,16 +29,16 @@ public class StatUpgradeScreen extends Screen {
 
     // The texture's buttons sit 10px further left than the previous hitboxes.
     private static final int LEFT_X = 10;
-    private static final int RIGHT_X = 168;
+    private static final int RIGHT_X = 178;
     private static final int[] STAT_YS = {36, 76, 116, 156};
 
-    private static final int POINTS_X = 20;
-    private static final int POINTS_Y = 20;
+    private static final int POINTS_X = 10;
+    private static final int POINTS_Y = 11;
     private static final int POINTS_WIDTH = 84;
     private static final int POINTS_HEIGHT = 21;
 
-    private static final int CONFIRM_X = 249;
-    private static final int CONFIRM_Y = 17;
+    private static final int CONFIRM_X = 251;
+    private static final int CONFIRM_Y = 8;
     private static final int CONFIRM_WIDTH = 84;
     private static final int CONFIRM_HEIGHT = 21;
 
