@@ -38,7 +38,7 @@ public class StatUpgradeScreen extends Screen {
     private static final int POINTS_HEIGHT = 21;
 
     private static final int CONFIRM_X = 249;
-    private static final int CONFIRM_Y = 20;
+    private static final int CONFIRM_Y = 17;
     private static final int CONFIRM_WIDTH = 84;
     private static final int CONFIRM_HEIGHT = 21;
 
@@ -82,12 +82,12 @@ public class StatUpgradeScreen extends Screen {
         renderStat(graphics, mouseX, mouseY, left, top, 7, "mind", stats.getMind());
 
         int remainingPoints = Math.max(0, stats.getAvailablePoints() - getPendingPointCount());
-        graphics.drawString(font, String.valueOf(remainingPoints), left + 76, top + 26, 0xFFFFFF, true);
+        graphics.drawString(font, String.valueOf(remainingPoints), left + 80, top + 23, 0xFFFFFF, true);
 
-        // Hold Shift over the Points button for the detailed XP information.
-        if (isInside(mouseX, mouseY, left + POINTS_X, top + POINTS_Y, POINTS_WIDTH, POINTS_HEIGHT)
-                && hasShiftDown()) {
-            renderTrainingPointTooltip(graphics, stats, left + POINTS_X, top + POINTS_Y + POINTS_HEIGHT + 3);
+        // Hover Points to see the progress toward the next Training Point.
+        if (isInside(mouseX, mouseY, left + POINTS_X, top + POINTS_Y, POINTS_WIDTH, POINTS_HEIGHT)) {
+            renderTrainingPointTooltip(graphics, stats, left + POINTS_X + POINTS_WIDTH + 4,
+                    top + POINTS_Y + POINTS_HEIGHT + 3);
         }
 
         // Stat changes are staged locally. Confirm is the button that commits them.
@@ -127,9 +127,24 @@ public class StatUpgradeScreen extends Screen {
         int value = Math.min(100, baseValue + pendingUpgrades.getOrDefault(statKey, 0));
         String valueText = value >= 100 ? "MAX" : String.valueOf(value);
 
-        // The value belongs directly after the '-' in the texture.
-        int valueX = left + x + 127;
-        graphics.drawString(font, valueText, valueX, top + y + TEXT_Y_OFFSET,
+        int valueX = left + x + 123;
+        int valueY = top + y + TEXT_Y_OFFSET;
+
+        switch (statKey) {
+            case "magic_resistance", "magic_power" -> {
+                valueX += 7;
+                valueY += 3;
+            }
+            case "mana", "mind" -> {
+                valueX -= 4;
+                valueY += 3;
+            }
+            default -> {
+                // Left column keeps its current horizontal alignment.
+            }
+        }
+
+        graphics.drawString(font, valueText, valueX, valueY,
                 value >= 100 ? 0xB048FF : 0xFFFFFF, true);
 
         if (hovered) {
