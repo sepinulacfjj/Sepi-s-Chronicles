@@ -28,7 +28,7 @@ public class StatUpgradeScreen extends Screen {
     private static final int STAT_HEIGHT = 38;
 
     // The texture's buttons sit 10px further left than the previous hitboxes.
-    private static final int LEFT_X = 10;
+    private static final int LEFT_X = 16;
     private static final int RIGHT_X = 178;
     private static final int[] STAT_YS = {36, 76, 116, 156};
 
@@ -38,7 +38,7 @@ public class StatUpgradeScreen extends Screen {
     private static final int POINTS_HEIGHT = 21;
 
     private static final int CONFIRM_X = 251;
-    private static final int CONFIRM_Y = 8;
+    private static final int CONFIRM_Y = 12;
     private static final int CONFIRM_WIDTH = 84;
     private static final int CONFIRM_HEIGHT = 21;
 
@@ -127,21 +127,27 @@ public class StatUpgradeScreen extends Screen {
         int value = Math.min(100, baseValue + pendingUpgrades.getOrDefault(statKey, 0));
         String valueText = value >= 100 ? "MAX" : String.valueOf(value);
 
-        int valueX = left + x + 123;
+        // Each label has a different length, so keep the number just after its '-'.
+        int valueX;
         int valueY = top + y + TEXT_Y_OFFSET;
 
         switch (statKey) {
-            case "magic_resistance", "magic_power" -> {
-                valueX += 7;
-                valueY += 3;
-            }
-            case "mana", "mind" -> {
-                valueX -= 4;
-                valueY += 3;
-            }
-            default -> {
-                // Left column keeps its current horizontal alignment.
-            }
+            case "strength" -> valueX = left + x + 105;
+            case "agility" -> valueX = left + x + 105;
+            case "constitution" -> valueX = left + x + 105;
+            case "defense" -> valueX = left + x + 105;
+
+            case "magic_resistance" -> valueX = left + x + 132;
+            case "magic_power" -> valueX = left + x + 143;
+            case "mana" -> valueX = left + x + 112;
+            case "mind" -> valueX = left + x + 112;
+
+            default -> valueX = left + x + 120;
+        }
+
+        if (statKey.equals("magic_resistance") || statKey.equals("magic_power")
+                || statKey.equals("mana") || statKey.equals("mind")) {
+            valueY += 3;
         }
 
         graphics.drawString(font, valueText, valueX, valueY,
