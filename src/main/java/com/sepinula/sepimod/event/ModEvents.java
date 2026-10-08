@@ -36,6 +36,7 @@ import net.neoforged.neoforge.common.Tags;
 import net.neoforged.neoforge.event.entity.EntityAttributeCreationEvent;
 import net.neoforged.neoforge.event.entity.living.LivingEntityUseItemEvent;
 import net.neoforged.neoforge.event.entity.living.LivingIncomingDamageEvent;
+import net.neoforged.neoforge.event.entity.living.MobEffectEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 import net.neoforged.neoforge.event.entity.player.PlayerXpEvent;
@@ -83,6 +84,22 @@ public class ModEvents {
     @SubscribeEvent
     public static void registerAttributes(EntityAttributeCreationEvent event) {
         event.put(ModEntities.BabyGOBLIN.get(), Baby_GoblinEntity.createAttributes().build());
+    }
+
+    @SubscribeEvent
+    public static void onMagicResistance(MobEffectEvent.Applicable event) {
+        if (!(event.getEntity() instanceof ServerPlayer player)) return;
+
+        // Magic Resistance protects against harmful Minecraft status effects.
+        if (event.getEffectInstance().getEffect().value().getCategory() != net.minecraft.world.effect.MobEffectCategory.HARMFUL) return;
+
+        PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
+        double resistChance = Math.min(0.75D, stats.getMagicResistance() * 0.0075D);
+
+        if (player.getRandom().nextDouble() < resistChance) {
+            event.setResult(MobEffectEvent.Applicable.Result.DENY);
+            player.displayClientMessage(Component.literal("§b✦ Resisted!"), true);
+        }
     }
 
     @SubscribeEvent
