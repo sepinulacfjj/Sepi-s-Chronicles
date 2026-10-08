@@ -1,7 +1,7 @@
 package com.sepinula.sepimod.util;
 
 public enum RpgArchetype {
-    // Parameters: Name, Description, Str, Agi, Con, Def, Wil, Mnd, Mana, Cha
+    // Parameters: Name, Description, Str, Agi, Con, Def, MagicResistance, Mnd, Mana, Cha
     NONE("None", "§7Choose your path...", 0, 0, 0, 0, 0, 0, 0, 0),
     WARRIOR("Warrior", "§cHigh strength and defense.", 2, 1, 2, 2, 0, 0, 0, 0),
     MAGE("Mage", "§bMaster of mana and mind.", 0, 1, 0, 0, 2, 2, 2, 0),
@@ -13,7 +13,7 @@ public enum RpgArchetype {
     // Base stats provided by the class
     public final int baseStr, baseAgi, baseCon, baseDef, baseWil, baseMnd, baseMana, baseCha;
 
-    RpgArchetype(String name, String description, int str, int agi, int con, int def, int wil, int mnd, int mana, int cha) {
+    RpgArchetype(String name, String description, int str, int agi, int con, int def, int magicResistance, int mnd, int mana, int cha) {
         this.name = name;
         this.description = description;
         this.baseStr = str;
