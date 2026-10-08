@@ -58,7 +58,7 @@ public class StatUpgradeScreen extends Screen {
         renderStatValue(graphics, mouseX, mouseY, stats.getAgility(), "agility", leftPos + 228, topPos + 245, leftPos + 94, topPos + 229);
         renderStatValue(graphics, mouseX, mouseY, stats.getConstitution(), "constitution", leftPos + 232, topPos + 289, leftPos + 94, topPos + 274);
         renderStatValue(graphics, mouseX, mouseY, stats.getDefense(), "defense", leftPos + 228, topPos + 335, leftPos + 94, topPos + 319);
-        renderStatValue(graphics, mouseX, mouseY, stats.getWillpower(), "willpower", leftPos + 392, topPos + 199, leftPos + 260, topPos + 184);
+        renderStatValue(graphics, mouseX, mouseY, stats.getMagicResistance(), "magic_resistance", leftPos + 392, topPos + 199, leftPos + 260, topPos + 184);
         renderStatValue(graphics, mouseX, mouseY, stats.getCharisma(), "charisma", leftPos + 397, topPos + 244, leftPos + 260, topPos + 229);
         renderStatValue(graphics, mouseX, mouseY, stats.getMana(), "mana", leftPos + 397, topPos + 289, leftPos + 260, topPos + 274);
         renderStatValue(graphics, mouseX, mouseY, stats.getMind(), "mind", leftPos + 392, topPos + 334, leftPos + 260, topPos + 319);
@@ -108,7 +108,7 @@ public class StatUpgradeScreen extends Screen {
         else if (check(mouseX, mouseY, leftPos + 94, topPos + 229)) handleStatClick("agility");
         else if (check(mouseX, mouseY, leftPos + 94, topPos + 274)) handleStatClick("constitution");
         else if (check(mouseX, mouseY, leftPos + 94, topPos + 319)) handleStatClick("defense");
-        else if (check(mouseX, mouseY, leftPos + 260, topPos + 184)) handleStatClick("willpower");
+        else if (check(mouseX, mouseY, leftPos + 260, topPos + 184)) handleStatClick("magic_resistance");
         else if (check(mouseX, mouseY, leftPos + 260, topPos + 229)) handleStatClick("charisma");
         else if (check(mouseX, mouseY, leftPos + 260, topPos + 274)) handleStatClick("mana");
         else if (check(mouseX, mouseY, leftPos + 260, topPos + 319)) handleStatClick("mind");
@@ -131,7 +131,7 @@ public class StatUpgradeScreen extends Screen {
             case "strength" -> stats.getStrengthRaw();
             case "agility" -> stats.getAgility();
             case "constitution" -> stats.getConstitution();
-            case "willpower" -> stats.getWillpower();
+            case "magic_resistance" -> stats.getMagicResistance();
             case "mind" -> stats.getMind();
             case "mana" -> stats.getManaRaw();
             case "defense" -> stats.getDefenseRaw();
