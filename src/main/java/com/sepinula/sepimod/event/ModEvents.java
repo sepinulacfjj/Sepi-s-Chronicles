@@ -94,7 +94,7 @@ public class ModEvents {
         double resistChance = Math.min(0.75D, stats.getMagicResistance() * 0.0075D);
 
         if (player.getRandom().nextDouble() < resistChance) {
-            event.setResult(MobEffectEvent.Applicable.Result.DENY);
+            event.setResult(MobEffectEvent.Applicable.Result.DO_NOT_APPLY);
             player.displayClientMessage(Component.literal("§b✦ Resisted!"), true);
         }
     }
