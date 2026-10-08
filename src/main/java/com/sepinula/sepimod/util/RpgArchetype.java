@@ -11,7 +11,7 @@ public enum RpgArchetype {
     private final String description;
 
     // Base stats provided by the class
-    public final int baseStr, baseAgi, baseCon, baseDef, baseWil, baseMnd, baseMana, baseCha;
+    public final int baseStr, baseAgi, baseCon, baseDef, baseMagicResistance, baseMnd, baseMana, baseCha;
 
     RpgArchetype(String name, String description, int str, int agi, int con, int def, int magicResistance, int mnd, int mana, int cha) {
         this.name = name;
@@ -20,7 +20,7 @@ public enum RpgArchetype {
         this.baseAgi = agi;
         this.baseCon = con;
         this.baseDef = def;
-        this.baseWil = wil;
+        this.baseMagicResistance = magicResistance;
         this.baseMnd = mnd;
         this.baseMana = mana;
         this.baseCha = cha;
