@@ -13,7 +13,9 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 public class StatUpgradeScreen extends Screen {
     private static final ResourceLocation GUI_TEXTURE =
@@ -24,8 +26,10 @@ public class StatUpgradeScreen extends Screen {
 
     private static final int STAT_WIDTH = 155;
     private static final int STAT_HEIGHT = 38;
-    private static final int LEFT_X = 20;
-    private static final int RIGHT_X = 178;
+
+    // The texture's buttons sit 10px further left than the previous hitboxes.
+    private static final int LEFT_X = 10;
+    private static final int RIGHT_X = 168;
     private static final int[] STAT_YS = {36, 76, 116, 156};
 
     private static final int POINTS_X = 20;
@@ -40,6 +44,7 @@ public class StatUpgradeScreen extends Screen {
 
     private static final int TEXT_Y_OFFSET = 13;
 
+    private final Map<String, Integer> pendingUpgrades = new LinkedHashMap<>();
     private String clickedStat = "";
     private int clickTimer = 0;
 
@@ -67,42 +72,41 @@ public class StatUpgradeScreen extends Screen {
 
         PlayerStats stats = minecraft.player.getData(ModDataAttachments.PLAYER_STATS);
 
-        renderStat(graphics, mouseX, mouseY, left, top, 0, "strength", stats.getStrength(), "Strength");
-        renderStat(graphics, mouseX, mouseY, left, top, 1, "magic_resistance", stats.getMagicResistance(), "Magic Resist");
-        renderStat(graphics, mouseX, mouseY, left, top, 2, "agility", stats.getAgility(), "Agility");
-        renderStat(graphics, mouseX, mouseY, left, top, 3, "magic_power", stats.getMagicPower(), "Magic Power");
+        renderStat(graphics, mouseX, mouseY, left, top, 0, "strength", stats.getStrength());
+        renderStat(graphics, mouseX, mouseY, left, top, 1, "magic_resistance", stats.getMagicResistance());
+        renderStat(graphics, mouseX, mouseY, left, top, 2, "agility", stats.getAgility());
+        renderStat(graphics, mouseX, mouseY, left, top, 3, "magic_power", stats.getMagicPower());
+        renderStat(graphics, mouseX, mouseY, left, top, 4, "constitution", stats.getConstitution());
+        renderStat(graphics, mouseX, mouseY, left, top, 5, "mana", stats.getMana());
+        renderStat(graphics, mouseX, mouseY, left, top, 6, "defense", stats.getDefense());
+        renderStat(graphics, mouseX, mouseY, left, top, 7, "mind", stats.getMind());
 
-        renderStat(graphics, mouseX, mouseY, left, top, 4, "constitution", stats.getConstitution(), "Constitution");
-        renderStat(graphics, mouseX, mouseY, left, top, 5, "mana", stats.getMana(), "Mana");
-        renderStat(graphics, mouseX, mouseY, left, top, 6, "defense", stats.getDefense(), "Defense");
-        renderStat(graphics, mouseX, mouseY, left, top, 7, "mind", stats.getMind(), "Mind");
+        int remainingPoints = Math.max(0, stats.getAvailablePoints() - getPendingPointCount());
+        graphics.drawString(font, String.valueOf(remainingPoints), left + 76, top + 26, 0xFFFFFF, true);
 
-        String points = String.valueOf(stats.getAvailablePoints());
-        graphics.drawString(font, points, left + 76, top + 26, 0xFFFFFF, true);
-
-        if (isInside(mouseX, mouseY, left + POINTS_X, top + POINTS_Y, POINTS_WIDTH, POINTS_HEIGHT)) {
-            graphics.renderComponentTooltip(font, List.of(
-                    Component.literal("§d§lTraining Points"),
-                    Component.literal("§7Available: §f" + stats.getAvailablePoints()),
-                    Component.literal("§7Spend points on any stat.")
-            ), mouseX, mouseY);
+        // Hold Shift over the Points button for the detailed XP information.
+        if (isInside(mouseX, mouseY, left + POINTS_X, top + POINTS_Y, POINTS_WIDTH, POINTS_HEIGHT)
+                && hasShiftDown()) {
+            renderTrainingPointTooltip(graphics, stats, left + POINTS_X, top + POINTS_Y + POINTS_HEIGHT + 3);
         }
 
+        // Stat changes are staged locally. Confirm is the button that commits them.
         if (isInside(mouseX, mouseY, left + CONFIRM_X, top + CONFIRM_Y, CONFIRM_WIDTH, CONFIRM_HEIGHT)) {
-            graphics.renderComponentTooltip(font, List.of(
-                    Component.literal("§e§lConfirm"),
-                    Component.literal("§7Close the stat menu.")
-            ), mouseX, mouseY);
-        }
-
-        if (stats.getTrainingPoints() < 800 && stats.getAvailablePoints() >= 0
-                && isInside(mouseX, mouseY, left + 80, top + 20, 150, 24)) {
-            renderXpTooltip(graphics, stats, mouseX, mouseY);
+            List<Component> tooltip = new ArrayList<>();
+            tooltip.add(Component.literal("§e§lConfirm Changes"));
+            if (getPendingPointCount() > 0) {
+                tooltip.add(Component.literal("§7Apply §f" + getPendingPointCount() + " §7stat point"
+                        + (getPendingPointCount() == 1 ? "" : "s") + "?"));
+                tooltip.add(Component.literal("§aClick to confirm"));
+            } else {
+                tooltip.add(Component.literal("§7No stat changes pending."));
+            }
+            graphics.renderComponentTooltip(font, tooltip, mouseX, mouseY);
         }
     }
 
     private void renderStat(GuiGraphics graphics, int mouseX, int mouseY, int left, int top,
-                            int index, String statKey, int value, String label) {
+                            int index, String statKey, int baseValue) {
         int column = index % 2;
         int row = index / 2;
         int x = column == 0 ? LEFT_X : RIGHT_X;
@@ -120,25 +124,20 @@ public class StatUpgradeScreen extends Screen {
                     left + x + STAT_WIDTH - 2, top + y + STAT_HEIGHT - 2, 0x5000FF00);
         }
 
+        int value = Math.min(100, baseValue + pendingUpgrades.getOrDefault(statKey, 0));
         String valueText = value >= 100 ? "MAX" : String.valueOf(value);
-        int valueWidth = font.width(valueText);
 
-        // The texture already contains the stat label and trailing '-'.
-        // Put the live number immediately after it.
-        int valueX = column == 0 ? left + x + 137 : left + x + 137;
-        if (valueWidth > 30) valueX = left + x + STAT_WIDTH - valueWidth - 5;
-        graphics.drawString(font, valueText, valueX, top + y + TEXT_Y_OFFSET, value >= 100 ? 0xB048FF : 0xFFFFFF, true);
+        // The value belongs directly after the '-' in the texture.
+        int valueX = left + x + 127;
+        graphics.drawString(font, valueText, valueX, top + y + TEXT_Y_OFFSET,
+                value >= 100 ? 0xB048FF : 0xFFFFFF, true);
 
         if (hovered) {
-            graphics.renderComponentTooltip(font, getStatTooltip(statsForTooltip(), statKey), mouseX, mouseY);
+            graphics.renderComponentTooltip(font, getStatTooltip(statKey), mouseX, mouseY);
         }
     }
 
-    private PlayerStats statsForTooltip() {
-        return minecraft.player.getData(ModDataAttachments.PLAYER_STATS);
-    }
-
-    private List<Component> getStatTooltip(PlayerStats stats, String stat) {
+    private List<Component> getStatTooltip(String stat) {
         List<Component> tooltip = new ArrayList<>();
         switch (stat) {
             case "strength" -> {
@@ -204,8 +203,7 @@ public class StatUpgradeScreen extends Screen {
         }
 
         if (isInside(mouseX, mouseY, left + CONFIRM_X, top + CONFIRM_Y, CONFIRM_WIDTH, CONFIRM_HEIGHT)) {
-            minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-            onClose();
+            confirmPendingChanges();
             return true;
         }
 
@@ -215,7 +213,22 @@ public class StatUpgradeScreen extends Screen {
     private void handleStatClick(String stat) {
         PlayerStats stats = minecraft.player.getData(ModDataAttachments.PLAYER_STATS);
 
-        int rawValue = switch (stat) {
+        int rawValue = getRawValue(stats, stat);
+        int pending = pendingUpgrades.getOrDefault(stat, 0);
+        int availablePoints = stats.getAvailablePoints() - getPendingPointCount();
+
+        if (availablePoints > 0 && rawValue + pending < 100) {
+            minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+            pendingUpgrades.merge(stat, 1, Integer::sum);
+            clickedStat = stat;
+            clickTimer = 5;
+        } else if (rawValue + pending >= 100) {
+            minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
+        }
+    }
+
+    private int getRawValue(PlayerStats stats, String stat) {
+        return switch (stat) {
             case "strength" -> stats.getStrengthRaw();
             case "magic_resistance" -> stats.getMagicResistanceRaw();
             case "agility" -> stats.getAgilityRaw();
@@ -226,18 +239,36 @@ public class StatUpgradeScreen extends Screen {
             case "mind" -> stats.getMindRaw();
             default -> 100;
         };
-
-        if (stats.getAvailablePoints() > 0 && rawValue < 100) {
-            minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-            Messages.sendToServer(new PacketUpdateStat(stat));
-            clickedStat = stat;
-            clickTimer = 5;
-        } else if (rawValue >= 100) {
-            minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
-        }
     }
 
-    private void renderXpTooltip(GuiGraphics graphics, PlayerStats stats, int mouseX, int mouseY) {
+    private int getPendingPointCount() {
+        int total = 0;
+        for (int amount : pendingUpgrades.values()) {
+            total += amount;
+        }
+        return total;
+    }
+
+    private void confirmPendingChanges() {
+        if (getPendingPointCount() == 0) {
+            minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+            onClose();
+            return;
+        }
+
+        minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+
+        for (Map.Entry<String, Integer> entry : pendingUpgrades.entrySet()) {
+            for (int i = 0; i < entry.getValue(); i++) {
+                Messages.sendToServer(new PacketUpdateStat(entry.getKey()));
+            }
+        }
+
+        pendingUpgrades.clear();
+        onClose();
+    }
+
+    private void renderTrainingPointTooltip(GuiGraphics graphics, PlayerStats stats, int x, int y) {
         List<Component> tooltip = new ArrayList<>();
         tooltip.add(Component.literal("§d§lNext Training Point"));
 
@@ -252,7 +283,7 @@ public class StatUpgradeScreen extends Screen {
                     + "§8" + "█".repeat(10 - percent / 10) + " §7(" + percent + "%)"));
         }
 
-        graphics.renderComponentTooltip(font, tooltip, mouseX, mouseY);
+        graphics.renderComponentTooltip(font, tooltip, x, y);
     }
 
     private boolean isInside(double mouseX, double mouseY, int x, int y, int w, int h) {
