@@ -137,15 +137,15 @@ public class StatUpgradeScreen extends Screen {
             case "agility" ->
                     valueX = left + x + 85;
             case "constitution" ->
-                    valueX = left + x + 116;
+                    valueX = left + x + 118;
             case "defense" ->
                     valueX = left + x + 93;
             case "magic_resistance" ->
-                    valueX = left + x + 124;
+                    valueX = left + x + 122;
             case "magic_power" ->
-                    valueX = left + x + 132;
+                    valueX = left + x + 130;
             case "mana", "mind" ->
-                    valueX = left + x + 85;
+                    valueX = left + x + 82;
             default ->
                     valueX = left + x + 115;
         }
