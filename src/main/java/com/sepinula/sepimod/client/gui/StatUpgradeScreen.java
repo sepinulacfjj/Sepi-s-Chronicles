@@ -28,8 +28,8 @@ public class StatUpgradeScreen extends Screen {
     private static final int STAT_HEIGHT = 38;
 
     // The texture's buttons sit 10px further left than the previous hitboxes.
-    private static final int LEFT_X = 13;
-    private static final int RIGHT_X = 184;
+    private static final int LEFT_X = 16;
+    private static final int RIGHT_X = 187;
     private static final int[] STAT_YS = {36, 76, 116, 156};
 
     private static final int POINTS_X = 10;
@@ -82,7 +82,7 @@ public class StatUpgradeScreen extends Screen {
         renderStat(graphics, mouseX, mouseY, left, top, 7, "mind", stats.getMind());
 
         int remainingPoints = Math.max(0, stats.getAvailablePoints() - getPendingPointCount());
-        graphics.drawString(font, String.valueOf(remainingPoints), left + 83, top + 19, 0xFFFFFF, true);
+        graphics.drawString(font, String.valueOf(remainingPoints), left + 79, top + 19, 0xFFFFFF, true);
 
         // Hover Points to see the progress toward the next Training Point.
         if (isInside(mouseX, mouseY, left + POINTS_X, top + POINTS_Y, POINTS_WIDTH, POINTS_HEIGHT)) {
