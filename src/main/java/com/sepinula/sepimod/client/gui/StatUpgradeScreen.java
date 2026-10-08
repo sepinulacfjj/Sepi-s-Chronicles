@@ -82,7 +82,7 @@ public class StatUpgradeScreen extends Screen {
         renderStat(graphics, mouseX, mouseY, left, top, 7, "mind", stats.getMind());
 
         int remainingPoints = Math.max(0, stats.getAvailablePoints() - getPendingPointCount());
-        graphics.drawString(font, String.valueOf(remainingPoints), left + 83, top + 18, 0xFFFFFF, true);
+        graphics.drawString(font, String.valueOf(remainingPoints), left + 83, top + 19, 0xFFFFFF, true);
 
         // Hover Points to see the progress toward the next Training Point.
         if (isInside(mouseX, mouseY, left + POINTS_X, top + POINTS_Y, POINTS_WIDTH, POINTS_HEIGHT)) {
@@ -132,14 +132,20 @@ public class StatUpgradeScreen extends Screen {
         int valueY = top + y + TEXT_Y_OFFSET;
 
         switch (statKey) {
-            case "strength", "agility", "constitution", "defense" ->
+            case "strength" ->
                     valueX = left + x + 100;
+            case "agility" ->
+                    valueX = left + x + 95;
+            case "constitution" ->
+                    valueX = left + x + 105;
+            case "defense" ->
+                    valueX = left + x + 101;
             case "magic_resistance" ->
-                    valueX = left + x + 132;
+                    valueX = left + x + 129;
             case "magic_power" ->
-                    valueX = left + x + 141;
+                    valueX = left + x + 138;
             case "mana", "mind" ->
-                    valueX = left + x + 107;
+                    valueX = left + x + 102;
             default ->
                     valueX = left + x + 115;
         }
@@ -148,8 +154,8 @@ public class StatUpgradeScreen extends Screen {
             valueY += 3;
         }
 
-        if (statKey.equals("magic_power")) {
-            valueY = top + y + TEXT_Y_OFFSET + 2;
+        if (statKey.equals("magic_resistance") || statKey.equals("magic_power")) {
+            valueY += 2;
         }
 
         graphics.drawString(font, valueText, valueX, valueY,
