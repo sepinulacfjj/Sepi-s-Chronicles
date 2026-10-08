@@ -26,7 +26,7 @@ public class StatUpgradeScreen extends Screen {
     private static final int STAT_HEIGHT = 38;
     private static final int LEFT_X = 20;
     private static final int RIGHT_X = 178;
-    private static final int[] STAT_YS = {68, 107, 146, 185};
+    private static final int[] STAT_YS = {36, 76, 116, 156};
 
     private static final int POINTS_X = 20;
     private static final int POINTS_Y = 20;
@@ -125,8 +125,8 @@ public class StatUpgradeScreen extends Screen {
 
         // The texture already contains the stat label and trailing '-'.
         // Put the live number immediately after it.
-        int valueX = left + x + 125;
-        if (valueWidth > 24) valueX = left + x + STAT_WIDTH - valueWidth - 5;
+        int valueX = column == 0 ? left + x + 137 : left + x + 137;
+        if (valueWidth > 30) valueX = left + x + STAT_WIDTH - valueWidth - 5;
         graphics.drawString(font, valueText, valueX, top + y + TEXT_Y_OFFSET, value >= 100 ? 0xB048FF : 0xFFFFFF, true);
 
         if (hovered) {
