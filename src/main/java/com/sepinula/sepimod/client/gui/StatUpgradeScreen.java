@@ -1,6 +1,5 @@
 package com.sepinula.sepimod.client.gui;
 
-import com.mojang.blaze3d.systems.RenderSystem;
 import com.sepinula.sepimod.SepiMod;
 import com.sepinula.sepimod.network.Messages;
 import com.sepinula.sepimod.network.PacketUpdateStat;
@@ -8,171 +7,260 @@ import com.sepinula.sepimod.util.ModDataAttachments;
 import com.sepinula.sepimod.util.PlayerStats;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.screens.Screen;
-import net.minecraft.client.renderer.GameRenderer;
-import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
+import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class StatUpgradeScreen extends Screen {
-    private static final ResourceLocation GUI_TEXTURE = ResourceLocation.fromNamespaceAndPath(SepiMod.MODID, "textures/gui/stat_menu.png");
+    private static final ResourceLocation GUI_TEXTURE =
+            ResourceLocation.fromNamespaceAndPath(SepiMod.MODID, "textures/gui/stat_menu.png");
 
-    private final int xSize = 512;
-    private final int ySize = 512;
-    private final int btnW = 162;
-    private final int btnH = 40;
-    private final float numberScale = 1.2f;
-    private final float pointsScale = 2.0f;
+    private static final int GUI_WIDTH = 352;
+    private static final int GUI_HEIGHT = 204;
+
+    private static final int STAT_WIDTH = 155;
+    private static final int STAT_HEIGHT = 38;
+    private static final int LEFT_X = 20;
+    private static final int RIGHT_X = 178;
+    private static final int[] STAT_YS = {68, 107, 146, 185};
+
+    private static final int POINTS_X = 20;
+    private static final int POINTS_Y = 20;
+    private static final int POINTS_WIDTH = 84;
+    private static final int POINTS_HEIGHT = 21;
+
+    private static final int CONFIRM_X = 249;
+    private static final int CONFIRM_Y = 20;
+    private static final int CONFIRM_WIDTH = 84;
+    private static final int CONFIRM_HEIGHT = 21;
+
+    private static final int TEXT_Y_OFFSET = 13;
 
     private String clickedStat = "";
     private int clickTimer = 0;
 
     public StatUpgradeScreen() {
-        super(Component.literal("Stat Upgrades"));
+        super(Component.literal("Status Upgrade"));
     }
 
     @Override
     public void tick() {
-        if (clickTimer > 0) clickTimer--;
-        else clickedStat = "";
+        if (clickTimer > 0) {
+            clickTimer--;
+        } else {
+            clickedStat = "";
+        }
     }
 
     @Override
     public void render(GuiGraphics graphics, int mouseX, int mouseY, float partialTick) {
         super.renderBackground(graphics, mouseX, mouseY, partialTick);
-        int leftPos = (this.width - xSize) / 2;
-        int topPos = (this.height - ySize) / 2;
 
-        RenderSystem.setShader(GameRenderer::getPositionTexShader);
-        RenderSystem.setShaderTexture(0, GUI_TEXTURE);
-        graphics.blit(GUI_TEXTURE, leftPos, topPos, 0, 0, xSize, ySize, 512, 512);
+        int left = (width - GUI_WIDTH) / 2;
+        int top = (height - GUI_HEIGHT) / 2;
 
-        PlayerStats stats = this.minecraft.player.getData(ModDataAttachments.PLAYER_STATS);
+        graphics.blit(GUI_TEXTURE, left, top, 0, 0, GUI_WIDTH, GUI_HEIGHT, GUI_WIDTH, GUI_HEIGHT);
 
-        // --- STAT COLUMNS (Using Total Stat for Display, but keeping keys unique) ---
-        // Strength, Defense, and Mana now use getStrength(), getDefense(), and getMana() to show Archetype bonuses.
-        renderStatValue(graphics, mouseX, mouseY, stats.getStrength(), "strength", leftPos + 228, topPos + 199, leftPos + 94, topPos + 184);
-        renderStatValue(graphics, mouseX, mouseY, stats.getAgility(), "agility", leftPos + 228, topPos + 245, leftPos + 94, topPos + 229);
-        renderStatValue(graphics, mouseX, mouseY, stats.getConstitution(), "constitution", leftPos + 232, topPos + 289, leftPos + 94, topPos + 274);
-        renderStatValue(graphics, mouseX, mouseY, stats.getDefense(), "defense", leftPos + 228, topPos + 335, leftPos + 94, topPos + 319);
-        renderStatValue(graphics, mouseX, mouseY, stats.getMagicResistance(), "magic_resistance", leftPos + 392, topPos + 199, leftPos + 260, topPos + 184);
-        renderStatValue(graphics, mouseX, mouseY, stats.getCharisma(), "charisma", leftPos + 397, topPos + 244, leftPos + 260, topPos + 229);
-        renderStatValue(graphics, mouseX, mouseY, stats.getMana(), "mana", leftPos + 397, topPos + 289, leftPos + 260, topPos + 274);
-        renderStatValue(graphics, mouseX, mouseY, stats.getMind(), "mind", leftPos + 392, topPos + 334, leftPos + 260, topPos + 319);
+        PlayerStats stats = minecraft.player.getData(ModDataAttachments.PLAYER_STATS);
 
-        // --- PURPLE TRAINING POINTS ---
-        String pointsVal = String.valueOf(stats.getAvailablePoints());
-        int pX = leftPos + 430;
-        int pY = topPos + 162;
+        renderStat(graphics, mouseX, mouseY, left, top, 0, "strength", stats.getStrength(), "Strength");
+        renderStat(graphics, mouseX, mouseY, left, top, 1, "magic_resistance", stats.getMagicResistance(), "Magic Resist");
+        renderStat(graphics, mouseX, mouseY, left, top, 2, "agility", stats.getAgility(), "Agility");
+        renderStat(graphics, mouseX, mouseY, left, top, 3, "magic_power", stats.getMagicPower(), "Magic Power");
 
-        graphics.pose().pushPose();
-        graphics.pose().translate(pX, pY, 0);
-        graphics.pose().scale(pointsScale, pointsScale, 1.0f);
-        graphics.drawString(this.font, pointsVal, 0, 0, 0xB048FF, true);
-        graphics.pose().popPose();
+        renderStat(graphics, mouseX, mouseY, left, top, 4, "constitution", stats.getConstitution(), "Constitution");
+        renderStat(graphics, mouseX, mouseY, left, top, 5, "mana", stats.getMana(), "Mana");
+        renderStat(graphics, mouseX, mouseY, left, top, 6, "defense", stats.getDefense(), "Defense");
+        renderStat(graphics, mouseX, mouseY, left, top, 7, "mind", stats.getMind(), "Mind");
 
-        // --- XP PROGRESS HOVER POP-UP (800 CAP) ---
-        if (mouseX >= pX - 10 && mouseX <= pX + 50 && mouseY >= pY && mouseY <= pY + 25) {
-            renderXpTooltip(graphics, stats, mouseX, mouseY);
+        String points = String.valueOf(stats.getAvailablePoints());
+        graphics.drawString(font, points, left + 145, top + 26, 0xFFFFFF, true);
+
+        if (isInside(mouseX, mouseY, left + POINTS_X, top + POINTS_Y, POINTS_WIDTH, POINTS_HEIGHT)) {
+            renderTooltip(graphics, List.of(
+                    Component.literal("§d§lTraining Points"),
+                    Component.literal("§7Available: §f" + stats.getAvailablePoints()),
+                    Component.literal("§7Spend points on any stat.")
+            ), mouseX, mouseY);
         }
 
-        // --- EXIT BUTTON HIGHLIGHTS ---
-        renderButtonHighlights(graphics, mouseX, mouseY, leftPos, topPos);
+        if (isInside(mouseX, mouseY, left + CONFIRM_X, top + CONFIRM_Y, CONFIRM_WIDTH, CONFIRM_HEIGHT)) {
+            renderTooltip(graphics, List.of(
+                    Component.literal("§e§lConfirm"),
+                    Component.literal("§7Close the stat menu.")
+            ), mouseX, mouseY);
+        }
+
+        if (stats.getTrainingPoints() < 800 && stats.getAvailablePoints() >= 0
+                && isInside(mouseX, mouseY, left + 80, top + 20, 150, 24)) {
+            renderXpTooltip(graphics, stats, mouseX, mouseY);
+        }
     }
 
-    private void renderStatValue(GuiGraphics graphics, int mouseX, int mouseY, int value, String statKey, int textX, int textY, int btnX, int btnY) {
-        if (clickedStat.equals(statKey)) graphics.fill(btnX, btnY, btnX + btnW, btnY + btnH, 0x6000FF00);
-        else if (mouseX >= btnX && mouseX <= btnX + btnW && mouseY >= btnY && mouseY <= btnY + btnH)
-            graphics.fill(btnX, btnY, btnX + btnW, btnY + btnH, 0x30FFFFFF);
+    private void renderStat(GuiGraphics graphics, int mouseX, int mouseY, int left, int top,
+                            int index, String statKey, int value, String label) {
+        int column = index % 2;
+        int row = index / 2;
+        int x = column == 0 ? LEFT_X : RIGHT_X;
+        int y = STAT_YS[row];
 
-        boolean isMax = value >= 100;
-        String valStr = isMax ? "MAX" : String.valueOf(value);
-        int color = isMax ? 0xB048FF : 0xFFFFFF;
+        boolean hovered = isInside(mouseX, mouseY, left + x, top + y, STAT_WIDTH, STAT_HEIGHT);
+        boolean clicked = clickedStat.equals(statKey);
 
-        graphics.pose().pushPose();
-        graphics.pose().translate(textX, textY, 0);
-        graphics.pose().scale(numberScale, numberScale, 1.0f);
-        graphics.drawString(this.font, valStr, 0, 0, color, true);
-        graphics.pose().popPose();
+        if (hovered) {
+            graphics.fill(left + x + 2, top + y + 2,
+                    left + x + STAT_WIDTH - 2, top + y + STAT_HEIGHT - 2, 0x35FFFFFF);
+        }
+        if (clicked) {
+            graphics.fill(left + x + 2, top + y + 2,
+                    left + x + STAT_WIDTH - 2, top + y + STAT_HEIGHT - 2, 0x5000FF00);
+        }
+
+        String valueText = value >= 100 ? "MAX" : String.valueOf(value);
+        int valueWidth = font.width(valueText);
+
+        // The texture already contains the stat label and trailing '-'.
+        // Put the live number immediately after it.
+        int valueX = left + x + 125;
+        if (valueWidth > 24) valueX = left + x + STAT_WIDTH - valueWidth - 5;
+        graphics.drawString(font, valueText, valueX, top + y + TEXT_Y_OFFSET, value >= 100 ? 0xB048FF : 0xFFFFFF, true);
+
+        if (hovered) {
+            renderTooltip(graphics, getStatTooltip(statsForTooltip(), statKey), mouseX, mouseY);
+        }
+    }
+
+    private PlayerStats statsForTooltip() {
+        return minecraft.player.getData(ModDataAttachments.PLAYER_STATS);
+    }
+
+    private List<Component> getStatTooltip(PlayerStats stats, String stat) {
+        List<Component> tooltip = new ArrayList<>();
+        switch (stat) {
+            case "strength" -> {
+                tooltip.add(Component.literal("§c§lStrength"));
+                tooltip.add(Component.literal("§7Increases physical attack damage."));
+                tooltip.add(Component.literal("§7Also improves mining speed at high values."));
+            }
+            case "magic_resistance" -> {
+                tooltip.add(Component.literal("§b§lMagic Resist"));
+                tooltip.add(Component.literal("§7Chance to resist harmful status effects."));
+                tooltip.add(Component.literal("§7Reduces magic and curse-type damage."));
+            }
+            case "agility" -> {
+                tooltip.add(Component.literal("§e§lAgility"));
+                tooltip.add(Component.literal("§7Improves dodge chance and sprint speed."));
+                tooltip.add(Component.literal("§7Also increases maximum Stamina."));
+            }
+            case "magic_power" -> {
+                tooltip.add(Component.literal("§5§lMagic Power"));
+                tooltip.add(Component.literal("§7Increases spell damage and spell effects."));
+            }
+            case "constitution" -> {
+                tooltip.add(Component.literal("§c§lConstitution"));
+                tooltip.add(Component.literal("§7Increases maximum health and regeneration."));
+            }
+            case "mana" -> {
+                tooltip.add(Component.literal("§9§lMana"));
+                tooltip.add(Component.literal("§7Increases maximum Mana and regeneration."));
+            }
+            case "defense" -> {
+                tooltip.add(Component.literal("§6§lDefense"));
+                tooltip.add(Component.literal("§7Reduces incoming physical damage."));
+                tooltip.add(Component.literal("§7Also increases knockback resistance."));
+            }
+            case "mind" -> {
+                tooltip.add(Component.literal("§d§lMind"));
+                tooltip.add(Component.literal("§7Increases experience gained."));
+            }
+        }
+        return tooltip;
     }
 
     @Override
     public boolean mouseClicked(double mouseX, double mouseY, int button) {
-        int leftPos = (this.width - xSize) / 2;
-        int topPos = (this.height - ySize) / 2;
+        int left = (width - GUI_WIDTH) / 2;
+        int top = (height - GUI_HEIGHT) / 2;
 
-        if (check(mouseX, mouseY, leftPos + 94, topPos + 184)) handleStatClick("strength");
-        else if (check(mouseX, mouseY, leftPos + 94, topPos + 229)) handleStatClick("agility");
-        else if (check(mouseX, mouseY, leftPos + 94, topPos + 274)) handleStatClick("constitution");
-        else if (check(mouseX, mouseY, leftPos + 94, topPos + 319)) handleStatClick("defense");
-        else if (check(mouseX, mouseY, leftPos + 260, topPos + 184)) handleStatClick("magic_resistance");
-        else if (check(mouseX, mouseY, leftPos + 260, topPos + 229)) handleStatClick("charisma");
-        else if (check(mouseX, mouseY, leftPos + 260, topPos + 274)) handleStatClick("mana");
-        else if (check(mouseX, mouseY, leftPos + 260, topPos + 319)) handleStatClick("mind");
+        String[] stats = {
+                "strength", "magic_resistance", "agility", "magic_power",
+                "constitution", "mana", "defense", "mind"
+        };
 
-        else if (mouseX >= leftPos + 201 && mouseX <= leftPos + 314 && mouseY >= topPos + 362 && mouseY <= topPos + 385) {
-            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-            this.onClose();
-        } else if (mouseX >= leftPos + 471 && mouseX <= leftPos + 497 && mouseY >= topPos + 126 && mouseY <= topPos + 145) {
-            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
-            this.onClose();
+        for (int i = 0; i < stats.length; i++) {
+            int column = i % 2;
+            int row = i / 2;
+            int x = column == 0 ? LEFT_X : RIGHT_X;
+            int y = STAT_YS[row];
+
+            if (isInside(mouseX, mouseY, left + x, top + y, STAT_WIDTH, STAT_HEIGHT)) {
+                handleStatClick(stats[i]);
+                return true;
+            }
         }
+
+        if (isInside(mouseX, mouseY, left + CONFIRM_X, top + CONFIRM_Y, CONFIRM_WIDTH, CONFIRM_HEIGHT)) {
+            minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+            onClose();
+            return true;
+        }
+
         return super.mouseClicked(mouseX, mouseY, button);
     }
 
     private void handleStatClick(String stat) {
-        PlayerStats stats = this.minecraft.player.getData(ModDataAttachments.PLAYER_STATS);
+        PlayerStats stats = minecraft.player.getData(ModDataAttachments.PLAYER_STATS);
 
-        // We CHECK against the RAW value so archetype bonuses don't "eat" your 100-point limit.
-        int rawVal = switch(stat) {
+        int rawValue = switch (stat) {
             case "strength" -> stats.getStrengthRaw();
-            case "agility" -> stats.getAgility();
-            case "constitution" -> stats.getConstitution();
-            case "magic_resistance" -> stats.getMagicResistance();
-            case "mind" -> stats.getMind();
+            case "magic_resistance" -> stats.getMagicResistanceRaw();
+            case "agility" -> stats.getAgilityRaw();
+            case "magic_power" -> stats.getMagicPowerRaw();
+            case "constitution" -> stats.getConstitutionRaw();
             case "mana" -> stats.getManaRaw();
             case "defense" -> stats.getDefenseRaw();
-            case "charisma" -> stats.getCharisma();
+            case "mind" -> stats.getMindRaw();
             default -> 100;
         };
 
-        if (stats.getAvailablePoints() > 0 && rawVal < 100) {
-            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
+        if (stats.getAvailablePoints() > 0 && rawValue < 100) {
+            minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.UI_BUTTON_CLICK, 1.0F));
             Messages.sendToServer(new PacketUpdateStat(stat));
-            this.clickedStat = stat;
-            this.clickTimer = 5;
-        } else if (rawVal >= 100) {
-            this.minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
+            clickedStat = stat;
+            clickTimer = 5;
+        } else if (rawValue >= 100) {
+            minecraft.getSoundManager().play(SimpleSoundInstance.forUI(SoundEvents.VILLAGER_NO, 1.0F));
         }
     }
 
-    private void renderXpTooltip(GuiGraphics graphics, PlayerStats stats, int mx, int my) {
+    private void renderXpTooltip(GuiGraphics graphics, PlayerStats stats, int mouseX, int mouseY) {
         List<Component> tooltip = new ArrayList<>();
         tooltip.add(Component.literal("§d§lNext Training Point"));
+
         if (stats.getTrainingPoints() >= 800) {
-            tooltip.add(Component.literal("§7Progress: §e0 §8/ §eMAX XP"));
-            tooltip.add(Component.literal("§a██████████ §7(100%)"));
+            tooltip.add(Component.literal("§7Progress: §eMAX LEVEL"));
         } else {
             int currentXp = (int) stats.getTotalXpGained();
             int goalXp = (int) stats.getXpNeededForNextPoint();
-            float percent = Math.min(1.0f, (float)currentXp / goalXp);
+            int percent = goalXp <= 0 ? 0 : (int) Math.min(100.0F, currentXp * 100.0F / goalXp);
             tooltip.add(Component.literal("§7Progress: §f" + currentXp + " §8/ §f" + goalXp + " XP"));
-            String bar = "§a" + "█".repeat((int)(percent * 10)) + "§8" + "█".repeat(10 - (int)(percent * 10));
-            tooltip.add(Component.literal(bar + " §7(" + (int)(percent * 100) + "%)"));
+            tooltip.add(Component.literal("§a" + "█".repeat(percent / 10)
+                    + "§8" + "█".repeat(10 - percent / 10) + " §7(" + percent + "%)"));
         }
-        graphics.renderComponentTooltip(this.font, tooltip, mx, my);
+
+        renderTooltip(graphics, tooltip, mouseX, mouseY);
     }
 
-    private void renderButtonHighlights(GuiGraphics graphics, int mx, int my, int left, int top) {
-        if (mx >= left + 201 && mx <= left + 314 && my >= top + 362 && my <= top + 385)
-            graphics.fill(left + 201, top + 362, left + 314, top + 385, 0x40FFFFFF);
-        if (mx >= left + 471 && mx <= left + 497 && my >= top + 126 && my <= top + 145)
-            graphics.fill(left + 471, top + 126, left + 497, top + 145, 0x40FFFFFF);
+    private boolean isInside(double mouseX, double mouseY, int x, int y, int w, int h) {
+        return mouseX >= x && mouseX < x + w && mouseY >= y && mouseY < y + h;
     }
 
-    private boolean check(double mx, double my, int x, int y) { return mx >= x && mx <= x + btnW && my >= y && my <= y + btnH; }
-    @Override public boolean isPauseScreen() { return false; }
+    @Override
+    public boolean isPauseScreen() {
+        return false;
+    }
 }
