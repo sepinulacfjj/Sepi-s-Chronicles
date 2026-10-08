@@ -28,8 +28,8 @@ public class StatUpgradeScreen extends Screen {
     private static final int STAT_HEIGHT = 38;
 
     // The texture's buttons sit 10px further left than the previous hitboxes.
-    private static final int LEFT_X = 16;
-    private static final int RIGHT_X = 178;
+    private static final int LEFT_X = 10;
+    private static final int RIGHT_X = 184;
     private static final int[] STAT_YS = {36, 76, 116, 156};
 
     private static final int POINTS_X = 10;
@@ -82,7 +82,7 @@ public class StatUpgradeScreen extends Screen {
         renderStat(graphics, mouseX, mouseY, left, top, 7, "mind", stats.getMind());
 
         int remainingPoints = Math.max(0, stats.getAvailablePoints() - getPendingPointCount());
-        graphics.drawString(font, String.valueOf(remainingPoints), left + 80, top + 23, 0xFFFFFF, true);
+        graphics.drawString(font, String.valueOf(remainingPoints), left + 83, top + 18, 0xFFFFFF, true);
 
         // Hover Points to see the progress toward the next Training Point.
         if (isInside(mouseX, mouseY, left + POINTS_X, top + POINTS_Y, POINTS_WIDTH, POINTS_HEIGHT)) {
@@ -132,22 +132,24 @@ public class StatUpgradeScreen extends Screen {
         int valueY = top + y + TEXT_Y_OFFSET;
 
         switch (statKey) {
-            case "strength" -> valueX = left + x + 105;
-            case "agility" -> valueX = left + x + 105;
-            case "constitution" -> valueX = left + x + 105;
-            case "defense" -> valueX = left + x + 105;
-
-            case "magic_resistance" -> valueX = left + x + 132;
-            case "magic_power" -> valueX = left + x + 143;
-            case "mana" -> valueX = left + x + 112;
-            case "mind" -> valueX = left + x + 112;
-
-            default -> valueX = left + x + 120;
+            case "strength", "agility", "constitution", "defense" ->
+                    valueX = left + x + 100;
+            case "magic_resistance" ->
+                    valueX = left + x + 132;
+            case "magic_power" ->
+                    valueX = left + x + 141;
+            case "mana", "mind" ->
+                    valueX = left + x + 107;
+            default ->
+                    valueX = left + x + 115;
         }
 
-        if (statKey.equals("magic_resistance") || statKey.equals("magic_power")
-                || statKey.equals("mana") || statKey.equals("mind")) {
+        if (!statKey.equals("magic_resistance")) {
             valueY += 3;
+        }
+
+        if (statKey.equals("magic_power")) {
+            valueY = top + y + TEXT_Y_OFFSET + 2;
         }
 
         graphics.drawString(font, valueText, valueX, valueY,
