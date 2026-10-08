@@ -30,9 +30,9 @@ public class ModCommands {
                 .then(addStatNode("strength"))
                 .then(addStatNode("agility"))
                 .then(addStatNode("constitution"))
-                .then(addStatNode("willpower"))
+                .then(addStatNode("magic_resistance"))
                 .then(addStatNode("defense"))
-                .then(addStatNode("charisma"))
+                .then(addStatNode("magic_power"))
                 .then(addStatNode("mana"))
                 .then(addStatNode("mind"))
         );
@@ -51,7 +51,7 @@ public class ModCommands {
         for (ServerPlayer player : targets) {
             PlayerStats stats = player.getData(ModDataAttachments.PLAYER_STATS);
             stats.setStrength(100); stats.setAgility(100); stats.setConstitution(100);
-            stats.setDefense(100); stats.setWillpower(100); stats.setCharisma(100);
+            stats.setDefense(100); stats.setMagicResistance(100); stats.setMagicPower(100);
             stats.setMana(100); stats.setMind(100);
             stats.setAvailablePoints(800);
             stats.setTrainingPoints(800);
@@ -146,8 +146,8 @@ public class ModCommands {
     }
 
     private static void recalculateTrainingPoints(PlayerStats stats) {
-        int total = stats.getStrengthRaw() + stats.getAgilityRaw() + stats.getConstitution() +
-                stats.getWillpowerRaw() + stats.getDefenseRaw() + stats.getCharisma() +
+        int total = stats.getStrengthRaw() + stats.getAgilityRaw() + stats.getConstitutionRaw() +
+                stats.getMagicResistanceRaw() + stats.getMagicPowerRaw() + stats.getDefenseRaw() +
                 stats.getManaRaw() + stats.getMindRaw() + stats.getAvailablePoints();
 
         stats.setTrainingPoints(Math.min(800, total));
@@ -157,10 +157,10 @@ public class ModCommands {
         return switch (stat) {
             case "strength" -> stats.getStrengthRaw();
             case "agility" -> stats.getAgilityRaw();
-            case "constitution" -> stats.getConstitution();
-            case "willpower" -> stats.getWillpowerRaw();
+            case "constitution" -> stats.getConstitutionRaw();
+            case "magic_resistance" -> stats.getMagicResistanceRaw();
             case "defense" -> stats.getDefenseRaw();
-            case "charisma" -> stats.getCharisma();
+            case "magic_power" -> stats.getMagicPowerRaw();
             case "mana" -> stats.getManaRaw();
             case "mind" -> stats.getMindRaw();
             default -> 0;
@@ -172,9 +172,9 @@ public class ModCommands {
             case "strength" -> stats.setStrength(val);
             case "agility" -> stats.setAgility(val);
             case "constitution" -> stats.setConstitution(val);
-            case "willpower" -> stats.setWillpower(val);
+            case "magic_resistance" -> stats.setMagicResistance(val);
             case "defense" -> stats.setDefense(val);
-            case "charisma" -> stats.setCharisma(val);
+            case "magic_power" -> stats.setMagicPower(val);
             case "mana" -> stats.setMana(val);
             case "mind" -> stats.setMind(val);
         }
