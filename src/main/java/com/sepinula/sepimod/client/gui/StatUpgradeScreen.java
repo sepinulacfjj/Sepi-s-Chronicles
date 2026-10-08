@@ -28,7 +28,7 @@ public class StatUpgradeScreen extends Screen {
     private static final int STAT_HEIGHT = 38;
 
     // The texture's buttons sit 10px further left than the previous hitboxes.
-    private static final int LEFT_X = 16;
+    private static final int LEFT_X = 10;
     private static final int RIGHT_X = 187;
     private static final int[] STAT_YS = {36, 76, 116, 156};
 
@@ -135,17 +135,17 @@ public class StatUpgradeScreen extends Screen {
             case "strength" ->
                     valueX = left + x + 100;
             case "agility" ->
-                    valueX = left + x + 89;
+                    valueX = left + x + 85;
             case "constitution" ->
-                    valueX = left + x + 119;
+                    valueX = left + x + 116;
             case "defense" ->
-                    valueX = left + x + 97;
+                    valueX = left + x + 93;
             case "magic_resistance" ->
                     valueX = left + x + 124;
             case "magic_power" ->
-                    valueX = left + x + 134;
+                    valueX = left + x + 132;
             case "mana", "mind" ->
-                    valueX = left + x + 89;
+                    valueX = left + x + 85;
             default ->
                     valueX = left + x + 115;
         }
