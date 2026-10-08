@@ -106,6 +106,8 @@ public class ModEvents {
 
             boolean magicDamage = event.getSource().is(DamageTypes.MAGIC)
                     || event.getSource().is(DamageTypes.INDIRECT_MAGIC)
+                    || event.getSource().is(DamageTypes.FIREBALL)
+                    || event.getSource().is(DamageTypes.UNATTRIBUTED_FIREBALL)
                     || event.getSource().is(DamageTypes.WITHER)
                     || event.getSource().is(Tags.DamageTypes.IS_POISON);
 
