@@ -7,7 +7,6 @@ import net.minecraft.network.codec.StreamCodec;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.util.Mth;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.effect.MobEffects;
 
 public class PlayerStats {
     public static final Codec<PlayerStats> CODEC = RecordCodecBuilder.create(instance ->
@@ -16,20 +15,23 @@ public class PlayerStats {
                     Codec.INT.fieldOf("strength").forGetter(PlayerStats::getStrengthRaw),
                     Codec.INT.fieldOf("agility").forGetter(PlayerStats::getAgilityRaw),
                     Codec.INT.fieldOf("constitution").forGetter(PlayerStats::getConstitutionRaw),
-                    Codec.INT.fieldOf("willpower").forGetter(PlayerStats::getMagicResistanceRaw),
-                    Codec.INT.fieldOf("mind").forGetter(PlayerStats::getMindRaw),
+                    Codec.INT.fieldOf("magicResistance").forGetter(PlayerStats::getMagicResistanceRaw),
+                    Codec.INT.fieldOf("magicPower").forGetter(PlayerStats::getMagicPowerRaw),
                     Codec.INT.fieldOf("mana").forGetter(PlayerStats::getManaRaw),
                     Codec.INT.fieldOf("defense").forGetter(PlayerStats::getDefenseRaw),
-                    Codec.INT.fieldOf("charisma").forGetter(PlayerStats::getCharismaRaw),
+                    Codec.INT.fieldOf("mind").forGetter(PlayerStats::getMindRaw),
                     Codec.INT.fieldOf("availablePoints").forGetter(PlayerStats::getAvailablePoints),
                     Codec.INT.fieldOf("trainingPoints").forGetter(PlayerStats::getTrainingPoints),
                     Codec.FLOAT.fieldOf("currentMana").forGetter(PlayerStats::getCurrentMana),
                     Codec.FLOAT.fieldOf("currentStamina").forGetter(PlayerStats::getCurrentStamina),
                     Codec.FLOAT.fieldOf("totalXpGained").forGetter(PlayerStats::getTotalXpGained)
-            ).apply(instance, (archName, str, agi, con, magicRes, min, man, def, cha, avail, train, curMan, curSta, xp) -> {
+            ).apply(instance, (archName, str, agi, con, res, power, man, def, mind, avail, train, curMan, curSta, xp) -> {
                 RpgArchetype arch = RpgArchetype.NONE;
-                try { arch = RpgArchetype.valueOf(archName); } catch (Exception e) {}
-                return new PlayerStats(arch, str, agi, con, magicRes, min, man, def, cha, avail, train, curMan, curSta, xp);
+                try {
+                    arch = RpgArchetype.valueOf(archName);
+                } catch (Exception ignored) {
+                }
+                return new PlayerStats(arch, str, agi, con, res, power, man, def, mind, avail, train, curMan, curSta, xp);
             }));
 
     public static final StreamCodec<RegistryFriendlyByteBuf, PlayerStats> STREAM_CODEC = new StreamCodec<>() {
@@ -41,10 +43,10 @@ public class PlayerStats {
             stats.setAgility(buffer.readInt());
             stats.setConstitution(buffer.readInt());
             stats.setMagicResistance(buffer.readInt());
-            stats.setMind(buffer.readInt());
+            stats.setMagicPower(buffer.readInt());
             stats.setMana(buffer.readInt());
             stats.setDefense(buffer.readInt());
-            stats.setCharisma(buffer.readInt());
+            stats.setMind(buffer.readInt());
             stats.setAvailablePoints(buffer.readInt());
             stats.setTrainingPoints(buffer.readInt());
             stats.setCurrentMana(buffer.readFloat());
@@ -60,10 +62,10 @@ public class PlayerStats {
             buffer.writeInt(stats.getAgilityRaw());
             buffer.writeInt(stats.getConstitutionRaw());
             buffer.writeInt(stats.getMagicResistanceRaw());
-            buffer.writeInt(stats.getMindRaw());
+            buffer.writeInt(stats.getMagicPowerRaw());
             buffer.writeInt(stats.getManaRaw());
             buffer.writeInt(stats.getDefenseRaw());
-            buffer.writeInt(stats.getCharismaRaw());
+            buffer.writeInt(stats.getMindRaw());
             buffer.writeInt(stats.getAvailablePoints());
             buffer.writeInt(stats.getTrainingPoints());
             buffer.writeFloat(stats.getCurrentMana());
@@ -73,7 +75,15 @@ public class PlayerStats {
     };
 
     private RpgArchetype archetype = RpgArchetype.NONE;
-    private int strength = 0, agility = 0, constitution = 0, magicResistance = 0, mind = 0, mana = 0, defense = 0, charisma = 0;
+    private int strength = 0;
+    private int agility = 0;
+    private int constitution = 0;
+    private int magicResistance = 0;
+    private int magicPower = 0;
+    private int mana = 0;
+    private int defense = 0;
+    private int mind = 0;
+
     private int availablePoints = 0;
     private int trainingPoints = 0;
     private float currentMana = 20.0f;
@@ -83,53 +93,76 @@ public class PlayerStats {
 
     public PlayerStats() {}
 
-    public PlayerStats(RpgArchetype archetype, int str, int agi, int con, int magicRes, int min, int man, int def, int cha, int avail, int train, float curMan, float curSta, float xp) {
+    public PlayerStats(RpgArchetype archetype, int strength, int agility, int constitution,
+                       int magicResistance, int magicPower, int mana, int defense, int mind,
+                       int availablePoints, int trainingPoints, float currentMana,
+                       float currentStamina, float totalXpGained) {
         this.archetype = archetype;
-        this.strength = str;
-        this.agility = agi;
-        this.constitution = con;
-        this.magicResistance = magicRes;
-        this.mind = min;
-        this.mana = man;
-        this.defense = def;
-        this.charisma = cha;
-        this.availablePoints = avail;
-        this.trainingPoints = train;
-        this.currentMana = curMan;
-        this.currentStamina = curSta;
-        this.totalXpGained = xp;
+        this.strength = strength;
+        this.agility = agility;
+        this.constitution = constitution;
+        this.magicResistance = magicResistance;
+        this.magicPower = magicPower;
+        this.mana = mana;
+        this.defense = defense;
+        this.mind = mind;
+        this.availablePoints = availablePoints;
+        this.trainingPoints = trainingPoints;
+        this.currentMana = currentMana;
+        this.currentStamina = currentStamina;
+        this.totalXpGained = totalXpGained;
     }
 
-    private int clampSpent(int val) { return Mth.clamp(val, 0, 100); }
-    private int clampTotal(int val) { return Mth.clamp(val, 0, 800); }
+    private int clampSpent(int value) {
+        return Mth.clamp(value, 0, 100);
+    }
+
+    private int clampTotal(int value) {
+        return Mth.clamp(value, 0, 800);
+    }
 
     public void addXp(int amount) {
-        if (this.trainingPoints < 800) {
-            this.totalXpGained += amount;
-            while (this.totalXpGained >= getXpNeededForNextPoint() && this.trainingPoints < 800) {
-                this.totalXpGained -= getXpNeededForNextPoint();
-                this.availablePoints++;
-                this.trainingPoints++;
+        if (trainingPoints < 800) {
+            totalXpGained += amount;
+            while (totalXpGained >= getXpNeededForNextPoint() && trainingPoints < 800) {
+                totalXpGained -= getXpNeededForNextPoint();
+                availablePoints++;
+                trainingPoints++;
             }
         }
     }
 
-    public void resetProgressAfterCap() { this.totalXpGained = 0; }
-
-    public void resetAll() {
-        this.archetype = RpgArchetype.NONE;
-        this.strength = 0; this.agility = 0; this.constitution = 0;
-        this.magicResistance = 0; this.mind = 0; this.mana = 0;
-        this.defense = 0; this.charisma = 0; this.availablePoints = 0;
-        this.trainingPoints = 0; this.totalXpGained = 0;
-        this.currentMana = 20.0f; this.currentStamina = 100.0f;
+    public void resetProgressAfterCap() {
+        totalXpGained = 0;
     }
 
-    public float getMaxMana() { return 20.0f + (getMana() * 5.0f); }
-    public float getMaxStamina() { return 100.0f + (getAgility() * 2.0f); }
+    public void resetAll() {
+        archetype = RpgArchetype.NONE;
+        strength = 0;
+        agility = 0;
+        constitution = 0;
+        magicResistance = 0;
+        magicPower = 0;
+        mana = 0;
+        defense = 0;
+        mind = 0;
+        availablePoints = 0;
+        trainingPoints = 0;
+        totalXpGained = 0;
+        currentMana = 20.0f;
+        currentStamina = 100.0f;
+    }
+
+    public float getMaxMana() {
+        return 20.0f + (getMana() * 5.0f);
+    }
+
+    public float getMaxStamina() {
+        return 100.0f + (getAgility() * 2.0f);
+    }
 
     public void tickStaminaRegen(Player player) {
-        if (this.currentStamina >= getMaxStamina()) {
+        if (currentStamina >= getMaxStamina()) {
             staminaTickCounter = 0;
             return;
         }
@@ -139,9 +172,11 @@ public class PlayerStats {
 
         if (staminaTickCounter >= ticksToWait) {
             float regenAmount = 1.5f + (getConstitution() * 0.1f);
-            this.addStamina(regenAmount);
+            addStamina(regenAmount);
             staminaTickCounter = 0;
-            if (player instanceof ServerPlayer sp) ModDataAttachments.sync(sp);
+            if (player instanceof ServerPlayer serverPlayer) {
+                ModDataAttachments.sync(serverPlayer);
+            }
         }
     }
 
@@ -152,69 +187,167 @@ public class PlayerStats {
         return -1;
     }
 
-    public float getXpNeededForNextPoint() { return 500f + (this.trainingPoints * 150f); }
+    public float getXpNeededForNextPoint() {
+        return 500f + (trainingPoints * 150f);
+    }
 
-    public RpgArchetype getArchetype() { return archetype; }
-    public void setArchetype(RpgArchetype archetype) { this.archetype = archetype; }
+    public RpgArchetype getArchetype() {
+        return archetype;
+    }
 
-    // Strength
-    public int getStrength() { return clampTotal(strength + archetype.baseStr); }
-    public int getStrengthRaw() { return strength; }
-    public void setStrength(int val) { this.strength = clampSpent(val); }
+    public void setArchetype(RpgArchetype archetype) {
+        this.archetype = archetype;
+    }
 
-    // Agility
-    public int getAgility() { return clampTotal(agility + archetype.baseAgi); }
-    public int getAgilityRaw() { return agility; }
-    public void setAgility(int val) { this.agility = clampSpent(val); }
+    public int getStrength() {
+        return clampTotal(strength + archetype.baseStrength);
+    }
 
-    // Constitution
-    public int getConstitution() { return clampTotal(constitution + archetype.baseCon); }
-    public int getConstitutionRaw() { return constitution; }
-    public void setConstitution(int val) { this.constitution = clampSpent(val); }
+    public int getStrengthRaw() {
+        return strength;
+    }
 
-    // Magic Resistance
-    public int getMagicResistance() { return clampTotal(magicResistance + archetype.baseMagicResistance); }
-    public int getMagicResistanceRaw() { return magicResistance; }
-    public void setMagicResistance(int val) { this.magicResistance = clampSpent(val); }
+    public void setStrength(int value) {
+        strength = clampSpent(value);
+    }
 
-    // Mind
-    public int getMind() { return clampTotal(mind + archetype.baseMnd); }
-    public int getMindRaw() { return mind; }
-    public void setMind(int val) { this.mind = clampSpent(val); }
+    public int getAgility() {
+        return clampTotal(agility + archetype.baseAgility);
+    }
 
-    // Mana (Stat)
-    public int getMana() { return clampTotal(mana + archetype.baseMana); }
-    public int getManaRaw() { return mana; }
-    public void setMana(int val) { this.mana = clampSpent(val); }
+    public int getAgilityRaw() {
+        return agility;
+    }
 
-    // Defense
-    public int getDefense() { return clampTotal(defense + archetype.baseDef); }
-    public int getDefenseRaw() { return defense; }
-    public void setDefense(int val) { this.defense = clampSpent(val); }
+    public void setAgility(int value) {
+        agility = clampSpent(value);
+    }
 
-    // Charisma
-    public int getCharisma() { return clampTotal(charisma + archetype.baseCha); }
-    public int getCharismaRaw() { return charisma; }
-    public void setCharisma(int val) { this.charisma = clampSpent(val); }
+    public int getConstitution() {
+        return clampTotal(constitution + archetype.baseConstitution);
+    }
 
-    // Points and Logic
-    public int getAvailablePoints() { return availablePoints; }
-    public void setAvailablePoints(int availablePoints) { this.availablePoints = availablePoints; }
+    public int getConstitutionRaw() {
+        return constitution;
+    }
 
-    public int getTrainingPoints() { return trainingPoints; }
-    public void setTrainingPoints(int val) { this.trainingPoints = clampTotal(val); }
+    public void setConstitution(int value) {
+        constitution = clampSpent(value);
+    }
 
-    public float getCurrentMana() { return currentMana; }
-    public void setCurrentMana(float val) { this.currentMana = val; }
+    public int getMagicResistance() {
+        return clampTotal(magicResistance + archetype.baseMagicResistance);
+    }
 
-    public float getCurrentStamina() { return currentStamina; }
-    public void setCurrentStamina(float val) { this.currentStamina = val; }
+    public int getMagicResistanceRaw() {
+        return magicResistance;
+    }
 
-    public float getTotalXpGained() { return totalXpGained; }
-    public void setTotalXpGained(float val) { this.totalXpGained = val; }
+    public void setMagicResistance(int value) {
+        magicResistance = clampSpent(value);
+    }
 
-    public void addMana(float amount) { this.currentMana = Math.min(getMaxMana(), this.currentMana + amount); }
-    public void subMana(float amount) { this.currentMana = Math.max(0, this.currentMana - amount); }
-    public void addStamina(float amount) { this.currentStamina = Math.min(getMaxStamina(), this.currentStamina + amount); }
-    public void subStamina(float amount) { this.currentStamina = Math.max(0, this.currentStamina - amount); }
+    public int getMagicPower() {
+        return clampTotal(magicPower + archetype.baseMagicPower);
+    }
+
+    public int getMagicPowerRaw() {
+        return magicPower;
+    }
+
+    public void setMagicPower(int value) {
+        magicPower = clampSpent(value);
+    }
+
+    public int getMana() {
+        return clampTotal(mana + archetype.baseMana);
+    }
+
+    public int getManaRaw() {
+        return mana;
+    }
+
+    public void setMana(int value) {
+        mana = clampSpent(value);
+    }
+
+    public int getDefense() {
+        return clampTotal(defense + archetype.baseDefense);
+    }
+
+    public int getDefenseRaw() {
+        return defense;
+    }
+
+    public void setDefense(int value) {
+        defense = clampSpent(value);
+    }
+
+    public int getMind() {
+        return clampTotal(mind + archetype.baseMind);
+    }
+
+    public int getMindRaw() {
+        return mind;
+    }
+
+    public void setMind(int value) {
+        mind = clampSpent(value);
+    }
+
+    public int getAvailablePoints() {
+        return availablePoints;
+    }
+
+    public void setAvailablePoints(int availablePoints) {
+        this.availablePoints = availablePoints;
+    }
+
+    public int getTrainingPoints() {
+        return trainingPoints;
+    }
+
+    public void setTrainingPoints(int value) {
+        trainingPoints = clampTotal(value);
+    }
+
+    public float getCurrentMana() {
+        return currentMana;
+    }
+
+    public void setCurrentMana(float value) {
+        currentMana = Math.max(0.0f, Math.min(getMaxMana(), value));
+    }
+
+    public float getCurrentStamina() {
+        return currentStamina;
+    }
+
+    public void setCurrentStamina(float value) {
+        currentStamina = Math.max(0.0f, Math.min(getMaxStamina(), value));
+    }
+
+    public float getTotalXpGained() {
+        return totalXpGained;
+    }
+
+    public void setTotalXpGained(float value) {
+        totalXpGained = value;
+    }
+
+    public void addMana(float amount) {
+        currentMana = Math.min(getMaxMana(), currentMana + amount);
+    }
+
+    public void subMana(float amount) {
+        currentMana = Math.max(0, currentMana - amount);
+    }
+
+    public void addStamina(float amount) {
+        currentStamina = Math.min(getMaxStamina(), currentStamina + amount);
+    }
+
+    public void subStamina(float amount) {
+        currentStamina = Math.max(0, currentStamina - amount);
+    }
 }
