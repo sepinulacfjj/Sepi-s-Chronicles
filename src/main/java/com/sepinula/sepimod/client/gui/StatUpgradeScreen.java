@@ -135,17 +135,17 @@ public class StatUpgradeScreen extends Screen {
             case "strength" ->
                     valueX = left + x + 100;
             case "agility" ->
-                    valueX = left + x + 95;
+                    valueX = left + x + 92;
             case "constitution" ->
-                    valueX = left + x + 105;
+                    valueX = left + x + 115;
             case "defense" ->
-                    valueX = left + x + 101;
+                    valueX = left + x + 97;
             case "magic_resistance" ->
-                    valueX = left + x + 129;
+                    valueX = left + x + 124;
             case "magic_power" ->
-                    valueX = left + x + 138;
+                    valueX = left + x + 134;
             case "mana", "mind" ->
-                    valueX = left + x + 102;
+                    valueX = left + x + 97;
             default ->
                     valueX = left + x + 115;
         }
@@ -156,6 +156,22 @@ public class StatUpgradeScreen extends Screen {
 
         if (statKey.equals("magic_resistance") || statKey.equals("magic_power")) {
             valueY += 2;
+        }
+
+        if (statKey.equals("strength")) {
+            valueY -= 1;
+        }
+
+        if (statKey.equals("magic_power")) {
+            valueY -= 1;
+        }
+
+        if (statKey.equals("magic_resistance")) {
+            valueY += 1;
+        }
+
+        if (statKey.equals("mana")) {
+            valueY += 1;
         }
 
         graphics.drawString(font, valueText, valueX, valueY,
