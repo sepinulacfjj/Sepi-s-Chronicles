@@ -16,7 +16,7 @@ public class PlayerStats {
                     Codec.INT.fieldOf("strength").forGetter(PlayerStats::getStrengthRaw),
                     Codec.INT.fieldOf("agility").forGetter(PlayerStats::getAgilityRaw),
                     Codec.INT.fieldOf("constitution").forGetter(PlayerStats::getConstitutionRaw),
-                    Codec.INT.fieldOf("willpower").forGetter(PlayerStats::getWillpowerRaw),
+                    Codec.INT.fieldOf("magicResistance").forGetter(PlayerStats::getMagicResistanceRaw),
                     Codec.INT.fieldOf("mind").forGetter(PlayerStats::getMindRaw),
                     Codec.INT.fieldOf("mana").forGetter(PlayerStats::getManaRaw),
                     Codec.INT.fieldOf("defense").forGetter(PlayerStats::getDefenseRaw),
@@ -26,7 +26,7 @@ public class PlayerStats {
                     Codec.FLOAT.fieldOf("currentMana").forGetter(PlayerStats::getCurrentMana),
                     Codec.FLOAT.fieldOf("currentStamina").forGetter(PlayerStats::getCurrentStamina),
                     Codec.FLOAT.fieldOf("totalXpGained").forGetter(PlayerStats::getTotalXpGained)
-            ).apply(instance, (archName, str, agi, con, wil, min, man, def, cha, avail, train, curMan, curSta, xp) -> {
+            ).apply(instance, (archName, str, agi, con, magicRes, min, man, def, cha, avail, train, curMan, curSta, xp) -> {
                 RpgArchetype arch = RpgArchetype.NONE;
                 try { arch = RpgArchetype.valueOf(archName); } catch (Exception e) {}
                 return new PlayerStats(arch, str, agi, con, wil, min, man, def, cha, avail, train, curMan, curSta, xp);
@@ -40,7 +40,7 @@ public class PlayerStats {
             stats.setStrength(buffer.readInt());
             stats.setAgility(buffer.readInt());
             stats.setConstitution(buffer.readInt());
-            stats.setWillpower(buffer.readInt());
+            stats.setMagicResistance(buffer.readInt());
             stats.setMind(buffer.readInt());
             stats.setMana(buffer.readInt());
             stats.setDefense(buffer.readInt());
@@ -173,7 +173,7 @@ public class PlayerStats {
     public void setConstitution(int val) { this.constitution = clampSpent(val); }
 
     // Willpower
-    public int getWillpower() { return clampTotal(willpower + archetype.baseWil); }
+    public int getMagicResistance() { return clampTotal(willpower + archetype.baseMagicResistance); }
     public int getWillpowerRaw() { return willpower; }
     public void setWillpower(int val) { this.willpower = clampSpent(val); }
 
