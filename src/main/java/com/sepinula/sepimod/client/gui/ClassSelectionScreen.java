@@ -34,7 +34,7 @@ public class ClassSelectionScreen extends Screen {
     private static final int NEXT_X = 222;
     private static final int ARROW_Y = 78;
     private static final int ARROW_WIDTH = 11;
-    private static final int ARROW_HEIGHT = 15;
+    private static final int ARROW_HEIGHT = 12;
 
     // Confirm button remains the same size as in the texture.
     private static final int CONFIRM_X = 137;
@@ -109,10 +109,10 @@ public class ClassSelectionScreen extends Screen {
     private void renderArrow(GuiGraphics graphics, int mouseX, int mouseY, int x, int y, String label) {
         boolean hovered = isInside(mouseX, mouseY, x, y, ARROW_WIDTH, ARROW_HEIGHT);
         if (hovered) {
-            graphics.fill(x, y, x + ARROW_WIDTH, y + ARROW_HEIGHT, 0xB0200878);
+            graphics.fill(x, y, x + ARROW_WIDTH, y + ARROW_HEIGHT, 0xB0000000);
         }
         graphics.drawCenteredString(font, Component.literal(label),
-                x + ARROW_WIDTH / 2, y + 3, hovered ? 0xFFFFFF : 0x5A287F);
+                x + ARROW_WIDTH / 2, y + 3, 0x000000);
     }
 
     private void renderClassInformation(GuiGraphics graphics, RpgArchetype archetype, int left, int top) {
