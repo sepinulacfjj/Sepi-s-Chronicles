@@ -84,7 +84,7 @@ public class ClassSelectionScreen extends Screen {
                 InventoryScreen.renderEntityInInventory(
                         graphics,
                         left + PREVIEW_X + PREVIEW_WIDTH / 2.0F,
-                        top + PREVIEW_Y + PREVIEW_HEIGHT - 50.0F,
+                        top + PREVIEW_Y + PREVIEW_HEIGHT - 24.0F,
                         42.0F,
                         new org.joml.Vector3f(0.0F, 0.0F, 0.0F),
                         pose,
