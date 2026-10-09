@@ -72,14 +72,13 @@ public class ClassSelectionScreen extends Screen {
 
         RpgArchetype archetype = selectedClass();
 
-        // Render the actual local player model, including their current skin.
+        // Render the actual local player model with empty hands and manually controlled rotation.
         if (minecraft.player != null) {
             net.minecraft.world.item.ItemStack mainHand = minecraft.player.getMainHandItem();
             net.minecraft.world.item.ItemStack offHand = minecraft.player.getOffhandItem();
             minecraft.player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, net.minecraft.world.item.ItemStack.EMPTY);
             minecraft.player.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND, net.minecraft.world.item.ItemStack.EMPTY);
             try {
-                try {
                 org.joml.Quaternionf pose = new org.joml.Quaternionf()
                         .rotationXYZ(0.0F, (float) Math.toRadians(previewRotation), 0.0F);
                 InventoryScreen.renderEntityInInventory(
@@ -110,8 +109,8 @@ public class ClassSelectionScreen extends Screen {
 
         if (isInside(mouseX, mouseY, left + CONFIRM_X, top + CONFIRM_Y,
                 CONFIRM_WIDTH, CONFIRM_HEIGHT)) {
-            graphics.fill(left + CONFIRM_X + 1, top + CONFIRM_Y + 1,
-                    left + CONFIRM_X + CONFIRM_WIDTH - 1,
+            graphics.fill(left + CONFIRM_X, top + CONFIRM_Y - 3,
+                    left + CONFIRM_X + CONFIRM_WIDTH,
                     top + CONFIRM_Y + CONFIRM_HEIGHT - 1, 0x45FFFFFF);
         }
     }
