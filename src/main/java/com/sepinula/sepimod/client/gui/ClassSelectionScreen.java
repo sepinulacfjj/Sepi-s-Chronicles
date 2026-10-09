@@ -79,17 +79,18 @@ public class ClassSelectionScreen extends Screen {
             minecraft.player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, net.minecraft.world.item.ItemStack.EMPTY);
             minecraft.player.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND, net.minecraft.world.item.ItemStack.EMPTY);
             try {
-                InventoryScreen.renderEntityInInventoryFollowsMouse(
-                    graphics,
-                    left + PREVIEW_X,
-                    top + PREVIEW_Y,
-                    left + PREVIEW_X + PREVIEW_WIDTH,
-                    top + PREVIEW_Y + PREVIEW_HEIGHT,
-                    42,
-                    0.0F,
-                    left + PREVIEW_X + PREVIEW_WIDTH / 2 + (int) (previewRotation % 360.0F),
-                    top + PREVIEW_Y + PREVIEW_HEIGHT / 2,
-                    minecraft.player
+                try {
+                org.joml.Quaternionf pose = new org.joml.Quaternionf()
+                        .rotationXYZ(0.0F, (float) Math.toRadians(previewRotation), 0.0F);
+                InventoryScreen.renderEntityInInventory(
+                        graphics,
+                        left + PREVIEW_X + PREVIEW_WIDTH / 2.0F,
+                        top + PREVIEW_Y + PREVIEW_HEIGHT - 8.0F,
+                        42.0F,
+                        new org.joml.Vector3f(0.0F, 0.0F, 0.0F),
+                        pose,
+                        null,
+                        minecraft.player
                 );
             } finally {
                 minecraft.player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, mainHand);
