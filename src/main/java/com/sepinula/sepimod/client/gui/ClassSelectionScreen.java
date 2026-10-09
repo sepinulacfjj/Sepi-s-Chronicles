@@ -78,12 +78,24 @@ public class ClassSelectionScreen extends Screen {
             net.minecraft.world.item.ItemStack offHand = minecraft.player.getOffhandItem();
             float playerPitch = minecraft.player.getXRot();
             float previousPlayerPitch = minecraft.player.xRotO;
+            float playerYaw = minecraft.player.getYRot();
+            float previousPlayerYaw = minecraft.player.yRotO;
+            float headYaw = minecraft.player.yHeadRot;
+            float previousHeadYaw = minecraft.player.yHeadRotO;
+            float bodyYaw = minecraft.player.yBodyRot;
+            float previousBodyYaw = minecraft.player.yBodyRotO;
             minecraft.player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, net.minecraft.world.item.ItemStack.EMPTY);
             minecraft.player.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND, net.minecraft.world.item.ItemStack.EMPTY);
             try {
-                // Keep the preview upright regardless of where the player is looking in the world.
+                // Freeze the preview's world-facing angles so looking around cannot tilt or twist it.
                 minecraft.player.setXRot(0.0F);
                 minecraft.player.xRotO = 0.0F;
+                minecraft.player.setYRot(0.0F);
+                minecraft.player.yRotO = 0.0F;
+                minecraft.player.yHeadRot = 0.0F;
+                minecraft.player.yHeadRotO = 0.0F;
+                minecraft.player.yBodyRot = 0.0F;
+                minecraft.player.yBodyRotO = 0.0F;
                 org.joml.Quaternionf pose = new org.joml.Quaternionf()
                         .rotationXYZ(0.0F, (float) Math.toRadians(previewRotation), (float) Math.PI);
                 InventoryScreen.renderEntityInInventory(
@@ -99,6 +111,12 @@ public class ClassSelectionScreen extends Screen {
             } finally {
                 minecraft.player.setXRot(playerPitch);
                 minecraft.player.xRotO = previousPlayerPitch;
+                minecraft.player.setYRot(playerYaw);
+                minecraft.player.yRotO = previousPlayerYaw;
+                minecraft.player.yHeadRot = headYaw;
+                minecraft.player.yHeadRotO = previousHeadYaw;
+                minecraft.player.yBodyRot = bodyYaw;
+                minecraft.player.yBodyRotO = previousBodyYaw;
                 minecraft.player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, mainHand);
                 minecraft.player.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND, offHand);
             }
