@@ -5,10 +5,11 @@ import com.sepinula.sepimod.network.Messages;
 import com.sepinula.sepimod.network.PacketSelectClass;
 import com.sepinula.sepimod.util.RpgArchetype;
 import net.minecraft.client.gui.GuiGraphics;
-import net.minecraft.client.gui.screens.InventoryScreen;
+import net.minecraft.client.gui.screens.inventory.InventoryScreen;
 import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.network.chat.Component;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.sounds.SoundEvents;
 
@@ -120,7 +121,7 @@ public class ClassSelectionScreen extends Screen {
         graphics.drawString(font, Component.literal("§e§l" + archetype.getName()),
                 leftTextX, infoTop, 0xFFFF00, false);
 
-        List<Component> description = font.split(
+        List<FormattedCharSequence> description = font.split(
                 Component.literal(stripFormatting(archetype.getDescription())), infoWidth);
         int y = infoTop + 13;
         for (Component line : description) {
@@ -138,14 +139,14 @@ public class ClassSelectionScreen extends Screen {
 
         graphics.drawString(font, Component.literal("§ePlaystyle"), rightTextX, infoTop, 0xFFFF00, false);
         int rightY = infoTop + 14;
-        for (Component line : font.split(Component.literal(getPlaystyle(archetype)), infoWidth)) {
+        for (FormattedCharSequence line : font.split(Component.literal(getPlaystyle(archetype)), infoWidth)) {
             graphics.drawString(font, line, rightTextX, rightY, 0xFFFFFF, false);
             rightY += 10;
         }
 
         graphics.drawString(font, Component.literal("§eBest for"), rightTextX, rightY + 6, 0xFFFF00, false);
         rightY += 18;
-        for (Component line : font.split(Component.literal(getBestFor(archetype)), infoWidth)) {
+        for (FormattedCharSequence line : font.split(Component.literal(getBestFor(archetype)), infoWidth)) {
             if (rightY > top + 137) break;
             graphics.drawString(font, line, rightTextX, rightY, 0xFFFFFF, false);
             rightY += 10;
