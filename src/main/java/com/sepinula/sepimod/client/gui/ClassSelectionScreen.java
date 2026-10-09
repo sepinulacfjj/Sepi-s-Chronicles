@@ -80,11 +80,11 @@ public class ClassSelectionScreen extends Screen {
             minecraft.player.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND, net.minecraft.world.item.ItemStack.EMPTY);
             try {
                 org.joml.Quaternionf pose = new org.joml.Quaternionf()
-                        .rotationXYZ(0.0F, (float) Math.toRadians(previewRotation), 0.0F);
+                        .rotationXYZ(0.0F, (float) Math.toRadians(previewRotation) + (float) Math.PI, 0.0F);
                 InventoryScreen.renderEntityInInventory(
                         graphics,
                         left + PREVIEW_X + PREVIEW_WIDTH / 2.0F,
-                        top + PREVIEW_Y + PREVIEW_HEIGHT - 8.0F,
+                        top + PREVIEW_Y + PREVIEW_HEIGHT - 50.0F,
                         42.0F,
                         new org.joml.Vector3f(0.0F, 0.0F, 0.0F),
                         pose,
@@ -109,7 +109,7 @@ public class ClassSelectionScreen extends Screen {
 
         if (isInside(mouseX, mouseY, left + CONFIRM_X, top + CONFIRM_Y,
                 CONFIRM_WIDTH, CONFIRM_HEIGHT)) {
-            graphics.fill(left + CONFIRM_X, top + CONFIRM_Y - 3,
+            graphics.fill(left + CONFIRM_X, top + CONFIRM_Y,
                     left + CONFIRM_X + CONFIRM_WIDTH,
                     top + CONFIRM_Y + CONFIRM_HEIGHT - 1, 0x45FFFFFF);
         }
