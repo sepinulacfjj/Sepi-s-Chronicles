@@ -74,7 +74,12 @@ public class ClassSelectionScreen extends Screen {
 
         // Render the actual local player model, including their current skin.
         if (minecraft.player != null) {
-            InventoryScreen.renderEntityInInventoryFollowsMouse(
+            net.minecraft.world.item.ItemStack mainHand = minecraft.player.getMainHandItem();
+            net.minecraft.world.item.ItemStack offHand = minecraft.player.getOffhandItem();
+            minecraft.player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, net.minecraft.world.item.ItemStack.EMPTY);
+            minecraft.player.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND, net.minecraft.world.item.ItemStack.EMPTY);
+            try {
+                InventoryScreen.renderEntityInInventoryFollowsMouse(
                     graphics,
                     left + PREVIEW_X,
                     top + PREVIEW_Y,
@@ -82,10 +87,14 @@ public class ClassSelectionScreen extends Screen {
                     top + PREVIEW_Y + PREVIEW_HEIGHT,
                     42,
                     0.0F,
-                    left + PREVIEW_X + PREVIEW_WIDTH / 2 + (int) previewRotation,
+                    left + PREVIEW_X + PREVIEW_WIDTH / 2 + (int) (previewRotation % 360.0F),
                     top + PREVIEW_Y + PREVIEW_HEIGHT / 2,
                     minecraft.player
-            );
+                );
+            } finally {
+                minecraft.player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, mainHand);
+                minecraft.player.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND, offHand);
+            }
         }
 
         // The chosen class sits in the strip beneath the player preview.
@@ -151,7 +160,7 @@ public class ClassSelectionScreen extends Screen {
         rightY += 18;
         for (FormattedCharSequence line : font.split(Component.literal(getBestFor(archetype)), infoWidth)) {
             if (rightY > top + 137) break;
-            graphics.drawString(font, line, rightTextX, rightY, 0xFFFFFF, false);
+            graphics.drawString(font, line, rightTextX, rightY, 0x30204A, false);
             rightY += 10;
         }
     }
@@ -226,7 +235,7 @@ public class ClassSelectionScreen extends Screen {
     public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
         if (draggingPreview && button == 0) {
             previewRotation += (float) (mouseX - lastDragX) * 1.5F;
-            previewRotation = Math.max(-80.0F, Math.min(80.0F, previewRotation));
+            previewRotation = previewRotation % 360.0F;
             lastDragX = mouseX;
             return true;
         }
