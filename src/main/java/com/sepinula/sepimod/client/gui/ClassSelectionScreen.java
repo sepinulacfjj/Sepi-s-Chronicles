@@ -124,7 +124,7 @@ public class ClassSelectionScreen extends Screen {
         List<FormattedCharSequence> description = font.split(
                 Component.literal(stripFormatting(archetype.getDescription())), infoWidth);
         int y = infoTop + 13;
-        for (Component line : description) {
+        for (FormattedCharSequence line : description) {
             graphics.drawString(font, line, leftTextX, y, 0xFFFFFF, false);
             y += 10;
         }
