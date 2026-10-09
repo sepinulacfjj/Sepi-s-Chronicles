@@ -76,15 +76,20 @@ public class ClassSelectionScreen extends Screen {
         if (minecraft.player != null) {
             net.minecraft.world.item.ItemStack mainHand = minecraft.player.getMainHandItem();
             net.minecraft.world.item.ItemStack offHand = minecraft.player.getOffhandItem();
+            float playerPitch = minecraft.player.getXRot();
+            float previousPlayerPitch = minecraft.player.xRotO;
             minecraft.player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, net.minecraft.world.item.ItemStack.EMPTY);
             minecraft.player.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND, net.minecraft.world.item.ItemStack.EMPTY);
             try {
+                // Keep the preview upright regardless of where the player is looking in the world.
+                minecraft.player.setXRot(0.0F);
+                minecraft.player.xRotO = 0.0F;
                 org.joml.Quaternionf pose = new org.joml.Quaternionf()
                         .rotationXYZ(0.0F, (float) Math.toRadians(previewRotation), (float) Math.PI);
                 InventoryScreen.renderEntityInInventory(
                         graphics,
                         left + PREVIEW_X + PREVIEW_WIDTH / 2.0F,
-                        top + PREVIEW_Y + PREVIEW_HEIGHT - 24.0F,
+                        top + PREVIEW_Y + PREVIEW_HEIGHT - 9.0F,
                         42.0F,
                         new org.joml.Vector3f(0.0F, 0.0F, 0.0F),
                         pose,
@@ -92,6 +97,8 @@ public class ClassSelectionScreen extends Screen {
                         minecraft.player
                 );
             } finally {
+                minecraft.player.setXRot(playerPitch);
+                minecraft.player.xRotO = previousPlayerPitch;
                 minecraft.player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND, mainHand);
                 minecraft.player.setItemInHand(net.minecraft.world.InteractionHand.OFF_HAND, offHand);
             }
