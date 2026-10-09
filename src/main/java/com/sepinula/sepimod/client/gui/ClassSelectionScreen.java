@@ -97,7 +97,7 @@ public class ClassSelectionScreen extends Screen {
                 minecraft.player.yBodyRot = 0.0F;
                 minecraft.player.yBodyRotO = 0.0F;
                 org.joml.Quaternionf pose = new org.joml.Quaternionf()
-                        .rotationXYZ(0.0F, (float) Math.toRadians(previewRotation), (float) Math.PI);
+                        .rotationXYZ(0.0F, (float) Math.toRadians(previewRotation) + (float) Math.PI, (float) Math.PI);
                 InventoryScreen.renderEntityInInventory(
                         graphics,
                         left + PREVIEW_X + PREVIEW_WIDTH / 2.0F,
