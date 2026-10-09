@@ -33,8 +33,8 @@ public class ClassSelectionScreen extends Screen {
     private static final int PREVIOUS_X = 113;
     private static final int NEXT_X = 222;
     private static final int ARROW_Y = 78;
-    private static final int ARROW_WIDTH = 17;
-    private static final int ARROW_HEIGHT = 24;
+    private static final int ARROW_WIDTH = 11;
+    private static final int ARROW_HEIGHT = 15;
 
     // Confirm button remains the same size as in the texture.
     private static final int CONFIRM_X = 137;
@@ -49,6 +49,9 @@ public class ClassSelectionScreen extends Screen {
     };
 
     private int selectedIndex = 0;
+    private boolean draggingPreview = false;
+    private double lastDragX = 0.0D;
+    private float previewRotation = 0.0F;
 
     public ClassSelectionScreen() {
         super(Component.literal("Archetype Selection"));
@@ -79,15 +82,15 @@ public class ClassSelectionScreen extends Screen {
                     top + PREVIEW_Y + PREVIEW_HEIGHT,
                     42,
                     0.0F,
-                    mouseX,
-                    mouseY,
+                    left + PREVIEW_X + PREVIEW_WIDTH / 2 + (int) previewRotation,
+                    top + PREVIEW_Y + PREVIEW_HEIGHT / 2,
                     minecraft.player
             );
         }
 
         // The chosen class sits in the strip beneath the player preview.
         graphics.drawCenteredString(font, Component.literal(archetype.getName()),
-                left + PREVIEW_X + PREVIEW_WIDTH / 2, top + 151, 0xFFFF00);
+                left + PREVIEW_X + PREVIEW_WIDTH / 2, top + 154, 0xFFFF00);
 
         renderArrow(graphics, mouseX, mouseY, left + PREVIOUS_X, top + ARROW_Y, "<");
         renderArrow(graphics, mouseX, mouseY, left + NEXT_X, top + ARROW_Y, ">");
@@ -106,45 +109,45 @@ public class ClassSelectionScreen extends Screen {
     private void renderArrow(GuiGraphics graphics, int mouseX, int mouseY, int x, int y, String label) {
         boolean hovered = isInside(mouseX, mouseY, x, y, ARROW_WIDTH, ARROW_HEIGHT);
         if (hovered) {
-            graphics.fill(x, y, x + ARROW_WIDTH, y + ARROW_HEIGHT, 0x45FFFFFF);
+            graphics.fill(x, y, x + ARROW_WIDTH, y + ARROW_HEIGHT, 0xB0200878);
         }
         graphics.drawCenteredString(font, Component.literal(label),
-                x + ARROW_WIDTH / 2, y + 7, 0xFFFF00);
+                x + ARROW_WIDTH / 2, y + 3, hovered ? 0xFFFFFF : 0x5A287F);
     }
 
     private void renderClassInformation(GuiGraphics graphics, RpgArchetype archetype, int left, int top) {
-        int leftTextX = left + 8;
+        int leftTextX = left + 12;
         int rightTextX = left + 240;
         int infoTop = top + 42;
         int infoWidth = 102;
 
-        graphics.drawString(font, Component.literal("§e§l" + archetype.getName()),
-                leftTextX, infoTop, 0xFFFF00, false);
+        graphics.drawString(font, Component.literal("§8§l" + archetype.getName()),
+                leftTextX, infoTop, 0x30204A, false);
 
         List<FormattedCharSequence> description = font.split(
                 Component.literal(stripFormatting(archetype.getDescription())), infoWidth);
         int y = infoTop + 13;
         for (FormattedCharSequence line : description) {
-            graphics.drawString(font, line, leftTextX, y, 0xFFFFFF, false);
+            graphics.drawString(font, line, leftTextX, y, 0x30204A, false);
             y += 10;
         }
 
-        graphics.drawString(font, Component.literal("§eBonuses"), leftTextX, y + 5, 0xFFFF00, false);
+        graphics.drawString(font, Component.literal("§5§lBonuses"), leftTextX, y + 5, 0x54258A, false);
         y += 17;
         for (String bonus : getBonuses(archetype)) {
             if (y > top + 137) break;
-            graphics.drawString(font, Component.literal(bonus), leftTextX, y, 0xFFFFFF, false);
+            graphics.drawString(font, Component.literal(bonus), leftTextX, y, 0x30204A, false);
             y += 11;
         }
 
-        graphics.drawString(font, Component.literal("§ePlaystyle"), rightTextX, infoTop, 0xFFFF00, false);
+        graphics.drawString(font, Component.literal("§5§lPlaystyle"), rightTextX, infoTop, 0x54258A, false);
         int rightY = infoTop + 14;
         for (FormattedCharSequence line : font.split(Component.literal(getPlaystyle(archetype)), infoWidth)) {
-            graphics.drawString(font, line, rightTextX, rightY, 0xFFFFFF, false);
+            graphics.drawString(font, line, rightTextX, rightY, 0x30204A, false);
             rightY += 10;
         }
 
-        graphics.drawString(font, Component.literal("§eBest for"), rightTextX, rightY + 6, 0xFFFF00, false);
+        graphics.drawString(font, Component.literal("§5§lBest for"), rightTextX, rightY + 6, 0x54258A, false);
         rightY += 18;
         for (FormattedCharSequence line : font.split(Component.literal(getBestFor(archetype)), infoWidth)) {
             if (rightY > top + 137) break;
@@ -189,6 +192,13 @@ public class ClassSelectionScreen extends Screen {
         int left = (width - GUI_WIDTH) / 2;
         int top = (height - GUI_HEIGHT) / 2;
 
+        if (button == 0 && isInside(mouseX, mouseY,
+                left + PREVIEW_X, top + PREVIEW_Y, PREVIEW_WIDTH, PREVIEW_HEIGHT)) {
+            draggingPreview = true;
+            lastDragX = mouseX;
+            return true;
+        }
+
         if (isInside(mouseX, mouseY, left + PREVIOUS_X, top + ARROW_Y, ARROW_WIDTH, ARROW_HEIGHT)) {
             selectedIndex = (selectedIndex + CHOICES.length - 1) % CHOICES.length;
             playClick();
@@ -210,6 +220,26 @@ public class ClassSelectionScreen extends Screen {
         }
 
         return super.mouseClicked(mouseX, mouseY, button);
+    }
+
+    @Override
+    public boolean mouseDragged(double mouseX, double mouseY, int button, double dragX, double dragY) {
+        if (draggingPreview && button == 0) {
+            previewRotation += (float) (mouseX - lastDragX) * 1.5F;
+            previewRotation = Math.max(-80.0F, Math.min(80.0F, previewRotation));
+            lastDragX = mouseX;
+            return true;
+        }
+        return super.mouseDragged(mouseX, mouseY, button, dragX, dragY);
+    }
+
+    @Override
+    public boolean mouseReleased(double mouseX, double mouseY, int button) {
+        if (button == 0 && draggingPreview) {
+            draggingPreview = false;
+            return true;
+        }
+        return super.mouseReleased(mouseX, mouseY, button);
     }
 
     private void playClick() {
